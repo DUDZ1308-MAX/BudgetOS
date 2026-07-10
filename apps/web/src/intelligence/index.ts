@@ -1,0 +1,10 @@
+export { computeFinancialHealth } from './FinancialHealthEngine';
+export { generateAlerts } from './AlertEngine';
+export { generateRecommendations } from './RecommendationEngine';
+export { analyzeTrends } from './TrendAnalyzer';
+export { analyzeSpendingPatterns } from './SpendingPatternAnalyzer';
+export { analyzeGoals } from './GoalAnalyzer';
+export { createNotifications, filterNotifications, getUnreadCount, groupByType } from './NotificationEngine';
+export { generateWeeklySummary, generateMonthlyReview, computeStreak } from './RetentionEngine';
+export { generateIntelligence, loadStoredAlerts, saveAlerts, loadStoredRecs, saveRecs, shouldRegenerate } from './RecommendationScheduler';
+export type * from './types';

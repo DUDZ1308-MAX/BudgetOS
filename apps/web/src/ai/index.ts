@@ -1,0 +1,12 @@
+export type * from './types';
+export { AiService, ChatHistory } from './AiService';
+export { getAiProvider, getDefaultConfig, getSupportedProviders } from './AiProvider';
+export { buildSystemPrompt, buildUserPrompt, buildInitialPrompt } from './PromptBuilder';
+export { ConversationMemory } from './ConversationMemory';
+export { generateEnhancedInsights, computeCashFlowForecast } from './InsightEngine';
+export { generateRecommendations } from './RecommendationEngine';
+export { generateForecasts, calculateSavingsCompletionDate, calculateMortgageImpact } from './ForecastEngine';
+export { AiClient, AiClientError } from './services/aiClient';
+export { useAIChat } from './hooks/useAIChat';
+export { estimateTokens, estimateMessagesTokens, trimMessagesToFit, estimateCost, formatCost } from './utils/tokenManager';
+export { createStreamParser, parseOpenAIStreamChunk, parseSSELine } from './utils/responseParser';
