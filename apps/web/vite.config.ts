@@ -43,7 +43,6 @@ export default defineConfig({
           'vendor-charts': ['recharts'],
           'vendor-export': ['jspdf', 'jspdf-autotable', 'xlsx'],
           'vendor-query': ['@tanstack/react-query'],
-          'vendor-ai': ['openai'],
         },
       },
     },
