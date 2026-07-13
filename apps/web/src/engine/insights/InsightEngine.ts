@@ -1,5 +1,5 @@
 import type { Insight, InsightEngineInput } from '../types';
-import { daysInMonth, parseDate } from '../utils';
+import { daysInMonth, parseDate, todayISO, daysBetween } from '../utils';
 
 let insightCounter = 0;
 function nextId(prefix: string): string {
@@ -85,11 +85,13 @@ export function computeInsights(input: InsightEngineInput): Insight[] {
   const { totalBudgeted, totalSpent } = budgetSummary.budgetStatus;
   if (totalBudgeted > 0) {
     const startDate = parseDate(dateRange.start);
+    const endDate = parseDate(dateRange.end);
     const year = startDate.getFullYear();
     const month = startDate.getMonth() + 1;
     const totalDays = daysInMonth(year, month);
-    const today = new Date();
-    const daysPassed = Math.max(1, today.getDate() - startDate.getDate() + 1);
+    const rangeDays = daysBetween(dateRange.start, dateRange.end) + 1;
+    const actualDaysPassed = Math.max(1, daysBetween(dateRange.start, todayISO()) + 1);
+    const daysPassed = Math.min(actualDaysPassed, rangeDays);
     const expectedSoFar = (totalBudgeted / totalDays) * daysPassed;
 
     if (expectedSoFar > 0 && totalSpent > expectedSoFar * 1.3) {

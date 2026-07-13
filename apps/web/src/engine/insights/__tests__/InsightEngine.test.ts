@@ -182,8 +182,8 @@ describe('InsightEngine', () => {
           overBudget: [],
           underBudget: [],
           totalBudgeted: 310,
-          totalSpent: 60,
-          totalRemaining: 250,
+          totalSpent: 500,
+          totalRemaining: -190,
         },
       });
       const insights = computeInsights({

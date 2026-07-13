@@ -1,111 +1,75 @@
-import type { CashFlowSummary, DailyBalance, CashFlowEngineInput } from './types';
-import { parseDate, formatDateISO } from './utils';
+import { calculateIncomeVsExpenseRatio } from '@/lib/finance';
+import type { EngineTransaction, EngineAccount, CashFlowSummary, DailyBalance } from './types';
 
-export function computeCashFlowSummary(input: CashFlowEngineInput): CashFlowSummary {
-  if (!input) return createEmptyCashFlowSummary();
-  const { transactions = [], accounts = [] } = input;
-  const totalBalance = accounts
-    .filter((a) => a.is_active)
-    .reduce((sum, a) => sum + a.balance, 0);
-
-  const active = transactions.filter((t) => !t.is_archived);
+export function computeCashFlowSummary(input: {
+  transactions: EngineTransaction[];
+  accounts: EngineAccount[];
+}): CashFlowSummary {
+  const activeTransactions = (input.transactions ?? []).filter((t) => !t.is_archived);
 
   const dailyMap = new Map<string, { income: number; expenses: number }>();
+  const allTxns = [...activeTransactions].sort((a, b) => a.date.localeCompare(b.date));
 
-  let totalIncome = 0;
-  let totalExpenses = 0;
-
-  for (const txn of active) {
-    const amount = txn.amount;
-    if (amount >= 0) {
-      totalIncome += amount;
+  for (const t of allTxns) {
+    const day = dailyMap.get(t.date) || { income: 0, expenses: 0 };
+    if (t.amount > 0) {
+      day.income += Math.abs(t.amount);
     } else {
-      totalExpenses += amount;
+      day.expenses += Math.abs(t.amount);
     }
-
-    const existing = dailyMap.get(txn.date);
-    if (existing) {
-      if (amount >= 0) existing.income += amount;
-      else existing.expenses += amount;
-    } else {
-      dailyMap.set(txn.date, {
-        income: amount >= 0 ? amount : 0,
-        expenses: amount < 0 ? amount : 0,
-      });
-    }
+    dailyMap.set(t.date, day);
   }
 
-  const sortedDates = Array.from(dailyMap.keys()).sort();
+  const initialBalance = (input.accounts ?? [])
+    .filter((a) => a.is_active)
+    .reduce((s, a) => s + a.balance, 0);
+
+  const sortedDays = Array.from(dailyMap.entries()).sort(([a], [b]) => a.localeCompare(b));
   const dailyBalances: DailyBalance[] = [];
-  let runningBalance = totalBalance;
+  let running = initialBalance;
 
-  if (sortedDates.length === 0) {
-    return {
-      dailyBalances: [],
-      sevenDayTrend: 0,
-      thirtyDayTrend: 0,
-      incomeVsExpenseRatio: 0,
-      totalIncome: 0,
-      totalExpenses: 0,
-      netFlow: 0,
-    };
+  for (const [date, { income, expenses }] of sortedDays) {
+    running = running + income - expenses;
+    dailyBalances.push({ date, income, expenses, runningBalance: running, net: income - expenses });
   }
 
-  const dateRangeStart = parseDate(sortedDates[0]!);
-  const dateRangeEnd = parseDate(sortedDates[sortedDates.length - 1]!);
+  const totalIncome = allTxns.filter((t) => t.amount > 0).reduce((s, t) => s + Math.abs(t.amount), 0);
+  const totalExpenses = allTxns.filter((t) => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
+  const netFlow = totalIncome - totalExpenses;
 
-  const cursor = new Date(dateRangeStart);
-  while (cursor <= dateRangeEnd) {
-    const dateStr = formatDateISO(cursor);
-    const dayData = dailyMap.get(dateStr);
-    const dayIncome = dayData?.income ?? 0;
-    const dayExpenses = dayData?.expenses ?? 0;
-    const dayNet = dayIncome + dayExpenses;
-    runningBalance += dayNet;
+  // Calculate 7-day and 30-day trends
+  const now = new Date();
+  const sevenDaysAgo = new Date(now);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const thirtyDaysAgo = new Date(now);
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    dailyBalances.push({
-      date: dateStr,
-      income: dayIncome,
-      expenses: Math.abs(dayExpenses),
-      net: dayNet,
-      runningBalance,
-    });
+  const sevenDayTxns = allTxns.filter((t) => {
+    const d = new Date(t.date);
+    return d >= sevenDaysAgo && d <= now;
+  });
+  const thirtyDayTxns = allTxns.filter((t) => {
+    const d = new Date(t.date);
+    return d >= thirtyDaysAgo && d <= now;
+  });
 
-    cursor.setDate(cursor.getDate() + 1);
-  }
+  const sevenDayIncome = sevenDayTxns.filter((t) => t.amount > 0).reduce((s, t) => s + Math.abs(t.amount), 0);
+  const sevenDayExpenses = sevenDayTxns.filter((t) => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
+  const sevenDayTrend = sevenDayIncome - sevenDayExpenses;
 
-  const totalExpensesAbs = Math.abs(totalExpenses);
-  const incomeVsExpenseRatio = totalExpensesAbs > 0 ? totalIncome / totalExpensesAbs : totalIncome > 0 ? Infinity : 0;
+  const thirtyDayIncome = thirtyDayTxns.filter((t) => t.amount > 0).reduce((s, t) => s + Math.abs(t.amount), 0);
+  const thirtyDayExpenses = thirtyDayTxns.filter((t) => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
+  const thirtyDayTrend = thirtyDayIncome - thirtyDayExpenses;
 
-  const sevenDayTrend = computePeriodTrend(dailyBalances, 7);
-  const thirtyDayTrend = computePeriodTrend(dailyBalances, 30);
+  const incomeVsExpenseRatio = calculateIncomeVsExpenseRatio(totalIncome, totalExpenses);
 
   return {
     dailyBalances,
+    totalIncome,
+    totalExpenses,
+    netFlow,
     sevenDayTrend,
     thirtyDayTrend,
     incomeVsExpenseRatio,
-    totalIncome,
-    totalExpenses: totalExpensesAbs,
-    netFlow: totalIncome - totalExpensesAbs,
   };
-}
-
-function createEmptyCashFlowSummary(): CashFlowSummary {
-  return {
-    dailyBalances: [], sevenDayTrend: 0, thirtyDayTrend: 0,
-    incomeVsExpenseRatio: 0, totalIncome: 0, totalExpenses: 0, netFlow: 0,
-  };
-}
-
-function computePeriodTrend(balances: DailyBalance[], days: number): number {
-  if (balances.length < 2) return 0;
-
-  const period = Math.min(days, balances.length);
-  const recent = balances.slice(-period);
-  const first = recent[0];
-  const last = recent[recent.length - 1];
-
-  if (!first || !last) return 0;
-  return last.runningBalance - first.runningBalance;
 }

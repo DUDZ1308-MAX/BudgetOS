@@ -1,242 +1,167 @@
-import type { BudgetSummary, BudgetEngineInput, CategoryBreakdown, CategoryBudgetStatus, Alert } from './types';
-import { daysBetween, categorizeAccountType, parseDate, daysInMonth } from './utils';
+import { calculateBudgetStatus, sumByCategory, daysBetween } from '@/lib/finance';
+import type { TransactionInput, BudgetInput } from '@/lib/finance';
+import type { EngineTransaction, EngineAccount, EngineBudget, BudgetSummary, CategoryBreakdown, Alert } from './types';
 
-export function computeBudgetSummary(input: BudgetEngineInput): BudgetSummary {
-  if (!input) return createEmptyBudgetSummary();
-  const { transactions = [], accounts = [], categories = [], budgets = [], dateRange } = input;
-  const start = dateRange?.start || '';
-  const end = dateRange?.end || '';
+export function computeBudgetSummary(input: {
+  transactions: EngineTransaction[];
+  accounts: EngineAccount[];
+  categories: any[];
+  budgets: EngineBudget[];
+  dateRange: { start: string; end: string };
+}): BudgetSummary {
+  const { start, end } = input.dateRange;
 
-  if (!start || !end) return createEmptyBudgetSummary();
+  const activeTransactions: EngineTransaction[] = (input.transactions ?? []).filter(
+    (t) => !t.is_archived && t.date >= start && t.date <= end,
+  );
 
-  const startDate = parseDate(start);
-  const year = startDate.getFullYear();
-  const month = startDate.getMonth() + 1;
+  const transactions: TransactionInput[] = activeTransactions.map((t) => ({
+    id: t.id,
+    account_id: t.account_id,
+    category_id: t.category_id,
+    amount: Math.abs(t.amount),
+    date: t.date,
+    merchant: t.merchant,
+    note: t.note,
+    is_archived: t.is_archived ?? false,
+    type: t.amount > 0 ? 'income' as const : 'expense' as const,
+  }));
 
-  let totalIncome = 0;
-  let totalExpenses = 0;
-  let incomeCount = 0;
-  let expenseCount = 0;
+  const budgets: BudgetInput[] = (input.budgets ?? []).map((b) => ({
+    category_id: b.category_id,
+    year: b.year,
+    month: b.month,
+    amount: b.amount,
+    rollover: b.rollover || false,
+  }));
 
-  const expenseByCategory = new Map<string | null, { amount: number; count: number }>();
+  const totalIncome = transactions
+    .filter((t) => t.type === 'income')
+    .reduce((s, t) => s + t.amount, 0);
+  const totalExpenses = transactions
+    .filter((t) => t.type === 'expense')
+    .reduce((s, t) => s + t.amount, 0);
 
-  for (const txn of transactions) {
-    if (txn.is_archived) continue;
-    if (txn.date < start || txn.date > end) continue;
+  const netFlow = totalIncome - totalExpenses;
+  const rangeDays = end && start ? daysBetween(start, end) : 1;
+  const avgDaily = totalIncome / rangeDays;
 
-    if (txn.amount >= 0) {
-      totalIncome += txn.amount;
-      incomeCount++;
-    } else {
-      totalExpenses += txn.amount;
-      expenseCount++;
-      const catId = txn.category_id;
-      const existing = expenseByCategory.get(catId);
-      if (existing) {
-        existing.amount += txn.amount;
-        existing.count++;
-      } else {
-        expenseByCategory.set(catId, { amount: txn.amount, count: 1 });
-      }
-    }
+  // Expense breakdown by category
+  const categoryMap = new Map((input.categories ?? []).map((c: any) => [c.id, c.name]));
+  const expenseByCategoryMap = new Map<string, { amount: number; count: number }>();
+  for (const t of transactions) {
+    if (t.type !== 'expense') continue;
+    const catId = t.category_id || 'uncategorized';
+    const existing = expenseByCategoryMap.get(catId) || { amount: 0, count: 0 };
+    existing.amount += t.amount;
+    existing.count += 1;
+    expenseByCategoryMap.set(catId, existing);
   }
+  const expenseTotal = Array.from(expenseByCategoryMap.values()).reduce((s, c) => s + c.amount, 0);
+  const expenseBreakdown: CategoryBreakdown[] = Array.from(expenseByCategoryMap.entries()).map(([catId, { amount, count }]) => ({
+    categoryId: catId,
+    categoryName: categoryMap.get(catId) || '',
+    amount,
+    percentage: expenseTotal > 0 ? Math.round((amount / expenseTotal) * 100) : 0,
+    transactionCount: count,
+  }));
 
-  const absTotalExpenses = Math.abs(totalExpenses);
-  const netIncome = totalIncome - absTotalExpenses;
-  const dayCount = daysBetween(start, end);
-  const averageDailyIncome = dayCount > 0 ? totalIncome / dayCount : 0;
-  const averageDailySpending = dayCount > 0 ? absTotalExpenses / dayCount : 0;
+  // Budget calculations
+  const sumByCatMap = sumByCategory(transactions.filter((t) => t.type === 'expense'));
+  const categoryBudgetBreakdowns = budgets.map((b) => {
+    const catTotal = sumByCatMap[b.category_id] || 0;
+    const remaining = b.amount - catTotal;
+    const percentUsed = b.amount > 0 ? (catTotal / b.amount) * 100 : (catTotal > 0 ? 100 : 0);
+    const status = calculateBudgetStatus(percentUsed);
+    const catName = categoryMap.get(b.category_id) || '';
+    return { categoryId: b.category_id, categoryName: catName, budgeted: b.amount, spent: catTotal, remaining, percentUsed, status: status as 'under' | 'on_track' | 'at_limit' | 'over' };
+  });
 
-  const categoryMap = new Map<string, string>();
-  for (const cat of categories) {
-    categoryMap.set(cat.id, cat.name);
-  }
+  const totalBudgeted = budgets.reduce((s, b) => s + b.amount, 0);
+  const totalSpent = budgets.reduce((s, b) => s + (sumByCatMap[b.category_id] || 0), 0);
+  const totalRemaining = budgets.reduce((s, b) => s + (b.amount - (sumByCatMap[b.category_id] || 0)), 0);
 
-  const expenseByCategoryArray: CategoryBreakdown[] = [];
-  for (const [catId, data] of expenseByCategory) {
-    const absAmount = Math.abs(data.amount);
-    expenseByCategoryArray.push({
-      categoryId: catId,
-      categoryName: catId ? (categoryMap.get(catId) ?? 'Unknown') : 'Uncategorized',
-      amount: absAmount,
-      percentage: absTotalExpenses > 0 ? (absAmount / absTotalExpenses) * 100 : 0,
-      transactionCount: data.count,
+  // Account metrics
+  const activeAccounts = (input.accounts ?? []).filter((a) => a.is_active);
+  const totalAssets = activeAccounts
+    .filter((a) => a.balance > 0)
+    .reduce((s, a) => s + Math.abs(a.balance), 0);
+  const totalLiabilities = activeAccounts
+    .filter((a) => a.balance < 0)
+    .reduce((s, a) => s + a.balance, 0);
+  const netWorth = activeAccounts.reduce((s, a) => s + a.balance, 0);
+
+  // Savings capacity
+  const surplus = netFlow > 0 ? Math.min(netFlow, Math.round(totalIncome * 0.2)) : 0;
+  const savingsRate = totalIncome > 0 ? Math.round((surplus / totalIncome) * 100) : 0;
+  const recommendedAmount = surplus;
+
+  // Alerts
+  const alerts: Alert[] = [];
+  for (const oc of categoryBudgetBreakdowns.filter((c) => c.status === 'over')) {
+    alerts.push({
+      type: 'overspend',
+      severity: 'high',
+      message: `Category "${oc.categoryName || oc.categoryId}" is over budget by $${Math.abs(oc.remaining).toFixed(2)}`,
+      category: oc.categoryId,
     });
   }
-  expenseByCategoryArray.sort((a, b) => b.amount - a.amount);
 
-  const budgetMap = new Map<string, { amount: number; rollover: boolean }>();
-  for (const budget of budgets) {
-    if (budget.year === year && budget.month === month) {
-      budgetMap.set(budget.category_id, { amount: budget.amount, rollover: budget.rollover });
-    }
-  }
-
-  const budgetStatuses: CategoryBudgetStatus[] = [];
-  const overBudget: CategoryBudgetStatus[] = [];
-  const underBudget: CategoryBudgetStatus[] = [];
-  let totalBudgeted = 0;
-  let totalBudgetSpent = 0;
-
-  for (const cat of categories) {
-    if (cat.type !== 'expense' || cat.is_archived) continue;
-    const budget = budgetMap.get(cat.id);
-    const budgeted = budget?.amount ?? 0;
-    const expenseData = expenseByCategory.get(cat.id);
-    const spent = expenseData ? Math.abs(expenseData.amount) : 0;
-
-    if (budgeted > 0) {
-      totalBudgeted += budgeted;
-      totalBudgetSpent += spent;
-      const remaining = budgeted - spent;
-      const percentUsed = (spent / budgeted) * 100;
-
-      let status: 'under' | 'on_track' | 'at_limit' | 'over';
-      if (percentUsed > 100) status = 'over';
-      else if (percentUsed >= 90) status = 'at_limit';
-      else if (percentUsed >= 75) status = 'on_track';
-      else status = 'under';
-
-      const budgetStatus: CategoryBudgetStatus = {
-        categoryId: cat.id,
-        categoryName: cat.name,
-        budgeted,
-        spent,
-        remaining,
-        percentUsed,
-        status,
-      };
-
-      budgetStatuses.push(budgetStatus);
-      if (status === 'over') overBudget.push(budgetStatus);
-      if (status === 'under' || status === 'on_track') underBudget.push(budgetStatus);
-    }
-  }
-
-  const totalBudgetRemaining = totalBudgeted - totalBudgetSpent;
-  const daysLeftInMonth = daysInMonth(year, month) - startDate.getDate() + 1;
-  const safeToSpendToday = daysLeftInMonth > 0 && totalBudgetRemaining > 0
-    ? totalBudgetRemaining / daysLeftInMonth
-    : 0;
-
-  let totalAssets = 0;
-  let totalLiabilities = 0;
-  let accountCount = 0;
-  for (const acct of accounts) {
-    if (!acct.is_active) continue;
-    accountCount++;
-    const acctType = categorizeAccountType(acct.type);
-    if (acctType === 'asset') totalAssets += acct.balance;
-    else totalLiabilities += acct.balance;
-  }
-  const netWorth = totalAssets + totalLiabilities;
-  const remainingCash = totalAssets - Math.abs(totalLiabilities);
-  const currentBalance = totalAssets + totalLiabilities;
-
-  const projectedEndBalance = currentBalance + (netIncome / dayCount) * daysLeftInMonth;
-
-  const surplus = Math.max(0, totalIncome * 0.2);
-  const recommendedSavings = Math.min(surplus, Math.max(0, netIncome));
-  const savingsRate = totalIncome > 0 ? (recommendedSavings / totalIncome) * 100 : 0;
-
-  const alerts: Alert[] = [];
-
-  for (const cat of budgetStatuses) {
-    if (cat.status === 'over') {
-      alerts.push({
-        type: 'overspend',
-        severity: 'high',
-        message: `Overspent in ${cat.categoryName}: spent $${cat.spent.toFixed(2)} against $${cat.budgeted.toFixed(2)} budget`,
-        category: cat.categoryName,
-        amount: cat.spent - cat.budgeted,
-      });
-    } else if (cat.status === 'at_limit') {
-      alerts.push({
-        type: 'overspend',
-        severity: 'medium',
-        message: `Near budget limit in ${cat.categoryName}: used ${cat.percentUsed.toFixed(0)}% of $${cat.budgeted.toFixed(2)} budget`,
-        category: cat.categoryName,
-      });
-    }
-  }
-
-  if (currentBalance < 0) {
+  const totalBalance = activeAccounts.reduce((s, a) => s + a.balance, 0);
+  if (totalBalance < 0) {
     alerts.push({
       type: 'low_balance',
       severity: 'high',
       message: 'Your total account balance is negative',
-      amount: currentBalance,
     });
   }
 
-  if (totalExpenses < 0 && totalIncome > 0) {
-    const expenseRatio = absTotalExpenses / totalIncome;
-    if (expenseRatio > 0.9) {
-      alerts.push({
-        type: 'low_balance',
-        severity: 'high',
-        message: 'Spending exceeds 90% of income',
-        amount: absTotalExpenses,
-      });
-    } else if (expenseRatio > 0.75) {
-      alerts.push({
-        type: 'low_balance',
-        severity: 'medium',
-        message: 'Spending exceeds 75% of income',
-        amount: absTotalExpenses,
-      });
-    }
-  }
-
-  const avgExpense = expenseCount > 0 ? absTotalExpenses / expenseCount : 0;
-  for (const cat of expenseByCategoryArray) {
-    const catData = expenseByCategory.get(cat.categoryId);
-    if (catData && avgExpense > 0) {
-      const catAvg = cat.amount / catData.count;
-      if (catAvg > avgExpense * 2 && catData.count >= 3) {
+  // Check for unusually high spending
+  const avgTransaction = transactions.length > 0
+    ? transactions.reduce((s, t) => s + t.amount, 0) / transactions.length
+    : 0;
+  for (const t of transactions) {
+    if (t.type === 'expense' && avgTransaction > 0 && t.amount > avgTransaction * 3) {
+      const merchant = t.merchant || t.note || '';
+      if (merchant) {
         alerts.push({
           type: 'unusual_spending',
           severity: 'medium',
-          message: `Unusually high spending in ${cat.categoryName}: avg $${catAvg.toFixed(2)} per transaction`,
-          category: cat.categoryName,
-          amount: catAvg,
+          message: `Unusually high expense at ${merchant}: $${t.amount.toFixed(2)}`,
+          category: t.category_id ?? undefined,
         });
       }
     }
   }
 
+  const safeToSpend = rangeDays > 0 ? totalRemaining / rangeDays : 0;
+
   return {
-    income: {
-      total: totalIncome,
-      averageDaily: averageDailyIncome,
-    },
-    expenses: {
-      total: absTotalExpenses,
-      byCategory: expenseByCategoryArray,
-    },
+    income: { total: totalIncome, averageDaily: avgDaily },
+    expenses: { total: expenseTotal, byCategory: expenseBreakdown },
     cashFlow: {
-      netIncome,
-      dailySpendingAllowance: averageDailySpending,
-      safeToSpendToday,
-      projectedEndBalance,
+      netIncome: netFlow,
+      dailySpendingAllowance: safeToSpend,
+      safeToSpendToday: safeToSpend,
+      projectedEndBalance: 0,
     },
     budgetStatus: {
-      categories: budgetStatuses,
-      overBudget,
-      underBudget,
+      categories: categoryBudgetBreakdowns,
+      overBudget: categoryBudgetBreakdowns.filter((c) => c.status === 'over'),
+      underBudget: categoryBudgetBreakdowns.filter((c) => c.status !== 'over'),
       totalBudgeted,
-      totalSpent: totalBudgetSpent,
-      totalRemaining: totalBudgetRemaining,
+      totalSpent,
+      totalRemaining,
     },
     accounts: {
       netWorth,
-      remainingCash,
+      remainingCash: netWorth,
       totalAssets,
       totalLiabilities,
-      accountCount,
+      accountCount: activeAccounts.length,
     },
     savingsCapacity: {
-      recommendedAmount: recommendedSavings,
+      recommendedAmount,
       savingsRate,
       surplus,
     },
@@ -244,12 +169,15 @@ export function computeBudgetSummary(input: BudgetEngineInput): BudgetSummary {
   };
 }
 
-function createEmptyBudgetSummary(): BudgetSummary {
+export function createEmptyBudgetSummary(): BudgetSummary {
   return {
     income: { total: 0, averageDaily: 0 },
     expenses: { total: 0, byCategory: [] },
     cashFlow: { netIncome: 0, dailySpendingAllowance: 0, safeToSpendToday: 0, projectedEndBalance: 0 },
-    budgetStatus: { categories: [], overBudget: [], underBudget: [], totalBudgeted: 0, totalSpent: 0, totalRemaining: 0 },
+    budgetStatus: {
+      categories: [], overBudget: [], underBudget: [],
+      totalBudgeted: 0, totalSpent: 0, totalRemaining: 0,
+    },
     accounts: { netWorth: 0, remainingCash: 0, totalAssets: 0, totalLiabilities: 0, accountCount: 0 },
     savingsCapacity: { recommendedAmount: 0, savingsRate: 0, surplus: 0 },
     alerts: [],

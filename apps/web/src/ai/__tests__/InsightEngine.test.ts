@@ -28,7 +28,7 @@ function createMockContext(overrides?: Partial<AiContext>): AiContext {
     alerts: [],
     savings: {
       goals: [],
-      dashboard: { totalSaved: 0, activeGoals: 0, completedGoals: 0, largestGoal: null, averageMonthlySavings: 0, totalTarget: 0 },
+      dashboard: { totalSaved: 0, activeGoals: 0, completedGoals: 0, largestGoal: null, totalTarget: 0 },
     },
     mortgage: { dashboard: null, details: null },
     safeToSpend: { safeToSpendToday: 50, riskLevel: 'low', explanation: 'On track' },

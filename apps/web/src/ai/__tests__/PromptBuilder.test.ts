@@ -26,7 +26,7 @@ function createMockContext(overrides?: Partial<AiContext>): AiContext {
     alerts: [],
     savings: {
       goals: [{ id: '1', name: 'Vacation', target: 5000, current: 2000, progress: { percentComplete: 40, monthsRemaining: 6, onTrack: true, estimatedCompletionDate: '2026-01-01', remainingAmount: 3000, status: 'on_track', daysRemaining: 180 } }],
-      dashboard: { totalSaved: 2000, activeGoals: 1, completedGoals: 0, largestGoal: { name: 'Vacation', target: 5000 }, averageMonthlySavings: 300, totalTarget: 5000 },
+      dashboard: { totalSaved: 2000, activeGoals: 1, completedGoals: 0, largestGoal: { name: 'Vacation', target: 5000, current: 2000 }, totalTarget: 5000 },
     },
     mortgage: { dashboard: null, details: null },
     safeToSpend: { safeToSpendToday: 50, riskLevel: 'low', explanation: 'You are on track' },

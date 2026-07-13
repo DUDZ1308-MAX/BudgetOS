@@ -152,15 +152,11 @@ describe('RecurringEngine', () => {
     });
 
     it('respects endDate', () => {
-      const results = getUpcoming({
-        ...baseInput,
-        frequency: 'monthly',
-        dayOfMonth: 15,
-        startDate: '2026-01-15',
-        endDate: '2026-02-28',
-        lastRun: null,
-      }, 12);
+      const input = { ...baseInput, frequency: 'monthly' as const, dayOfMonth: 15, startDate: '2026-01-15', endDate: '2026-02-28', lastRun: null };
+      const results = getUpcoming(input, 12);
       expect(results).toHaveLength(2);
+      expect(results[0]).toBe('2026-01-15');
+      expect(results[1]).toBe('2026-02-15');
     });
 
     it('returns empty array if startDate is after endDate', () => {

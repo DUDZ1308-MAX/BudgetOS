@@ -37,7 +37,7 @@ function createMockContext(overrides?: Partial<AiContext>): AiContext {
     alerts: [],
     savings: {
       goals: [{ id: '1', name: 'Emergency Fund', target: 10000, current: 3000, progress: { percentComplete: 30, monthsRemaining: 24, onTrack: true, estimatedCompletionDate: '2027-01-01', remainingAmount: 7000, status: 'on_track', daysRemaining: 730 } }],
-      dashboard: { totalSaved: 3000, activeGoals: 1, completedGoals: 0, largestGoal: { name: 'Emergency Fund', target: 10000 }, averageMonthlySavings: 200, totalTarget: 10000 },
+      dashboard: { totalSaved: 3000, activeGoals: 1, completedGoals: 0, largestGoal: { name: 'Emergency Fund', target: 10000, current: 3000 }, totalTarget: 10000 },
     },
     mortgage: { dashboard: null, details: null },
     safeToSpend: { safeToSpendToday: 30, riskLevel: 'low', explanation: 'On track' },
@@ -82,11 +82,10 @@ describe('RecommendationEngine', () => {
           interestPaid: 50000,
           principalPaid: 50000,
           progressPct: 16.7,
-          totalCost: 480000,
         },
         details: {
           monthlyPayment: 1500,
-          schedule: [{ month: 1, date: '2025-02-01', payment: 1500, principal: 400, interest: 1100, totalInterestToDate: 1100, remainingBalance: 299600, extraPayment: 0 }],
+          schedule: [{ month: 1, date: '2025-02-01', payment: 1500, principal: 400, interest: 1100, remainingBalance: 299600 }],
           totalPayments: 360,
           totalPrincipal: 300000,
           totalInterest: 180000,
@@ -141,7 +140,7 @@ describe('RecommendationEngine', () => {
       },
       savings: {
         goals: [],
-        dashboard: { totalSaved: 0, activeGoals: 0, completedGoals: 0, largestGoal: null, averageMonthlySavings: 0, totalTarget: 0 },
+        dashboard: { totalSaved: 0, activeGoals: 0, completedGoals: 0, largestGoal: null, totalTarget: 0 },
       },
       mortgage: { dashboard: null, details: null },
       safeToSpend: null,
