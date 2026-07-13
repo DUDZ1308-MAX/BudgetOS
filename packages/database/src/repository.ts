@@ -13,6 +13,9 @@ import type {
   TransactionInsert,
   TransactionUpdate,
   TransactionFilters,
+  RecurringTransaction,
+  RecurringTransactionInsert,
+  RecurringTransactionUpdate,
 } from './types';
 
 const DEFAULT_INCOME_NAMES = [
@@ -257,5 +260,73 @@ export function updateBudget(client: SupabaseClient, budgetId: string, data: Bud
 export function deleteBudget(client: SupabaseClient, budgetId: string) {
   return as<Budget>(
     client.from('budgets').delete().eq('id', budgetId).select('*').single(),
+  );
+}
+
+// ============================================================
+// Recurring Transactions
+// ============================================================
+
+export function getRecurringTransactions(client: SupabaseClient, userId: string) {
+  return asList<RecurringTransaction>(
+    client
+      .from('recurring_transactions')
+      .select('*')
+      .eq('user_id', userId)
+      .order('next_run', { ascending: true }),
+  );
+}
+
+export function getRecurringTransaction(client: SupabaseClient, id: string) {
+  return as<RecurringTransaction>(
+    client.from('recurring_transactions').select('*').eq('id', id).single(),
+  );
+}
+
+export function createRecurringTransaction(
+  client: SupabaseClient,
+  userId: string,
+  data: RecurringTransactionInsert,
+) {
+  return as<RecurringTransaction>(
+    client
+      .from('recurring_transactions')
+      .insert({ user_id: userId, ...data })
+      .select('*')
+      .single(),
+  );
+}
+
+export function updateRecurringTransaction(
+  client: SupabaseClient,
+  id: string,
+  data: RecurringTransactionUpdate,
+) {
+  return as<RecurringTransaction>(
+    client
+      .from('recurring_transactions')
+      .update({ ...data, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select('*')
+      .single(),
+  );
+}
+
+export function deleteRecurringTransaction(client: SupabaseClient, id: string) {
+  return as<RecurringTransaction>(
+    client.from('recurring_transactions').delete().eq('id', id).select('*').single(),
+  );
+}
+
+export function getDueRecurringTransactions(client: SupabaseClient, userId: string, asOfDate: string) {
+  return asList<RecurringTransaction>(
+    client
+      .from('recurring_transactions')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .eq('auto_post', true)
+      .lte('next_run', asOfDate)
+      .order('next_run', { ascending: true }),
   );
 }

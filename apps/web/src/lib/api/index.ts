@@ -4,3 +4,4 @@ export { budgetsApi } from './budgets';
 export { categoriesApi } from './categories';
 export { savingsApi } from './savings';
 export { mortgageApi } from './mortgage';
+export { recurringApi } from './recurring';

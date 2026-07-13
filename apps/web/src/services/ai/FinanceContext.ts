@@ -5,6 +5,7 @@ import { CategoryRepository } from '@/lib/repositories/CategoryRepository';
 import { BudgetRepository } from '@/lib/repositories/BudgetRepository';
 import { SavingsRepository } from '@/lib/repositories/SavingsRepository';
 import { MortgageRepository } from '@/lib/repositories/MortgageRepository';
+import { recurringApi } from '@/lib/api/recurring';
 import { computeBudgetSummary } from '@/engine/BudgetEngine';
 import { computeCashFlowSummary } from '@/engine/CashFlowEngine';
 import { computeInsights } from '@/engine/insights/InsightEngine';
@@ -21,13 +22,14 @@ export async function buildAiContext(userId: string): Promise<AiContext> {
   const month = startDate.getMonth() + 1;
   const today = new Date();
 
-  const [accounts, transactions, categories, budgets, savingsGoals, mortgages] = await Promise.all([
+  const [accounts, transactions, categories, budgets, savingsGoals, mortgages, recurrings] = await Promise.all([
     AccountRepository.getAll(userId),
     TransactionRepository.getAll(userId, { limit: 200 }),
     CategoryRepository.getAll(userId),
     BudgetRepository.getAll(userId, year, month),
     SavingsRepository.getAll(userId),
     MortgageRepository.getAll(userId),
+    recurringApi.list(userId).catch(() => []),
   ]);
 
   const engineTransactions: EngineTransaction[] = (transactions ?? []).map((t) => ({
@@ -124,6 +126,17 @@ export async function buildAiContext(userId: string): Promise<AiContext> {
 
   const savingsDashboard = computeSavingsDashboard(savingsGoals ?? []);
 
+  const recurringSummary = (recurrings ?? []).map((r) => ({
+    id: r.id,
+    name: r.name,
+    type: r.type,
+    amount: Number(r.amount),
+    frequency: r.frequency,
+    nextRun: r.next_run,
+    status: r.status,
+    autoPost: r.auto_post,
+  }));
+
   return {
     budgetSummary,
     cashFlowSummary,
@@ -143,5 +156,6 @@ export async function buildAiContext(userId: string): Promise<AiContext> {
     netWorth: budgetSummary.accounts.netWorth,
     monthlyIncome: budgetSummary.income.total,
     monthlyExpenses: budgetSummary.expenses.total,
+    recurringTransactions: recurringSummary,
   };
 }

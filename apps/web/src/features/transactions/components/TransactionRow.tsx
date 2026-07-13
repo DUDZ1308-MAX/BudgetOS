@@ -17,6 +17,7 @@ export const TransactionRow = memo(function TransactionRow({
   categoryIcon,
   onArchive,
 }: TransactionRowProps) {
+  const isRecurring = !!transaction.recurring_id;
   const isIncome = transaction.amount >= 0;
 
   return (
@@ -42,6 +43,7 @@ export const TransactionRow = memo(function TransactionRow({
           </p>
           <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
             <span>{categoryName ?? 'Uncategorized'}</span>
+            {isRecurring && <span className="rounded-full bg-indigo-100 px-1.5 py-0.5 text-xs font-medium text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400">Recurring</span>}
             <span className="hidden sm:inline">&middot;</span>
             <span className="hidden sm:inline">{accountName ?? 'Unknown account'}</span>
             <span>&middot;</span>

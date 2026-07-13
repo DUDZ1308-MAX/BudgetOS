@@ -65,6 +65,7 @@ export interface Transaction {
   merchant: string | null;
   note: string | null;
   is_archived: boolean;
+  recurring_id: string | null;
   created_at: string;
 }
 
@@ -75,6 +76,7 @@ export interface TransactionInsert {
   date: string;
   merchant?: string | null;
   note?: string | null;
+  recurring_id?: string | null;
 }
 
 export interface TransactionUpdate {
@@ -85,6 +87,7 @@ export interface TransactionUpdate {
   merchant?: string | null;
   note?: string | null;
   is_archived?: boolean;
+  recurring_id?: string | null;
 }
 
 export interface TransactionFilters {
@@ -157,4 +160,70 @@ export interface CoachMessage {
   is_read: boolean;
   is_dismissed: boolean;
   created_at: string;
+}
+
+export interface RecurringTransaction {
+  id: string;
+  user_id: string;
+  account_id: string | null;
+  category_id: string | null;
+  type: 'income' | 'expense' | 'transfer';
+  name: string;
+  description: string | null;
+  amount: number;
+  frequency: 'one_time' | 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
+  interval_count: number;
+  day_of_week: number | null;
+  day_of_month: number | null;
+  month_of_year: number | null;
+  start_date: string;
+  end_date: string | null;
+  next_run: string;
+  last_run: string | null;
+  auto_post: boolean;
+  reminder_type: 'today' | 'day_before' | 'three_days_before' | 'week_before' | null;
+  status: 'active' | 'paused' | 'completed' | 'cancelled';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RecurringTransactionInsert {
+  account_id?: string | null;
+  category_id?: string | null;
+  type: 'income' | 'expense' | 'transfer';
+  name: string;
+  description?: string | null;
+  amount: number;
+  frequency: 'one_time' | 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
+  interval_count?: number;
+  day_of_week?: number | null;
+  day_of_month?: number | null;
+  month_of_year?: number | null;
+  start_date: string;
+  end_date?: string | null;
+  next_run?: string;
+  auto_post?: boolean;
+  reminder_type?: 'today' | 'day_before' | 'three_days_before' | 'week_before' | null;
+  status?: 'active' | 'paused' | 'completed' | 'cancelled';
+}
+
+export interface RecurringTransactionUpdate {
+  account_id?: string | null;
+  category_id?: string | null;
+  type?: 'income' | 'expense' | 'transfer';
+  name?: string;
+  description?: string | null;
+  amount?: number;
+  frequency?: 'one_time' | 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
+  interval_count?: number;
+  day_of_week?: number | null;
+  day_of_month?: number | null;
+  month_of_year?: number | null;
+  start_date?: string;
+  end_date?: string | null;
+  next_run?: string;
+  last_run?: string | null;
+  auto_post?: boolean;
+  reminder_type?: 'today' | 'day_before' | 'three_days_before' | 'week_before' | null;
+  status?: 'active' | 'paused' | 'completed' | 'cancelled';
 }

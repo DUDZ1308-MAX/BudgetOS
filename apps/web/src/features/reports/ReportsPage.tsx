@@ -6,6 +6,7 @@ import { transactionsApi } from '@/lib/api/transactions';
 import { budgetsApi } from '@/lib/api/budgets';
 import { savingsApi } from '@/lib/api/savings';
 import { mortgageApi } from '@/lib/api/mortgage';
+import { recurringApi } from '@/lib/api/recurring';
 import { formatCurrency } from '@/services/transactionService';
 import { computeBudgetSummary } from '@/engine/BudgetEngine';
 import { computeCashFlowSummary } from '@/engine/CashFlowEngine';
@@ -15,7 +16,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6', '#ec4899'];
 
-type ReportTab = 'monthly' | 'budget' | 'savings' | 'mortgage' | 'health';
+type ReportTab = 'monthly' | 'budget' | 'savings' | 'mortgage' | 'health' | 'recurring';
 
 function dateRangeFromTab(tab: string): { start: string; end: string } {
   const now = new Date();
@@ -57,6 +58,7 @@ export function ReportsPage() {
   const { data: budgets = [] } = useQuery({ queryKey: ['budgets', user?.id], queryFn: () => budgetsApi.list(user!.id), enabled: !!user });
   const { data: savingsGoals = [] } = useQuery({ queryKey: ['savings-goals', user?.id], queryFn: () => savingsApi.list(user!.id), enabled: !!user });
   const { data: mortgages = [] } = useQuery({ queryKey: ['mortgages', user?.id], queryFn: () => mortgageApi.list(user!.id), enabled: !!user });
+  const { data: recurrings = [] } = useQuery({ queryKey: ['recurring-transactions', user?.id], queryFn: () => recurringApi.list(user!.id), enabled: !!user });
 
   const monthTxns = useMemo(() => allTxns.filter((t) => t.date >= range.start && t.date <= range.end), [allTxns, range]);
   const allCategories = [...new Set(allTxns.filter((t) => t.category_id).map((t) => t.category_id!))];
@@ -159,7 +161,33 @@ export function ReportsPage() {
     { key: 'savings', label: 'Savings' },
     { key: 'mortgage', label: 'Mortgage' },
     { key: 'health', label: 'Financial Health' },
+    { key: 'recurring', label: 'Recurring vs Manual' },
   ];
+
+  const recurringExpenses = useMemo(() => {
+    const recurringTxnIds = new Set(recurrings.map((r) => r.id));
+    const withRecurring = allTxns.filter((t) => t.recurring_id);
+    const withoutRecurring = allTxns.filter((t) => !t.recurring_id && t.amount < 0);
+    return {
+      recurringTotal: withRecurring.reduce((s, t) => s + Math.abs(Number(t.amount)), 0),
+      manualTotal: withoutRecurring.reduce((s, t) => s + Math.abs(Number(t.amount)), 0),
+      recurringCount: withRecurring.length,
+      manualCount: withoutRecurring.length,
+    };
+  }, [allTxns, recurrings]);
+
+  const upcomingObligations = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    return recurrings
+      .filter((r) => r.type === 'expense' && r.status === 'active')
+      .map((r) => ({
+        name: r.name,
+        amount: Math.abs(Number(r.amount)),
+        nextRun: r.next_run,
+        frequency: r.frequency,
+      }))
+      .sort((a, b) => a.nextRun.localeCompare(b.nextRun));
+  }, [recurrings]);
 
   function exportCSV(data: Record<string, any>[], filename: string) {
     if (!data.length) return;
@@ -413,6 +441,53 @@ export function ReportsPage() {
               </div>
             </>
           )}
+        </div>
+      )}
+
+      {tab === 'recurring' && (
+        <div className="space-y-6">
+          {/* Recurring vs Manual */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Recurring Spending</p>
+              <p className="mt-1.5 text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(recurringExpenses.recurringTotal)}</p>
+              <p className="text-xs text-slate-400">{recurringExpenses.recurringCount} transactions</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Manual Spending</p>
+              <p className="mt-1.5 text-2xl font-bold text-amber-600 dark:text-amber-400">{formatCurrency(recurringExpenses.manualTotal)}</p>
+              <p className="text-xs text-slate-400">{recurringExpenses.manualCount} transactions</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Obligations</p>
+              <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">{upcomingObligations.length}</p>
+              <p className="text-xs text-slate-400">active recurring</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Monthly Recurring Total</p>
+              <p className="mt-1.5 text-2xl font-bold text-indigo-600 dark:text-indigo-400">{formatCurrency(upcomingObligations.reduce((s, o) => s + o.amount, 0))}</p>
+            </div>
+          </div>
+
+          {/* Upcoming Obligations */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <h3 className="mb-4 text-sm font-semibold text-slate-900 dark:text-white">Upcoming Monthly Obligations</h3>
+            {upcomingObligations.length === 0 ? (
+              <p className="py-6 text-center text-sm text-slate-400">No recurring expenses set up.</p>
+            ) : (
+              <div className="space-y-2">
+                {upcomingObligations.map((ob) => (
+                  <div key={ob.name} className="flex items-center justify-between py-1.5">
+                    <div>
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">{ob.name}</p>
+                      <p className="text-xs text-slate-400">{ob.frequency} &middot; {new Date(ob.nextRun).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                    </div>
+                    <span className="text-sm font-semibold text-red-600 dark:text-red-400">{formatCurrency(ob.amount)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 

@@ -17,3 +17,11 @@ export type CoachCategory = 'budget' | 'spending' | 'savings' | 'mortgage' | 'he
 export type FHSTier = 'excellent' | 'good' | 'fair' | 'concerning' | 'critical';
 
 export type FHSComponentName = 'savingsRate' | 'debtToIncome' | 'emergencyFund' | 'budgetAdherence' | 'netWorthTrend';
+
+export type RecurringType = 'income' | 'expense' | 'transfer';
+
+export type RecurringFrequency = 'one_time' | 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
+
+export type RecurringStatus = 'active' | 'paused' | 'completed' | 'cancelled';
+
+export type ReminderType = 'today' | 'day_before' | 'three_days_before' | 'week_before';

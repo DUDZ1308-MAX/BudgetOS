@@ -79,3 +79,46 @@ export const transactionFiltersSchema = z.object({
   categoryId: z.string().uuid().optional(),
   is_archived: z.boolean().optional(),
 });
+
+const recurringTypeEnum = z.enum(['income', 'expense', 'transfer']);
+const recurringFrequencyEnum = z.enum(['one_time', 'daily', 'weekly', 'biweekly', 'monthly', 'quarterly', 'semi_annual', 'yearly']);
+const recurringStatusEnum = z.enum(['active', 'paused', 'completed', 'cancelled']);
+const reminderTypeEnum = z.enum(['today', 'day_before', 'three_days_before', 'week_before']).nullable().optional();
+
+export const recurringTransactionInsertSchema = z.object({
+  account_id: z.string().uuid().nullable().optional(),
+  category_id: z.string().uuid().nullable().optional(),
+  type: recurringTypeEnum,
+  name: z.string().min(1).max(255),
+  description: z.string().max(2000).nullable().optional(),
+  amount: z.number().finite(),
+  frequency: recurringFrequencyEnum,
+  interval_count: z.number().int().min(1).default(1),
+  day_of_week: z.number().int().min(0).max(6).nullable().optional(),
+  day_of_month: z.number().int().min(1).max(31).nullable().optional(),
+  month_of_year: z.number().int().min(1).max(12).nullable().optional(),
+  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD'),
+  end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD').nullable().optional(),
+  auto_post: z.boolean().default(true),
+  reminder_type: reminderTypeEnum,
+  status: recurringStatusEnum.default('active'),
+});
+
+export const recurringTransactionUpdateSchema = z.object({
+  account_id: z.string().uuid().nullable().optional(),
+  category_id: z.string().uuid().nullable().optional(),
+  type: recurringTypeEnum.optional(),
+  name: z.string().min(1).max(255).optional(),
+  description: z.string().max(2000).nullable().optional(),
+  amount: z.number().finite().optional(),
+  frequency: recurringFrequencyEnum.optional(),
+  interval_count: z.number().int().min(1).optional(),
+  day_of_week: z.number().int().min(0).max(6).nullable().optional(),
+  day_of_month: z.number().int().min(1).max(31).nullable().optional(),
+  month_of_year: z.number().int().min(1).max(12).nullable().optional(),
+  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+  auto_post: z.boolean().optional(),
+  reminder_type: reminderTypeEnum,
+  status: recurringStatusEnum.optional(),
+});

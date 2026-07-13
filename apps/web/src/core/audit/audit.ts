@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 export type AuditAction = 'create' | 'update' | 'delete' | 'archive' | 'restore';
-export type AuditEntity = 'transaction' | 'account' | 'budget' | 'category' | 'savings_goal' | 'contribution' | 'mortgage' | 'extra_payment';
+export type AuditEntity = 'transaction' | 'account' | 'budget' | 'category' | 'savings_goal' | 'contribution' | 'mortgage' | 'extra_payment' | 'recurring_transaction';
 
 export interface AuditEntry {
   id: string;

@@ -18,6 +18,8 @@ You can answer questions about:
 - Cash flow and net worth
 - Safe-to-spend amounts
 - Financial recommendations and forecasts
+- Recurring bills, subscriptions, and recurring income
+- Upcoming payment due dates
 
 Financial context for this conversation:`;
 
@@ -86,6 +88,27 @@ export function buildSystemPrompt(context: AiContext): string {
     }
   } else {
     parts.push('No active alerts.');
+  }
+
+  if (context.recurringTransactions && context.recurringTransactions.length > 0) {
+    parts.push('\n=== RECURRING TRANSACTIONS ===');
+    const activeRecurring = context.recurringTransactions.filter((r) => r.status === 'active');
+    parts.push(`You have ${activeRecurring.length} active recurring transactions.`);
+    const bills = activeRecurring.filter((r) => r.type === 'expense');
+    const income = activeRecurring.filter((r) => r.type === 'income');
+    if (bills.length > 0) {
+      parts.push('Upcoming Bills:');
+      const sorted = [...bills].sort((a, b) => a.nextRun.localeCompare(b.nextRun));
+      for (const b of sorted) {
+        parts.push(`- ${b.name}: $${Math.abs(b.amount).toFixed(2)} due ${new Date(b.nextRun).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} (${b.frequency})`);
+      }
+    }
+    if (income.length > 0) {
+      parts.push('Upcoming Income:');
+      for (const i of income) {
+        parts.push(`- ${i.name}: $${Math.abs(i.amount).toFixed(2)} on ${new Date(i.nextRun).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} (${i.frequency})`);
+      }
+    }
   }
 
   parts.push('\n=== CURRENT INSIGHTS ===');

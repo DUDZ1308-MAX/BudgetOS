@@ -8,6 +8,7 @@ import { BudgetChart } from './components/BudgetChart';
 import { CashFlowChart } from './components/CashFlowChart';
 import { CategoryChart } from './components/CategoryChart';
 import { InsightsPanel } from './components/InsightsPanel';
+import { UpcomingBillsWidget, UpcomingIncomeWidget } from './components/UpcomingBillsWidget';
 
 export function DashboardPage() {
   const user = useAuthStore((s) => s.user);
@@ -63,6 +64,12 @@ export function DashboardPage() {
         <BudgetChart budgets={d.budgetUtilization} isLoading={isLoading} />
         <CashFlowChart />
         <InsightsPanel />
+      </div>
+
+      {/* Fourth Row: Recurring widgets */}
+      <div className="grid gap-6 lg:grid-cols-2" aria-label="Upcoming recurring transactions">
+        <UpcomingBillsWidget />
+        <UpcomingIncomeWidget />
       </div>
 
       {/* Third Row: Top Categories + Accounts + Recent Transactions */}

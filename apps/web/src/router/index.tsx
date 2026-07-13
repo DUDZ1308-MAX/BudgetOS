@@ -14,6 +14,7 @@ const UpdatePasswordPage = lazy(() => import('@/pages/auth/UpdatePasswordPage').
 const DashboardPage = lazy(() => import('@/pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
 const TransactionsPage = lazy(() => import('@/features/transactions/TransactionsPage').then(m => ({ default: m.TransactionsPage })));
 const AddTransactionPage = lazy(() => import('@/features/transactions/AddTransactionPage').then(m => ({ default: m.AddTransactionPage })));
+const RecurringPage = lazy(() => import('@/features/recurring/RecurringPage').then(m => ({ default: m.RecurringPage })));
 const BudgetsPage = lazy(() => import('@/pages/BudgetsPage').then(m => ({ default: m.BudgetsPage })));
 const AccountsPage = lazy(() => import('@/pages/AccountsPage').then(m => ({ default: m.AccountsPage })));
 const AccountPage = lazy(() => import('@/pages/AccountPage').then(m => ({ default: m.AccountPage })));
@@ -84,6 +85,7 @@ export const router = createBrowserRouter([
       { path: '/dashboard', element: <Lazy name="dashboard"><DashboardPage /></Lazy> },
       { path: '/transactions', element: <Lazy name="transactions"><TransactionsPage /></Lazy> },
       { path: '/transactions/add', element: <Lazy name="add transaction"><AddTransactionPage /></Lazy> },
+      { path: '/recurring', element: <Lazy name="recurring"><RecurringPage /></Lazy> },
       { path: '/budgets', element: <Lazy name="budgets"><BudgetsPage /></Lazy> },
       { path: '/accounts', element: <Lazy name="accounts"><AccountsPage /></Lazy> },
       { path: '/account', element: <Lazy name="account"><AccountPage /></Lazy> },

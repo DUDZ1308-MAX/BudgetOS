@@ -58,6 +58,16 @@ export interface AiContext {
   netWorth: number;
   monthlyIncome: number;
   monthlyExpenses: number;
+  recurringTransactions?: {
+    id: string;
+    name: string;
+    type: string;
+    amount: number;
+    frequency: string;
+    nextRun: string;
+    status: string;
+    autoPost: boolean;
+  }[];
 }
 
 export interface ChatSession {
