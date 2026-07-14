@@ -45,7 +45,7 @@ describe('computeScore', () => {
   it('returns lower score for poor finances', () => {
     const result = computeScore(POOR_INPUT);
     expect(result.overallScore).toBeLessThan(60);
-    expect(result.components.savingsRate.earnedPoints).toBeLessThan(result.components.savingsRate.maxPoints);
+    expect(result.components.savingsRate!.earnedPoints).toBeLessThan(result.components.savingsRate!.maxPoints);
   });
 
   it('returns all 5 components', () => {

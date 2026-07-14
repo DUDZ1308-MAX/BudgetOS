@@ -1,13 +1,12 @@
 import {
   computeMonthlyPayment,
   computeInterestPortion,
-  computePrincipalPortion,
 } from '../shared/math';
 import { addMonths } from '../shared/date';
 import { validateMortgageInput } from '../shared/errors';
 import { toMonthlyEquivalent } from '../shared/frequency';
 import type { MortgageInput, AmortizationRow } from './types';
-import type { EngineResult, EngineError } from '../shared/errors';
+import type { EngineResult } from '../shared/errors';
 import { success, failure } from '../shared/errors';
 
 export interface MortgageCalcResult {
@@ -30,18 +29,13 @@ export function calculateFullAmortization(input: MortgageInput): EngineResult<Mo
   const monthlyRate = input.annualRate / 100 / 12;
   const totalMonths = input.termYears * 12;
   const basePayment = computeMonthlyPayment(input.principal, monthlyRate, totalMonths);
-  const totalExtraMonthly = computeTotalExtraMonthly(input.extraPayments);
-  const totalPayment = basePayment + totalExtraMonthly;
-
   const schedule: AmortizationRow[] = [];
   let balance = input.principal;
   let cumulativeInterest = 0;
-  let payoffMonth = totalMonths;
   let payoffDate = '';
 
   for (let month = 1; month <= totalMonths; month++) {
     if (balance <= 0) {
-      payoffMonth = month - 1;
       break;
     }
 
@@ -109,16 +103,6 @@ function normalizeExtraAmount(amount: number, type: MortgageInput['extraPayments
     return toMonthlyEquivalent(amount, 'biweekly');
   }
   return amount;
-}
-
-function computeTotalExtraMonthly(extraPayments: MortgageInput['extraPayments']): number {
-  let total = 0;
-  for (const ep of extraPayments) {
-    if (ep.type === 'monthly_fixed' || ep.type === 'biweekly') {
-      total += normalizeExtraAmount(ep.amount, ep.type);
-    }
-  }
-  return total;
 }
 
 function getExtraForMonth(extraPayments: MortgageInput['extraPayments'], month: number): number {

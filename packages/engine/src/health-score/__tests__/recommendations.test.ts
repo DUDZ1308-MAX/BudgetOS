@@ -4,9 +4,9 @@ import type { FHSResult } from '../types';
 
 function makeResult(overrides?: Partial<FHSResult>): FHSResult {
   return {
-    score: 0,
-    category: 'poor',
-    componentScores: [],
+    overallScore: 0,
+    tier: 'critical',
+    components: {},
     recommendations: [],
     ...overrides,
   };

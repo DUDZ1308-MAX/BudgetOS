@@ -23,4 +23,4 @@ export interface ScenarioComparison {
   bestInterestSaved: number;
 }
 
-export { AmortizationRow, ScenarioResult, ExtraPayment };
+export type { AmortizationRow, ScenarioResult, ExtraPayment };

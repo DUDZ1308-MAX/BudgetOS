@@ -13,4 +13,4 @@ export interface BudgetInput {
   totalIncome: number;
 }
 
-export { CategoryBudget, TransactionSummary, Rollover, CategoryBudgetResult, OverallBudgetSummary };
+export type { CategoryBudget, TransactionSummary, Rollover, CategoryBudgetResult, OverallBudgetSummary };

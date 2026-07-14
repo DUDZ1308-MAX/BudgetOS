@@ -13,7 +13,7 @@ import type {
   CoachCategory,
 } from '@budgetos/shared';
 
-export {
+export type {
   CoachContext,
   CoachEventType,
   CoachMessageOutput,

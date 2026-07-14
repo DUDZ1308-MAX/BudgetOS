@@ -6,4 +6,4 @@ import type {
   AllocationResult,
 } from '@budgetos/shared';
 
-export { AllocationRequest, AllocationCurrentState, PriorityOverride, AllocationStep, AllocationResult };
+export type { AllocationRequest, AllocationCurrentState, PriorityOverride, AllocationStep, AllocationResult };

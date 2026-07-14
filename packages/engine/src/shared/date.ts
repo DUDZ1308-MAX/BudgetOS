@@ -39,7 +39,7 @@ export function currentMonthKey(): string {
 
 /** Compute number of amortization periods between two dates */
 export function amortizationPeriodCount(
-  startDate: string,
+  _startDate: string,
   termYears: number,
 ): number {
   return termYears * 12;

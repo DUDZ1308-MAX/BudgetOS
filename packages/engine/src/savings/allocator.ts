@@ -16,7 +16,7 @@ const DEFAULT_PRIORITIES: PriorityRule[] = [
     name: 'High-Interest Debt',
     isComplete: (s) => s.highInterestDebtBalance <= 0,
     needed: (s) => s.highInterestDebtBalance,
-    progress: (s) => 0,
+    progress: () => 0,
     target: (s) => s.highInterestDebtBalance,
   },
   {
