@@ -18,7 +18,7 @@ export function PrivacyPage() {
         <p>We collect anonymous usage data including page views, feature interactions, and error reports to improve the application. No personally identifiable financial information is included in usage data.</p>
 
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">2. How We Use Your Data</h2>
-        <p>Your financial data is used solely to provide the BudgetOS service: generating reports, powering AI insights, calculating financial health scores, and enabling data export. We never sell your data to third parties.</p>
+        <p>Your financial data is used solely to provide the MyBudgetOS service: generating reports, powering AI insights, calculating financial health scores, and enabling data export. We never sell your data to third parties.</p>
         <p>AI Copilot queries are processed through OpenAI's API. Queries are anonymized and do not include personally identifiable information beyond what you type. OpenAI does not use your financial data for model training.</p>
 
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">3. Data Storage & Security</h2>
@@ -26,13 +26,13 @@ export function PrivacyPage() {
         <p>You can export or delete your data at any time from the Data Management page. Local backups stored in your browser can be cleared manually.</p>
 
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">4. Third-Party Services</h2>
-        <p>BudgetOS uses the following third-party services: Supabase (database and authentication), OpenAI (AI Copilot), Stripe (payment processing), and Vercel (hosting). Each provider processes data in accordance with their own privacy policies and applicable data protection laws.</p>
+        <p>MyBudgetOS uses the following third-party services: Supabase (database and authentication), OpenAI (AI Copilot), Stripe (payment processing), and Vercel (hosting). Each provider processes data in accordance with their own privacy policies and applicable data protection laws.</p>
 
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">5. Your Rights</h2>
         <p>You have the right to access, correct, export, or delete your data at any time. You can manage your data from Settings &gt; Data Management. For assistance, contact us at privacy@budgetos.app.</p>
 
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">6. Changes to This Policy</h2>
-        <p>We may update this policy from time to time. Material changes will be announced via in-app notification and email. Continued use of BudgetOS after changes constitutes acceptance of the updated policy.</p>
+        <p>We may update this policy from time to time. Material changes will be announced via in-app notification and email. Continued use of MyBudgetOS after changes constitutes acceptance of the updated policy.</p>
       </section>
 
       <div className="border-t border-slate-200 pt-6 dark:border-slate-800">

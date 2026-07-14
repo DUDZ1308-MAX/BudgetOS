@@ -11,8 +11,11 @@ import { transactionsApi } from '@/lib/api/transactions';
 import { categoriesApi } from '@/lib/api/categories';
 import { budgetsApi } from '@/lib/api/budgets';
 import { savingsApi } from '@/lib/api/savings';
+import { recurringApi } from '@/lib/api/recurring';
 import { useSubscriptionStore } from '@/stores/subscription';
 import { FeatureGate } from '@/billing/billingGuard';
+import { computeMonthlyRunRate } from '@budgetos/engine';
+import type { RecurringFrequency } from '@budgetos/shared';
 import type { IntelligenceInput, HealthFactor } from '@/intelligence/types';
 
 function getHealthColor(score: number): string {
@@ -57,13 +60,14 @@ export function FinancialHealthPage() {
         end: `${year}-${month}-${String(lastDay).padStart(2, '0')}`,
       };
 
-      const [accounts, categories, budgets, transactions, goals, mortgageData] = await Promise.all([
+      const [accounts, categories, budgets, transactions, goals, mortgageData, recurrings] = await Promise.all([
         accountsApi.list(user.id),
         categoriesApi.list(user.id),
         budgetsApi.list(user.id, year, month),
         transactionsApi.list(user.id, { dateFrom: range.start, dateTo: range.end }),
         savingsApi.list(user.id),
         Promise.resolve(null),
+        recurringApi.list(user.id).catch(() => []),
       ]);
 
       const budgetSummary = computeBudgetSummary({
@@ -73,6 +77,18 @@ export function FinancialHealthPage() {
         budgets: budgets.map((b: any) => ({ ...b, amount: Number(b.amount) })),
         dateRange: range,
       });
+
+      // Patch budget summary with frequency-normalized monthly run rate for health scoring
+      const activeRecurrings = (recurrings ?? []).filter((r: any) => r.status === 'active');
+      const runRate = computeMonthlyRunRate(
+        activeRecurrings.map((r: any) => ({
+          amount: Math.abs(Number(r.amount)),
+          frequency: r.frequency as RecurringFrequency,
+          type: r.type as 'income' | 'expense',
+        })),
+      );
+      budgetSummary.income.total = Math.max(budgetSummary.income.total, runRate.income);
+      budgetSummary.expenses.total = Math.max(budgetSummary.expenses.total, runRate.expenses);
 
       const cashFlowSummary = computeCashFlowSummary({
         transactions: transactions.map((t: any) => ({ ...t, amount: Number(t.amount) })),

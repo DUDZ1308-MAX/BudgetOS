@@ -29,5 +29,5 @@ export const DEFAULT_TEMPLATES: CoachTemplate[] = [
   createTemplate('win', 'savings', 'Goal Progress', "Savings goal '{name}' is {percent}% complete. You're {status} schedule by {delta}.", 4),
   createTemplate('insight', 'health', 'Spending Insight', "Your biggest expense category this month was {category} ({percent}% of total).", 2),
   createTemplate('insight', 'health', 'Income Insight', "Your income was {direction} than average by {amount}.", 2),
-  createTemplate('insight', 'health', 'Health Score Trend', "You've been a BudgetOS user for {days} days. Your Financial Health Score has {trend} by {delta} points.", 2),
+  createTemplate('insight', 'health', 'Health Score Trend', "You've been a MyBudgetOS user for {days} days. Your Financial Health Score has {trend} by {delta} points.", 2),
 ];

@@ -25,3 +25,28 @@ export function toMonthlyEquivalent(amount: number, frequency: RecurringFrequenc
   const result = amount * multiplier;
   return Object.is(result, -0) ? 0 : result;
 }
+
+export interface RecurringRunRateItem {
+  amount: number;
+  frequency: RecurringFrequency;
+  type: 'income' | 'expense';
+}
+
+export interface MonthlyRunRate {
+  income: number;
+  expenses: number;
+}
+
+export function computeMonthlyRunRate(items: RecurringRunRateItem[]): MonthlyRunRate {
+  let income = 0;
+  let expenses = 0;
+  for (const item of items) {
+    const monthly = toMonthlyEquivalent(item.amount, item.frequency);
+    if (item.type === 'income') {
+      income += monthly;
+    } else {
+      expenses += monthly;
+    }
+  }
+  return { income, expenses };
+}

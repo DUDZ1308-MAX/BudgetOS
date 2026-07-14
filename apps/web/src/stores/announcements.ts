@@ -34,8 +34,8 @@ const defaultAnnouncements: Announcement[] = [
   {
     id: 'ann-1',
     type: 'release',
-    title: 'Welcome to BudgetOS Public Beta',
-    body: 'We\'re excited to launch our public beta! Explore the AI Financial Copilot, set savings goals, track budgets, and more. Your feedback helps shape the future of BudgetOS.',
+    title: 'Welcome to MyBudgetOS Public Beta',
+    body: 'We\'re excited to launch our public beta! Explore the AI Financial Copilot, set savings goals, track budgets, and more. Your feedback helps shape the future of MyBudgetOS.',
     createdAt: '2026-07-09T00:00:00Z',
     link: { label: 'View Release Notes', href: '/release-notes' },
   },

@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npx turbo run build --filter=@budgetos/web --filter=@budgetos/database",
+  "buildCommand": "npm run build",
   "outputDirectory": "apps/web/dist",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }

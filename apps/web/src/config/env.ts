@@ -22,7 +22,7 @@ export const env = {
     webhookEndpoint: import.meta.env.VITE_STRIPE_WEBHOOK_ENDPOINT ?? '/api/stripe/webhook',
   },
   app: {
-    name: 'BudgetOS',
+    name: 'MyBudgetOS',
     version: '1.0.0',
     url: import.meta.env.VITE_APP_URL ?? 'http://localhost:5173',
   },

@@ -31,7 +31,7 @@ export function WaitlistPage() {
           <IconSparkles className="h-3.5 w-3.5" />
           Public Beta
         </div>
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Join the BudgetOS Waitlist</h1>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Join the MyBudgetOS Waitlist</h1>
         <p className="mt-2 text-slate-500 dark:text-slate-400">Be first to experience the future of personal finance.</p>
       </div>
 

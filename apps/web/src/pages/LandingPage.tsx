@@ -108,10 +108,10 @@ const PRICING = [
 
 const FAQS = [
   { q: 'Is my financial data secure?', a: 'Absolutely. All data is encrypted in transit (TLS 1.3) and at rest (AES-256). We use Supabase for authentication and storage. Your data is never shared or sold.' },
-  { q: 'Can I try BudgetOS for free?', a: 'Yes! The Free plan includes 50 transactions, 2 accounts, and 5 AI requests per month. No credit card required.' },
+  { q: 'Can I try MyBudgetOS for free?', a: 'Yes! The Free plan includes 50 transactions, 2 accounts, and 5 AI requests per month. No credit card required.' },
   { q: 'How does the AI Copilot work?', a: 'The AI analyzes your financial data to provide personalized insights and recommendations. It can answer questions about your spending, suggest budgets, and help you reach your savings goals.' },
   { q: 'Can I export my data?', a: 'Yes. Export your data as PDF, CSV, or Excel from the Reports page. You can also download a complete JSON backup at any time.' },
-  { q: 'Is there a mobile app?', a: 'BudgetOS is a progressive web app (PWA) that works on any device with a browser. You can install it to your home screen for a native-like experience.' },
+  { q: 'Is there a mobile app?', a: 'MyBudgetOS is a progressive web app (PWA) that works on any device with a browser. You can install it to your home screen for a native-like experience.' },
   { q: 'How does cloud sync work?', a: 'Your data syncs automatically via Supabase when you\'re online. Changes queue locally when offline and sync when connectivity returns.' },
 ];
 
@@ -174,7 +174,7 @@ export function LandingPage() {
         <div className="mx-auto max-w-6xl px-4">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-bold text-slate-900 dark:text-white md:text-4xl">Everything you need to manage your money</h2>
-            <p className="mt-4 text-lg text-slate-500 dark:text-slate-400">BudgetOS combines smart budgeting with AI-powered insights to give you complete financial clarity.</p>
+            <p className="mt-4 text-lg text-slate-500 dark:text-slate-400">MyBudgetOS combines smart budgeting with AI-powered insights to give you complete financial clarity.</p>
           </div>
           <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((feature) => (
@@ -261,7 +261,7 @@ export function LandingPage() {
             {[
               { step: '01', title: 'Create Your Account', description: 'Sign up for free. No credit card required.' },
               { step: '02', title: 'Add Your Accounts', description: 'Link your checking, savings, and credit cards. Or start simple with one account.' },
-              { step: '03', title: 'Let AI Do the Rest', description: 'BudgetOS automatically tracks your spending, creates budgets, and provides AI-powered insights.' },
+              { step: '03', title: 'Let AI Do the Rest', description: 'MyBudgetOS automatically tracks your spending, creates budgets, and provides AI-powered insights.' },
             ].map((item) => (
               <div key={item.step} className="text-center">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-100 text-2xl font-bold text-brand-600 dark:bg-brand-900/30 dark:text-brand-400">
@@ -352,7 +352,7 @@ export function LandingPage() {
             <div className="order-1 md:order-2">
               <h2 className="text-3xl font-bold text-slate-900 dark:text-white md:text-4xl">Your Data Stays Yours</h2>
               <p className="mt-4 text-lg text-slate-500 dark:text-slate-400">
-                Security is built into every layer of BudgetOS. Your financial data is encrypted, private, and never shared.
+                Security is built into every layer of MyBudgetOS. Your financial data is encrypted, private, and never shared.
                 We believe financial tools should be trustworthy by default.
               </p>
               <ul className="mt-8 space-y-3">
@@ -379,13 +379,13 @@ export function LandingPage() {
         <div className="mx-auto max-w-6xl px-4">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-bold text-slate-900 dark:text-white md:text-4xl">Loved by Early Users</h2>
-            <p className="mt-4 text-lg text-slate-500 dark:text-slate-400">Here's what beta testers are saying about BudgetOS.</p>
+            <p className="mt-4 text-lg text-slate-500 dark:text-slate-400">Here's what beta testers are saying about MyBudgetOS.</p>
           </div>
           <div className="mt-12 grid gap-6 md:grid-cols-3">
             {[
               { quote: 'The AI Copilot is a game-changer. I asked it to find ways to save $200/month and it actually delivered.', name: 'Sarah M.', role: 'Freelance Designer' },
               { quote: 'Finally, a budgeting app that doesn\'t feel like a chore. The visual reports are gorgeous.', name: 'James K.', role: 'Software Engineer' },
-              { quote: 'I\'ve tried every budgeting app out there. BudgetOS is the first one that actually works for me.', name: 'Emily R.', role: 'Marketing Manager' },
+              { quote: 'I\'ve tried every budgeting app out there. MyBudgetOS is the first one that actually works for me.', name: 'Emily R.', role: 'Marketing Manager' },
             ].map((t) => (
               <div key={t.name} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <div className="flex gap-1 mb-4">
@@ -455,9 +455,9 @@ export function LandingPage() {
             <div>
               <div className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
                 <IconCrown className="h-5 w-5 text-brand-600" />
-                BudgetOS
+                MyBudgetOS
               </div>
-              <p className="mt-2 text-xs text-slate-500">Smart budgeting, AI-powered insights, financial freedom.</p>
+              <p className="mt-2 text-xs text-slate-500">Plan. Track. Grow.</p>
             </div>
             <div>
               <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Product</h4>
@@ -493,7 +493,7 @@ export function LandingPage() {
             </div>
           </div>
           <div className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-800">
-            <p className="text-center text-xs text-slate-400">&copy; {new Date().getFullYear()} BudgetOS. All rights reserved.</p>
+            <p className="text-center text-xs text-slate-400">&copy; {new Date().getFullYear()} MyBudgetOS. All rights reserved.</p>
           </div>
         </div>
       </footer>

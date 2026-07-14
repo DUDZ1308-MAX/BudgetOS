@@ -66,7 +66,7 @@ export function StatusPage() {
         <IconStatus className="h-6 w-6 text-brand-600" />
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">System Status</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Current operational status of BudgetOS services.</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Current operational status of MyBudgetOS services.</p>
         </div>
       </div>
 
@@ -134,7 +134,7 @@ export function StatusPage() {
         <div className="text-center py-8 text-sm text-slate-400">
           <IconBadgeCheck className="mx-auto h-8 w-8 text-emerald-500 mb-2" />
           <p>No recent incidents reported.</p>
-          <p className="text-xs text-slate-400 mt-1">BudgetOS has maintained 99.9% uptime during beta.</p>
+          <p className="text-xs text-slate-400 mt-1">MyBudgetOS has maintained 99.9% uptime during beta.</p>
         </div>
       </div>
     </div>

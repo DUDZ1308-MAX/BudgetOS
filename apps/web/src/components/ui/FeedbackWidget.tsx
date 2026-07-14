@@ -103,7 +103,7 @@ export function FeedbackWidget() {
                   <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-6 w-6 text-emerald-600"><polyline points="20 6 9 17 4 12" /></svg>
                 </div>
                 <p className="text-sm font-medium text-slate-900 dark:text-white">Feedback submitted!</p>
-                <p className="text-xs text-slate-500">Thanks for helping improve BudgetOS.</p>
+                <p className="text-xs text-slate-500">Thanks for helping improve MyBudgetOS.</p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-3 p-4">

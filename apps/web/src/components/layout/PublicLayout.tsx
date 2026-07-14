@@ -7,7 +7,7 @@ export function PublicLayout() {
       <nav className="fixed top-0 z-40 flex h-16 w-full items-center justify-between border-b border-slate-200 bg-white/80 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/80 px-4 md:px-8">
         <Link to="/" className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
           <IconCrown className="h-6 w-6 text-brand-600" />
-          BudgetOS
+          MyBudgetOS
         </Link>
         <div className="flex items-center gap-4">
           <Link to="/auth/login" className="text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">
@@ -26,7 +26,7 @@ export function PublicLayout() {
       </main>
       <footer className="border-t border-slate-200 bg-white px-4 py-6 dark:border-slate-800 dark:bg-slate-950">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-xs text-slate-500 sm:flex-row">
-          <p>&copy; {new Date().getFullYear()} BudgetOS. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} MyBudgetOS. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <Link to="/privacy" className="hover:text-slate-700 dark:hover:text-slate-300 transition-colors">Privacy Policy</Link>
             <Link to="/terms" className="hover:text-slate-700 dark:hover:text-slate-300 transition-colors">Terms of Service</Link>

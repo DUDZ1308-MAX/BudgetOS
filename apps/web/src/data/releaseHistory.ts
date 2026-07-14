@@ -14,7 +14,7 @@ export const releaseHistory: ReleaseNote[] = [
     version: '1.0.0',
     date: '2026-07-09',
     title: 'Public Beta Launch',
-    description: 'BudgetOS is officially entering public beta. Welcome!',
+    description: 'MyBudgetOS is officially entering public beta. Welcome!',
     type: 'major',
     highlights: [
       'Smart Dashboard with real-time financial overview',

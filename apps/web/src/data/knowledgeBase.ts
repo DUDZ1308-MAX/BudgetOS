@@ -14,7 +14,7 @@ export interface KBCategory {
 }
 
 export const kbCategories: KBCategory[] = [
-  { id: 'getting-started', name: 'Getting Started', description: 'New to BudgetOS? Start here.', icon: 'rocket' },
+  { id: 'getting-started', name: 'Getting Started', description: 'New to MyBudgetOS? Start here.', icon: 'rocket' },
   { id: 'budgets', name: 'Budgets', description: 'Learn how to create and manage budgets.', icon: 'chart' },
   { id: 'accounts', name: 'Accounts', description: 'Manage your financial accounts.', icon: 'accounts' },
   { id: 'savings', name: 'Savings Goals', description: 'Set and track savings targets.', icon: 'target' },
@@ -28,16 +28,16 @@ export const knowledgeBase: KBArticle[] = [
   {
     id: 'gs-1',
     title: 'Creating Your First Budget',
-    description: 'Learn how to set up your first budget in BudgetOS.',
+    description: 'Learn how to set up your first budget in MyBudgetOS.',
     category: 'getting-started',
-    content: `Getting started with your first budget is easy. Navigate to the Budgets page from the sidebar and click "Create Budget". Choose a category, set a spending limit, and select the timeframe (weekly, monthly, or yearly). BudgetOS will automatically track your spending against the budget and alert you when you're getting close to the limit. You can create as many budgets as you need across different categories.`,
+    content: `Getting started with your first budget is easy. Navigate to the Budgets page from the sidebar and click "Create Budget". Choose a category, set a spending limit, and select the timeframe (weekly, monthly, or yearly). MyBudgetOS will automatically track your spending against the budget and alert you when you're getting close to the limit. You can create as many budgets as you need across different categories.`,
   },
   {
     id: 'gs-2',
     title: 'Adding Your First Transaction',
     description: 'Record your income and expenses.',
     category: 'getting-started',
-    content: `To add a transaction, go to the Transactions page and click "Add Transaction". Enter the amount, select the type (income or expense), choose a category, and pick the account. You can add a description and date for better tracking. BudgetOS will automatically update your account balances, budget spending, and dashboard metrics.`,
+    content: `To add a transaction, go to the Transactions page and click "Add Transaction". Enter the amount, select the type (income or expense), choose a category, and pick the account. You can add a description and date for better tracking. MyBudgetOS will automatically update your account balances, budget spending, and dashboard metrics.`,
   },
   {
     id: 'gs-3',
@@ -51,14 +51,14 @@ export const knowledgeBase: KBArticle[] = [
     title: 'Understanding Budget Categories',
     description: 'How categories work with budgets.',
     category: 'budgets',
-    content: `Categories in BudgetOS help you organize your spending. Each transaction is assigned a category, and budgets are set per category. This lets you see exactly where your money is going. You can customize categories to match your spending habits. The system comes with common defaults like Housing, Groceries, Transportation, and Entertainment.`,
+    content: `Categories in MyBudgetOS help you organize your spending. Each transaction is assigned a category, and budgets are set per category. This lets you see exactly where your money is going. You can customize categories to match your spending habits. The system comes with common defaults like Housing, Groceries, Transportation, and Entertainment.`,
   },
   {
     id: 'bd-2',
     title: 'Budget Alerts and Notifications',
     description: 'Stay on track with automatic alerts.',
     category: 'budgets',
-    content: `BudgetOS sends alerts when you're approaching or exceeding your budget limits. You'll get notified at 75%, 90%, and 100% of your budget. Alerts appear in the notification center and can be configured in Settings. You can also opt for weekly summary emails.`,
+    content: `MyBudgetOS sends alerts when you're approaching or exceeding your budget limits. You'll get notified at 75%, 90%, and 100% of your budget. Alerts appear in the notification center and can be configured in Settings. You can also opt for weekly summary emails.`,
   },
   {
     id: 'ac-1',
@@ -72,7 +72,7 @@ export const knowledgeBase: KBArticle[] = [
     title: 'Setting Savings Goals',
     description: 'Define and track your savings targets.',
     category: 'savings',
-    content: `Savings goals help you plan for future expenses. Set a target amount and target date, and BudgetOS will calculate how much you need to save each month. You can track your progress with visual indicators and get notified when you reach milestones.`,
+    content: `Savings goals help you plan for future expenses. Set a target amount and target date, and MyBudgetOS will calculate how much you need to save each month. You can track your progress with visual indicators and get notified when you reach milestones.`,
   },
   {
     id: 'rp-1',
@@ -100,14 +100,14 @@ export const knowledgeBase: KBArticle[] = [
     title: 'Troubleshooting Sync Issues',
     description: 'Resolve data synchronization problems.',
     category: 'troubleshooting',
-    content: `If you're experiencing sync issues, first check your internet connection. BudgetOS will automatically queue changes when offline and sync when connectivity is restored. You can check sync status in the Data Management page. If problems persist, try signing out and signing back in, or contact support.`,
+    content: `If you're experiencing sync issues, first check your internet connection. MyBudgetOS will automatically queue changes when offline and sync when connectivity is restored. You can check sync status in the Data Management page. If problems persist, try signing out and signing back in, or contact support.`,
   },
   {
     id: 'tr-2',
     title: 'Data Backup and Restore',
     description: 'Keep your financial data safe.',
     category: 'troubleshooting',
-    content: `BudgetOS automatically saves your data to the cloud. You can also create manual backups from the Data Management page. Backups can be downloaded as JSON files and restored at any time. We recommend creating a backup before making major changes.`,
+    content: `MyBudgetOS automatically saves your data to the cloud. You can also create manual backups from the Data Management page. Backups can be downloaded as JSON files and restored at any time. We recommend creating a backup before making major changes.`,
   },
   {
     id: 'faq-1',
@@ -128,7 +128,7 @@ export const knowledgeBase: KBArticle[] = [
     title: 'How does billing work?',
     description: 'Understanding our pricing and billing.',
     category: 'faq',
-    content: 'BudgetOS offers Free, Pro ($9/mo), and Premium ($19/mo) plans. The Free plan includes 50 transactions, 2 accounts, and 5 AI requests per month. Upgrading unlocks unlimited features and higher AI usage limits. Visit the Pricing page for full details.',
+    content: 'MyBudgetOS offers Free, Pro ($9/mo), and Premium ($19/mo) plans. The Free plan includes 50 transactions, 2 accounts, and 5 AI requests per month. Upgrading unlocks unlimited features and higher AI usage limits. Visit the Pricing page for full details.',
   },
   {
     id: 'faq-4',

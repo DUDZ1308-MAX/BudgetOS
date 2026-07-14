@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 export function GuestPage() {
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Welcome to BudgetOS</h1>
+      <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Welcome to MyBudgetOS</h1>
 
       <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
         <p className="mb-4 text-sm text-slate-600 dark:text-slate-300">

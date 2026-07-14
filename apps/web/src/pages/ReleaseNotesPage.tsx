@@ -15,7 +15,7 @@ export function ReleaseNotesPage() {
         <IconMegaphone className="h-6 w-6 text-brand-600" />
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Release Notes</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Track what's new in BudgetOS.</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Track what's new in MyBudgetOS.</p>
         </div>
       </div>
 

@@ -65,7 +65,7 @@ export function DemoPage() {
       <nav className="flex h-16 items-center justify-between border-b border-slate-200 bg-white/80 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/80 px-4 md:px-8">
         <div className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
           <IconCrown className="h-6 w-6 text-brand-600" />
-          BudgetOS
+          MyBudgetOS
         </div>
         <div className="flex items-center gap-3">
           <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
@@ -90,7 +90,7 @@ export function DemoPage() {
             Interactive Demo
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white md:text-5xl">
-            Explore BudgetOS Risk-Free
+            Explore MyBudgetOS Risk-Free
           </h1>
           <p className="mt-4 text-lg text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">
             Try all features with realistic sample data. No account needed, no commitment required.
@@ -117,7 +117,7 @@ export function DemoPage() {
         <div className="mx-auto max-w-6xl px-4">
           <div className="mx-auto max-w-2xl text-center mb-12">
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white md:text-3xl">What You'll See</h2>
-            <p className="mt-2 text-slate-500 dark:text-slate-400">Experience the full power of BudgetOS with pre-loaded sample data.</p>
+            <p className="mt-2 text-slate-500 dark:text-slate-400">Experience the full power of MyBudgetOS with pre-loaded sample data.</p>
           </div>
           <div className="grid gap-6 md:grid-cols-3">
             {FEATURES.map((f) => (
@@ -208,7 +208,7 @@ export function DemoPage() {
 
       {/* Footer */}
       <footer className="border-t border-slate-200 dark:border-slate-800 py-8">
-        <p className="text-center text-xs text-slate-400">&copy; {new Date().getFullYear()} BudgetOS. All rights reserved.</p>
+        <p className="text-center text-xs text-slate-400">&copy; {new Date().getFullYear()} MyBudgetOS. All rights reserved.</p>
       </footer>
     </div>
   );

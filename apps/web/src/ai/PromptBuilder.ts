@@ -2,7 +2,7 @@ import { toMonthlyEquivalent } from '@budgetos/engine';
 import type { RecurringFrequency } from '@budgetos/shared';
 import type { AiContext, AiMessage, ChatSession } from '@/ai/types';
 
-const SYSTEM_PROMPT_BASE = `You are BudgetOS AI Copilot — a helpful, knowledgeable financial coach.
+const SYSTEM_PROMPT_BASE = `You are MyBudgetOS AI Copilot — a helpful, knowledgeable financial coach.
 
 Your role:
 - Analyze the user's financial data using ONLY the context provided below

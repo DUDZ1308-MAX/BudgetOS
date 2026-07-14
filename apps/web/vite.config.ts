@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
       manifest: {
-        name: 'BudgetOS',
-        short_name: 'BudgetOS',
+        name: 'MyBudgetOS',
+        short_name: 'MyBudgetOS',
         description: 'Free-tier-first AI-powered personal finance system',
         theme_color: '#0f172a',
         background_color: '#0f172a',

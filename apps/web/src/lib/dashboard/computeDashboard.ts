@@ -2,6 +2,9 @@ import { accountsApi } from '@/lib/api/accounts';
 import { transactionsApi } from '@/lib/api/transactions';
 import { categoriesApi } from '@/lib/api/categories';
 import { budgetsApi } from '@/lib/api/budgets';
+import { recurringApi } from '@/lib/api/recurring';
+import { computeMonthlyRunRate } from '@budgetos/engine';
+import type { RecurringFrequency } from '@budgetos/shared';
 import type { CategoryBudgetStatus, DashboardSummaryData } from './types';
 
 function debug(method: string, ...args: unknown[]) {
@@ -21,11 +24,12 @@ export async function computeDashboard(userId: string): Promise<DashboardSummary
 
   debug('fetching data for', userId, range);
 
-  const [accounts, categories, budgets, transactions] = await Promise.all([
+  const [accounts, categories, budgets, transactions, recurrings] = await Promise.all([
     accountsApi.list(userId),
     categoriesApi.list(userId),
     budgetsApi.list(userId, new Date().getFullYear(), new Date().getMonth() + 1),
     transactionsApi.list(userId, { dateFrom: range.start, dateTo: range.end }),
+    recurringApi.list(userId).catch(() => []),
   ]);
 
   const categoryMap = new Map(categories.map((c) => [c.id, c]));
@@ -56,6 +60,21 @@ export async function computeDashboard(userId: string): Promise<DashboardSummary
       }
     }
   }
+
+  // Compute frequency-normalized monthly run rate from active recurring definitions
+  const activeRecurrings = (recurrings ?? []).filter((r) => r.status === 'active');
+  const runRate = computeMonthlyRunRate(
+    activeRecurrings.map((r) => ({
+      amount: Math.abs(Number(r.amount)),
+      frequency: r.frequency as RecurringFrequency,
+      type: r.type as 'income' | 'expense',
+    })),
+  );
+
+  // Use the higher of posted transactions or recurring run rate for monthly estimates
+  // This ensures early-in-month views show expected monthly totals from recurring items
+  monthlyIncome = Math.max(monthlyIncome, runRate.income);
+  monthlyExpenses = Math.max(monthlyExpenses, runRate.expenses);
 
   // Cash flow
   const cashFlow = monthlyIncome - monthlyExpenses;

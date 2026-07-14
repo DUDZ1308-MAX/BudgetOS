@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { toMonthlyEquivalent, FREQUENCY_MULTIPLIERS } from '../frequency';
+import { toMonthlyEquivalent, FREQUENCY_MULTIPLIERS, computeMonthlyRunRate } from '../frequency';
 
 describe('toMonthlyEquivalent', () => {
   describe('standard conversions', () => {
@@ -126,6 +126,62 @@ describe('toMonthlyEquivalent', () => {
       const result = toMonthlyEquivalent(0.01, 'biweekly');
       expect(result).toBeCloseTo(0.0217, 3);
     });
+  });
+});
+
+describe('computeMonthlyRunRate', () => {
+  it('computes income and expenses from mixed recurring items', () => {
+    const items = [
+      { amount: 2000, frequency: 'biweekly' as const, type: 'income' as const },
+      { amount: 500, frequency: 'weekly' as const, type: 'expense' as const },
+      { amount: 100, frequency: 'monthly' as const, type: 'expense' as const },
+    ];
+    const result = computeMonthlyRunRate(items);
+    expect(result.income).toBeCloseTo(4333.33, 1);
+    expect(result.expenses).toBeCloseTo(2266.67, 1);
+  });
+
+  it('returns zeros for empty items', () => {
+    const result = computeMonthlyRunRate([]);
+    expect(result.income).toBe(0);
+    expect(result.expenses).toBe(0);
+  });
+
+  it('handles only income items', () => {
+    const items = [
+      { amount: 6000, frequency: 'yearly' as const, type: 'income' as const },
+      { amount: 900, frequency: 'quarterly' as const, type: 'income' as const },
+    ];
+    const result = computeMonthlyRunRate(items);
+    expect(result.income).toBe(500 + 300);
+    expect(result.expenses).toBe(0);
+  });
+
+  it('handles only expense items', () => {
+    const items = [
+      { amount: 1200, frequency: 'semi_annual' as const, type: 'expense' as const },
+      { amount: 200, frequency: 'semimonthly' as const, type: 'expense' as const },
+    ];
+    const result = computeMonthlyRunRate(items);
+    expect(result.income).toBe(0);
+    expect(result.expenses).toBe(200 + 400);
+  });
+
+  it('excludes one_time items from run rate', () => {
+    const items = [
+      { amount: 5000, frequency: 'one_time' as const, type: 'income' as const },
+      { amount: 2000, frequency: 'monthly' as const, type: 'income' as const },
+    ];
+    const result = computeMonthlyRunRate(items);
+    expect(result.income).toBe(2000);
+  });
+
+  it('matches user scenario: $2,000 biweekly salary', () => {
+    const items = [
+      { amount: 2000, frequency: 'biweekly' as const, type: 'income' as const },
+    ];
+    const result = computeMonthlyRunRate(items);
+    expect(result.income).toBeCloseTo(4333.33, 1);
   });
 });
 

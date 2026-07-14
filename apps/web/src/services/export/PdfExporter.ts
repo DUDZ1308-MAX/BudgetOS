@@ -90,7 +90,7 @@ export class PdfExporter {
       doc.setFontSize(8);
       doc.setTextColor(173, 181, 189);
       doc.text(
-        `BudgetOS Report — Generated ${new Date().toLocaleDateString()} — Page ${i} of ${pageCount}`,
+        `MyBudgetOS Report — Generated ${new Date().toLocaleDateString()} — Page ${i} of ${pageCount}`,
         doc.internal.pageSize.width / 2,
         doc.internal.pageSize.height - 10,
         { align: 'center' },

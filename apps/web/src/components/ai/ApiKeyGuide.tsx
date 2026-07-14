@@ -66,9 +66,9 @@ function OpenAIGuide() {
   const steps = [
     { title: 'Create an account', description: 'Go to platform.openai.com and sign up for an account.' },
     { title: 'Navigate to API Dashboard', description: 'Click on the API section in the sidebar, then go to "API Keys".' },
-    { title: 'Create a new API key', description: 'Click "Create new secret key", give it a name like "BudgetOS", and copy the key.' },
+    { title: 'Create a new API key', description: 'Click "Create new secret key", give it a name like "MyBudgetOS", and copy the key.' },
     { title: 'Copy the key', description: 'The key starts with "sk-". Copy it to your clipboard immediately — you won\'t be able to see it again.' },
-    { title: 'Paste into BudgetOS', description: 'Paste the key into the API Key field below. Then click "Test Connection" to verify it works.' },
+    { title: 'Paste into MyBudgetOS', description: 'Paste the key into the API Key field below. Then click "Test Connection" to verify it works.' },
   ];
 
   return (
@@ -87,7 +87,7 @@ function DeepSeekGuide() {
     { title: 'Navigate to API Keys', description: 'Go to the API Keys section in your account dashboard.' },
     { title: 'Generate a new API key', description: 'Click "Create API Key", give it a name, and copy the generated key.' },
     { title: 'Copy the key', description: 'Save the key securely. You won\'t be able to view it again after closing the dialog.' },
-    { title: 'Paste into BudgetOS', description: 'Paste the key into the API Key field below and click "Test Connection".' },
+    { title: 'Paste into MyBudgetOS', description: 'Paste the key into the API Key field below and click "Test Connection".' },
   ];
 
   return (
@@ -106,7 +106,7 @@ function OllamaGuide() {
     { title: 'Start the Ollama server', description: 'Run "ollama serve" in a terminal, or the Ollama app will run it automatically.' },
     { title: 'Download a model', description: 'Run "ollama pull llama3" (recommended) or "ollama pull llama2", "ollama pull mistral" in a terminal.' },
     { title: 'Verify the endpoint', description: 'Open http://localhost:11434 in your browser. You should see "Ollama is running".' },
-    { title: 'Test the connection', description: 'Click "Test Connection" below to verify BudgetOS can reach your local Ollama server.' },
+    { title: 'Test the connection', description: 'Click "Test Connection" below to verify MyBudgetOS can reach your local Ollama server.' },
   ];
 
   return (

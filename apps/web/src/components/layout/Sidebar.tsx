@@ -17,7 +17,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 shadow-sm">
           <span className="text-sm font-bold text-white">B</span>
         </div>
-        <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">BudgetOS</span>
+        <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">MyBudgetOS</span>
       </div>
 
       <nav role="navigation" aria-label="Main navigation" className="flex-1 space-y-0.5 overflow-y-auto p-3">

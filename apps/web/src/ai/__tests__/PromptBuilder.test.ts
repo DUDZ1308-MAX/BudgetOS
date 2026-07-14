@@ -44,7 +44,7 @@ describe('PromptBuilder', () => {
     const ctx = createMockContext();
     const prompt = buildSystemPrompt(ctx);
 
-    expect(prompt).toContain('BudgetOS AI Copilot');
+    expect(prompt).toContain('MyBudgetOS AI Copilot');
     expect(prompt).toContain('$5000.00');
     expect(prompt).toContain('$3500.00');
     expect(prompt).toContain('$15000.00');

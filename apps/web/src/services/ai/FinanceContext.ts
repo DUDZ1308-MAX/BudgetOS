@@ -13,6 +13,8 @@ import { computeSafeToSpend } from '@/engine/safeToSpend/SafeToSpendEngine';
 import { computeGoalStatus, computeSavingsDashboard } from '@/engine/SavingsEngine';
 import { computeMortgage, computeMortgageDashboard } from '@/engine/MortgageEngine';
 import { currentMonthRange, daysInMonth } from '@/engine/utils';
+import { computeMonthlyRunRate } from '@budgetos/engine';
+import type { RecurringFrequency } from '@budgetos/shared';
 import type { EngineTransaction, EngineAccount, EngineCategory, EngineBudget } from '@/engine/types';
 
 export async function buildAiContext(userId: string): Promise<AiContext> {
@@ -137,6 +139,20 @@ export async function buildAiContext(userId: string): Promise<AiContext> {
     autoPost: r.auto_post,
   }));
 
+  // Compute frequency-normalized monthly run rate from active recurring definitions
+  const activeRecurrings = (recurrings ?? []).filter((r) => r.status === 'active');
+  const runRate = computeMonthlyRunRate(
+    activeRecurrings.map((r) => ({
+      amount: Math.abs(Number(r.amount)),
+      frequency: r.frequency as RecurringFrequency,
+      type: r.type as 'income' | 'expense',
+    })),
+  );
+
+  // Use the higher of posted transactions or recurring run rate for monthly estimates
+  const monthlyIncome = Math.max(budgetSummary.income.total, runRate.income);
+  const monthlyExpenses = Math.max(budgetSummary.expenses.total, runRate.expenses);
+
   return {
     budgetSummary,
     cashFlowSummary,
@@ -154,8 +170,8 @@ export async function buildAiContext(userId: string): Promise<AiContext> {
     recentTransactions: engineTransactions.slice(0, 20),
     categories: engineCategories,
     netWorth: budgetSummary.accounts.netWorth,
-    monthlyIncome: budgetSummary.income.total,
-    monthlyExpenses: budgetSummary.expenses.total,
+    monthlyIncome,
+    monthlyExpenses,
     recurringTransactions: recurringSummary,
   };
 }

@@ -7,18 +7,18 @@ const STEP_CONFIG: Record<OnboardingStep, {
   illustration: React.ReactNode;
 }> = {
   welcome: {
-    title: 'Welcome to BudgetOS',
+    title: 'Welcome to MyBudgetOS',
     description: 'Take control of your finances with smart budgeting, AI-powered insights, and beautiful visualizations. Let\'s get you set up in under 5 minutes.',
     illustration: <IconRocket className="h-16 w-16 text-brand-600" />,
   },
   'create-budget': {
     title: 'Create Your First Budget',
-    description: 'Budgets help you track spending and stay on top of your finances. Start simple — pick a category and set a monthly limit. BudgetOS will track everything automatically.',
+    description: 'Budgets help you track spending and stay on top of your finances. Start simple — pick a category and set a monthly limit. MyBudgetOS will track everything automatically.',
     illustration: <IconChart className="h-16 w-16 text-brand-600" />,
   },
   'add-income': {
     title: 'Add Your Income',
-    description: 'Add your salary, freelance income, or any regular deposits. BudgetOS will use this to calculate your savings rate and give you better financial insights.',
+    description: 'Add your salary, freelance income, or any regular deposits. MyBudgetOS will use this to calculate your savings rate and give you better financial insights.',
     illustration: <IconRocket className="h-16 w-16 text-emerald-600" />,
   },
   'add-expenses': {
@@ -28,7 +28,7 @@ const STEP_CONFIG: Record<OnboardingStep, {
   },
   'savings-goal': {
     title: 'Set a Savings Goal',
-    description: 'Save for something that matters — an emergency fund, a vacation, or a big purchase. Set a target and BudgetOS will help you track progress.',
+    description: 'Save for something that matters — an emergency fund, a vacation, or a big purchase. Set a target and MyBudgetOS will help you track progress.',
     illustration: <IconTarget className="h-16 w-16 text-brand-600" />,
   },
   'explore-ai': {
