@@ -81,7 +81,7 @@ export const transactionFiltersSchema = z.object({
 });
 
 const recurringTypeEnum = z.enum(['income', 'expense', 'transfer']);
-const recurringFrequencyEnum = z.enum(['one_time', 'daily', 'weekly', 'biweekly', 'monthly', 'quarterly', 'semi_annual', 'yearly']);
+const recurringFrequencyEnum = z.enum(['one_time', 'daily', 'weekly', 'biweekly', 'semimonthly', 'monthly', 'quarterly', 'semi_annual', 'yearly']);
 const recurringStatusEnum = z.enum(['active', 'paused', 'completed', 'cancelled']);
 const reminderTypeEnum = z.enum(['today', 'day_before', 'three_days_before', 'week_before']).nullable().optional();
 

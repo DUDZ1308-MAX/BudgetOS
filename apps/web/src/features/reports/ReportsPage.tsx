@@ -7,6 +7,8 @@ import { budgetsApi } from '@/lib/api/budgets';
 import { savingsApi } from '@/lib/api/savings';
 import { mortgageApi } from '@/lib/api/mortgage';
 import { recurringApi } from '@/lib/api/recurring';
+import { toMonthlyEquivalent } from '@budgetos/engine';
+import type { RecurringFrequency } from '@budgetos/shared';
 import { formatCurrency } from '@/services/transactionService';
 import { computeBudgetSummary } from '@/engine/BudgetEngine';
 import { computeCashFlowSummary } from '@/engine/CashFlowEngine';
@@ -183,6 +185,7 @@ export function ReportsPage() {
       .map((r) => ({
         name: r.name,
         amount: Math.abs(Number(r.amount)),
+        monthlyAmount: toMonthlyEquivalent(Math.abs(Number(r.amount)), r.frequency as RecurringFrequency),
         nextRun: r.next_run,
         frequency: r.frequency,
       }))
@@ -465,7 +468,7 @@ export function ReportsPage() {
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Monthly Recurring Total</p>
-              <p className="mt-1.5 text-2xl font-bold text-indigo-600 dark:text-indigo-400">{formatCurrency(upcomingObligations.reduce((s, o) => s + o.amount, 0))}</p>
+              <p className="mt-1.5 text-2xl font-bold text-indigo-600 dark:text-indigo-400">{formatCurrency(upcomingObligations.reduce((s, o) => s + o.monthlyAmount, 0))}</p>
             </div>
           </div>
 

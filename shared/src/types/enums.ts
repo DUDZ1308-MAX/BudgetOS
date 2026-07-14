@@ -20,7 +20,7 @@ export type FHSComponentName = 'savingsRate' | 'debtToIncome' | 'emergencyFund' 
 
 export type RecurringType = 'income' | 'expense' | 'transfer';
 
-export type RecurringFrequency = 'one_time' | 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
+export type RecurringFrequency = 'one_time' | 'daily' | 'weekly' | 'biweekly' | 'semimonthly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
 
 export type RecurringStatus = 'active' | 'paused' | 'completed' | 'cancelled';
 

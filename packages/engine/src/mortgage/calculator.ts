@@ -5,6 +5,7 @@ import {
 } from '../shared/math';
 import { addMonths } from '../shared/date';
 import { validateMortgageInput } from '../shared/errors';
+import { toMonthlyEquivalent } from '../shared/frequency';
 import type { MortgageInput, AmortizationRow } from './types';
 import type { EngineResult, EngineError } from '../shared/errors';
 import { success, failure } from '../shared/errors';
@@ -103,11 +104,18 @@ export function calculateFullAmortization(input: MortgageInput): EngineResult<Mo
   });
 }
 
+function normalizeExtraAmount(amount: number, type: MortgageInput['extraPayments'][number]['type']): number {
+  if (type === 'biweekly') {
+    return toMonthlyEquivalent(amount, 'biweekly');
+  }
+  return amount;
+}
+
 function computeTotalExtraMonthly(extraPayments: MortgageInput['extraPayments']): number {
   let total = 0;
   for (const ep of extraPayments) {
     if (ep.type === 'monthly_fixed' || ep.type === 'biweekly') {
-      total += ep.amount;
+      total += normalizeExtraAmount(ep.amount, ep.type);
     }
   }
   return total;
@@ -123,8 +131,7 @@ function getExtraForMonth(extraPayments: MortgageInput['extraPayments'], month: 
     } else if (ep.type === 'one_time' && ep.startMonth === month) {
       extra += ep.amount;
     } else if (ep.type === 'biweekly') {
-      const biweeklyExtraPerMonth = ep.amount;
-      extra += biweeklyExtraPerMonth;
+      extra += normalizeExtraAmount(ep.amount, ep.type);
     }
   }
   return extra;

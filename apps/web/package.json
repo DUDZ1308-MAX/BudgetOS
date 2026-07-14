@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@budgetos/database": "*",
+    "@budgetos/engine": "*",
     "@supabase/supabase-js": "^2.49.0",
     "@tanstack/react-query": "^5.62.0",
     "jspdf": "4.2.1",

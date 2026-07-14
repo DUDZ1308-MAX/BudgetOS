@@ -1,3 +1,5 @@
+import { toMonthlyEquivalent } from '@budgetos/engine';
+import type { RecurringFrequency } from '@budgetos/shared';
 import type { AiContext, AiMessage, ChatSession } from '@/ai/types';
 
 const SYSTEM_PROMPT_BASE = `You are BudgetOS AI Copilot — a helpful, knowledgeable financial coach.
@@ -100,13 +102,15 @@ export function buildSystemPrompt(context: AiContext): string {
       parts.push('Upcoming Bills:');
       const sorted = [...bills].sort((a, b) => a.nextRun.localeCompare(b.nextRun));
       for (const b of sorted) {
-        parts.push(`- ${b.name}: $${Math.abs(b.amount).toFixed(2)} due ${new Date(b.nextRun).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} (${b.frequency})`);
+        const monthly = toMonthlyEquivalent(Math.abs(b.amount), b.frequency as RecurringFrequency);
+        parts.push(`- ${b.name}: $${Math.abs(b.amount).toFixed(2)}/occurrence ($${monthly.toFixed(2)}/mo) due ${new Date(b.nextRun).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} (${b.frequency})`);
       }
     }
     if (income.length > 0) {
       parts.push('Upcoming Income:');
       for (const i of income) {
-        parts.push(`- ${i.name}: $${Math.abs(i.amount).toFixed(2)} on ${new Date(i.nextRun).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} (${i.frequency})`);
+        const monthly = toMonthlyEquivalent(Math.abs(i.amount), i.frequency as RecurringFrequency);
+        parts.push(`- ${i.name}: $${Math.abs(i.amount).toFixed(2)}/occurrence ($${monthly.toFixed(2)}/mo) on ${new Date(i.nextRun).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} (${i.frequency})`);
       }
     }
   }

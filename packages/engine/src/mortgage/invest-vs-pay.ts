@@ -1,4 +1,5 @@
 import { computeFutureValue } from '../shared/math';
+import { toMonthlyEquivalent } from '../shared/frequency';
 import { calculateFullAmortization } from './calculator';
 import type { MortgageInput } from './types';
 import type { InvestVsPayResult } from '@budgetos/shared';
@@ -15,8 +16,11 @@ export function compareInvestVsPay(
   }
 
   const extraMonthly = mortgageInput.extraPayments.reduce((sum, ep) => {
-    if (ep.type === 'monthly_fixed' || ep.type === 'biweekly') {
+    if (ep.type === 'monthly_fixed') {
       return sum + ep.amount;
+    }
+    if (ep.type === 'biweekly') {
+      return sum + toMonthlyEquivalent(ep.amount, 'biweekly');
     }
     return sum;
   }, 0);

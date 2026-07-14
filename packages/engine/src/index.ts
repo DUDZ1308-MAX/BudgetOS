@@ -4,6 +4,7 @@ export * from './shared/math';
 export * from './shared/precision';
 export * from './shared/date';
 export * from './shared/errors';
+export * from './shared/frequency';
 
 export { calculateFullAmortization } from './mortgage/calculator';
 export { compareScenarios } from './mortgage/scenarios';

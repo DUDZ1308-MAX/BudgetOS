@@ -1,0 +1,8 @@
+{
+  "buildCommand": "npx turbo run build --filter=@budgetos/web --filter=@budgetos/database",
+  "outputDirectory": "apps/web/dist",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
+

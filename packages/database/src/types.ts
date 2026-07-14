@@ -171,7 +171,7 @@ export interface RecurringTransaction {
   name: string;
   description: string | null;
   amount: number;
-  frequency: 'one_time' | 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
+  frequency: 'one_time' | 'daily' | 'weekly' | 'biweekly' | 'semimonthly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
   interval_count: number;
   day_of_week: number | null;
   day_of_month: number | null;
@@ -194,7 +194,7 @@ export interface RecurringTransactionInsert {
   name: string;
   description?: string | null;
   amount: number;
-  frequency: 'one_time' | 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
+  frequency: 'one_time' | 'daily' | 'weekly' | 'biweekly' | 'semimonthly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
   interval_count?: number;
   day_of_week?: number | null;
   day_of_month?: number | null;
