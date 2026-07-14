@@ -37,7 +37,7 @@ export class JsonExporter {
   ): { json: string; blob: Blob; filename: string } {
     const json = pretty ? JSON.stringify(data, null, 2) : JSON.stringify(data);
     const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
-    const fn = filename || `budgetos_backup_${new Date().toISOString().split('T')[0]}.json`;
+    const fn = filename || `mybudgetos_backup_${new Date().toISOString().split('T')[0]}.json`;
     return { json, blob, filename: fn };
   }
 

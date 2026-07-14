@@ -572,7 +572,7 @@ function PrivacySection() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `budgetos-export-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `mybudgetos-export-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -685,7 +685,7 @@ function AboutSection() {
         <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-white">Links</h2>
         <div className="space-y-2">
           <a
-            href="https://docs.budgetos.app"
+            href="https://docs.mybudgetos.app"
             target="_blank"
             rel="noopener noreferrer"
             className="block rounded-lg bg-slate-50 px-3 py-2 text-sm text-brand-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-brand-400 dark:hover:bg-slate-700"
@@ -693,7 +693,7 @@ function AboutSection() {
             Documentation
           </a>
           <a
-            href="https://github.com/budgetos/budgetos"
+            href="https://github.com/mybudgetos/mybudgetos"
             target="_blank"
             rel="noopener noreferrer"
             className="block rounded-lg bg-slate-50 px-3 py-2 text-sm text-brand-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-brand-400 dark:hover:bg-slate-700"
@@ -701,7 +701,7 @@ function AboutSection() {
             GitHub
           </a>
           <a
-            href="mailto:support@budgetos.app"
+            href="mailto:support@mybudgetos.app"
             className="block rounded-lg bg-slate-50 px-3 py-2 text-sm text-brand-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-brand-400 dark:hover:bg-slate-700"
           >
             Support

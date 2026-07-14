@@ -156,7 +156,7 @@ export class BackupManager {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `budgetos_local_backup_${backupId}.json`;
+      a.download = `mybudgetos_local_backup_${backupId}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

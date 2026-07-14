@@ -38,7 +38,7 @@ describe('JsonExporter', () => {
   it('generates filename with date if not provided', () => {
     const data = jsonExporter.buildExport([], [], [], [], []);
     const { filename } = jsonExporter.export(data);
-    expect(filename).toMatch(/budgetos_backup_\d{4}-\d{2}-\d{2}\.json/);
+    expect(filename).toMatch(/mybudgetos_backup_\d{4}-\d{2}-\d{2}\.json/);
   });
 
   it('uses provided filename', () => {

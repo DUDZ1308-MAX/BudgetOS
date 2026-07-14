@@ -29,7 +29,7 @@ export function PrivacyPage() {
         <p>MyBudgetOS uses the following third-party services: Supabase (database and authentication), OpenAI (AI Copilot), Stripe (payment processing), and Vercel (hosting). Each provider processes data in accordance with their own privacy policies and applicable data protection laws.</p>
 
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">5. Your Rights</h2>
-        <p>You have the right to access, correct, export, or delete your data at any time. You can manage your data from Settings &gt; Data Management. For assistance, contact us at privacy@budgetos.app.</p>
+        <p>You have the right to access, correct, export, or delete your data at any time. You can manage your data from Settings &gt; Data Management. For assistance, contact us at privacy@mybudgetos.app.</p>
 
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">6. Changes to This Policy</h2>
         <p>We may update this policy from time to time. Material changes will be announced via in-app notification and email. Continued use of MyBudgetOS after changes constitutes acceptance of the updated policy.</p>
