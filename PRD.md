@@ -769,7 +769,7 @@ Authentication (pre-login)
 
 ### Base URL
 ```
-https://api.budgetos.app/v1    (Cloudflare Worker route)
+https://budgetos-rust.vercel.app    (Vercel deployment)
 ```
 
 ### Endpoints
@@ -958,11 +958,10 @@ GET    /me/export                         # Export all data
                             | HTTPS (TLS 1.3)
                             v
 +-------------------------------------------------------------+
-|  Cloudflare Pages (FREE)                                    |
+|  Vercel (FREE tier)                                         |
 |  - Static site hosting                                      |
-|  - 500 builds/mo, 500MB storage                             |
-|  - Global CDN (330+ locations)                              |
-|  - Custom domain (budgetos.app)                             |
+|  - Global CDN                                               |
+|  - Custom domain (budgetos-rust.vercel.app)                 |
 |  - Automatic HTTPS                                          |
 +---------------------------+---------------------------------+
                             | API calls via Supabase JS SDK

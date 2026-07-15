@@ -1,8 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useAuthStore } from '@/stores/auth';
 import { useMortgages, useCreateMortgage, useUpdateMortgage, useDeleteMortgage, useExtraPayments, useAddExtraPayment, useDeleteExtraPayment } from '@/hooks/useMortgage';
 import { formatCurrency } from '@/services/transactionService';
 import { computeMortgage, computeMortgageDashboard } from '@/engine/MortgageEngine';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 
 function EmptyState({ message, description, action }: { message: string; description?: string; action?: { label: string; onClick: () => void } }) {
   return (
@@ -14,18 +15,32 @@ function EmptyState({ message, description, action }: { message: string; descrip
   );
 }
 
-function MortgageFormModal({ open, onClose, onSave }: { open: boolean; onClose: () => void; onSave: (data: any) => void }) {
-  const [name, setName] = useState('');
-  const [principal, setPrincipal] = useState('');
-  const [annualRate, setAnnualRate] = useState('');
-  const [termYears, setTermYears] = useState('30');
-  const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
+function MortgageFormModal({ open, onClose, onSave, mortgage }: { open: boolean; onClose: () => void; onSave: (data: any) => void; mortgage?: any }) {
+  const isEdit = !!mortgage;
+  const [name, setName] = useState(mortgage?.name ?? '');
+  const [principal, setPrincipal] = useState(mortgage?.principal?.toString() ?? '');
+  const [annualRate, setAnnualRate] = useState(mortgage?.annual_rate?.toString() ?? '');
+  const [termYears, setTermYears] = useState(mortgage?.term_years?.toString() ?? '30');
+  const [startDate, setStartDate] = useState(mortgage?.start_date ?? new Date().toISOString().slice(0, 10));
+  const initialValuesRef = useRef({
+    name: mortgage?.name ?? '',
+    principal: mortgage?.principal?.toString() ?? '',
+    annualRate: mortgage?.annual_rate?.toString() ?? '',
+    termYears: mortgage?.term_years?.toString() ?? '30',
+    startDate: mortgage?.start_date ?? new Date().toISOString().slice(0, 10),
+  });
+  const isDirty = name !== initialValuesRef.current.name ||
+    principal !== initialValuesRef.current.principal ||
+    annualRate !== initialValuesRef.current.annualRate ||
+    termYears !== initialValuesRef.current.termYears ||
+    startDate !== initialValuesRef.current.startDate;
+  useUnsavedChanges(isDirty && open);
 
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm" onClick={onClose}>
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">New Mortgage</h2>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{isEdit ? 'Edit Mortgage' : 'New Mortgage'}</h2>
         <div className="mt-4 space-y-4">
           <div>
             <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Property Name</label>
@@ -54,7 +69,7 @@ function MortgageFormModal({ open, onClose, onSave }: { open: boolean; onClose: 
         </div>
         <div className="mt-6 flex gap-3">
           <button onClick={onClose} className="flex-1 rounded-xl border border-slate-200 py-2 text-sm font-medium text-slate-600 dark:border-slate-700 dark:text-slate-400">Cancel</button>
-          <button onClick={() => { onSave({ name, principal: Number(principal), annual_rate: Number(annualRate), term_years: Number(termYears), start_date: startDate }); onClose(); }} disabled={!name || !principal || !annualRate} className="flex-1 rounded-xl bg-indigo-600 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50">Create</button>
+          <button onClick={() => { onSave({ name, principal: Number(principal), annual_rate: Number(annualRate), term_years: Number(termYears), start_date: startDate }); onClose(); }} disabled={!name || !principal || !annualRate} className="flex-1 rounded-xl bg-indigo-600 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50">{isEdit ? 'Save Changes' : 'Create'}</button>
         </div>
       </div>
     </div>
@@ -102,6 +117,7 @@ export function MortgagePage() {
   const [showExtraPayment, setShowExtraPayment] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [editingMortgage, setEditingMortgage] = useState<any>(null);
 
   const activeMortgage = activeMortgageId ? mortgages.find((m) => m.id === activeMortgageId) ?? mortgages[0] ?? null : mortgages[0] ?? null;
   const selectedId = activeMortgage?.id;
@@ -134,6 +150,17 @@ export function MortgagePage() {
             >
               {mortgages.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
             </select>
+          )}
+          {activeMortgage && (
+            <button
+              onClick={() => setEditingMortgage(activeMortgage)}
+              className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+              aria-label="Edit mortgage"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+            </button>
           )}
           <button onClick={() => setShowForm(true)} className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">+ New Mortgage</button>
         </div>
@@ -273,7 +300,20 @@ export function MortgagePage() {
         </>
       )}
 
-      <MortgageFormModal open={showForm} onClose={() => setShowForm(false)} onSave={(data) => { createMortgage.mutate(data); setShowForm(false); }} />
+      <MortgageFormModal
+        open={showForm || !!editingMortgage}
+        onClose={() => { setShowForm(false); setEditingMortgage(null); }}
+        onSave={(data) => {
+          if (editingMortgage) {
+            updateMortgage.mutate({ id: editingMortgage.id, data });
+          } else {
+            createMortgage.mutate(data);
+          }
+          setShowForm(false);
+          setEditingMortgage(null);
+        }}
+        mortgage={editingMortgage}
+      />
       {selectedId && <ExtraPaymentModal open={showExtraPayment} onClose={() => setShowExtraPayment(false)} mortgageId={selectedId} onAdd={(data) => addExtraPayment.mutate(data)} />}
 
       {confirmDelete && (

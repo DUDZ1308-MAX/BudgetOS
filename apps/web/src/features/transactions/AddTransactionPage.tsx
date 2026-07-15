@@ -3,7 +3,7 @@ import { useAccounts, useCreateAccount } from '@/hooks/useAccounts';
 import { useCategories } from '@/hooks/useCategories';
 import { useCreateTransaction } from '@/hooks/useTransactions';
 import { TransactionForm } from './components/TransactionForm';
-import { CreateAccountModal } from './components/CreateAccountModal';
+import { AccountFormModal } from './components/AccountFormModal';
 import { SuccessMessage } from '@/components/ui/SuccessMessage';
 import { logger } from '@/core/logger';
 
@@ -69,7 +69,7 @@ export function AddTransactionPage() {
       )}
 
       {showCreateAccount && (
-        <CreateAccountModal
+        <AccountFormModal
           isPending={createAccountMutation.isPending}
           onCreate={async (data) => {
             try {

@@ -19,7 +19,7 @@ export const RecentTransactionsCard = memo(function RecentTransactionsCard({ tra
         <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Recent Transactions</h3>
         <button
           onClick={() => navigate('/transactions')}
-          className="text-xs font-medium text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-400"
+          className="text-xs font-medium text-brand-600 transition-colors hover:text-brand-700 dark:text-brand-400"
         >
           View all
         </button>
@@ -30,9 +30,12 @@ export const RecentTransactionsCard = memo(function RecentTransactionsCard({ tra
           <div className="space-y-4 py-2">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <SkeletonLoader lines={1} className="w-32" />
-                  <SkeletonLoader lines={1} className="w-20" />
+                <div className="flex items-center gap-3">
+                  <SkeletonLoader variant="circle" className="h-8 w-8" />
+                  <div className="space-y-1.5">
+                    <SkeletonLoader lines={1} className="w-32" />
+                    <SkeletonLoader lines={1} className="w-20" />
+                  </div>
                 </div>
                 <SkeletonLoader lines={1} className="w-16" />
               </div>
@@ -40,7 +43,8 @@ export const RecentTransactionsCard = memo(function RecentTransactionsCard({ tra
           </div>
         ) : transactions.length === 0 ? (
           <EmptyState
-            message="No transactions yet."
+            message="No transactions yet"
+            description="Record your first income or expense"
             action={{ label: 'Add Transaction', onClick: () => navigate('/transactions/add') }}
           />
         ) : (

@@ -1,4 +1,4 @@
-/* Mobile-first improvements and utility classes for BudgetOS */
+/* MyBudgetOS Design System — RC2 */
 
 @layer base {
   /* ===== TOUCH TARGETS ===== */
@@ -10,35 +10,97 @@
     @apply touch-target px-4 py-3;
   }
 
-  /* ===== CARD RESPONSIVENESS ===== */
+  /* ===== CARD SYSTEM ===== */
+  .card {
+    @apply rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-200 dark:border-slate-800 dark:bg-slate-900;
+  }
+
+  .card-interactive {
+    @apply card hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700;
+  }
+
+  .card-elevated {
+    @apply card shadow-md;
+  }
+
   .mobile-card {
-    @apply w-full rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900;
+    @apply w-full card p-4;
   }
 
   .mobile-card-compact {
-    @apply w-full rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900;
+    @apply w-full rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900;
   }
 
-  /* ===== PAGE SPACING ===== */
+  /* ===== PAGE LAYOUT ===== */
   .page-container {
-    @apply space-y-4 md:space-y-6;
+    @apply space-y-6;
   }
 
   .page-header {
-    @apply flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between;
+    @apply flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between;
   }
 
   .page-title {
-    @apply text-xl font-bold text-slate-900 dark:text-white md:text-2xl;
+    @apply text-2xl font-bold tracking-tight text-slate-900 dark:text-white;
   }
 
-  /* ===== BUTTON RESPONSIVENESS ===== */
+  .page-subtitle {
+    @apply text-sm text-slate-500 dark:text-slate-400;
+  }
+
+  /* ===== BUTTON SYSTEM ===== */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
   .btn-primary {
-    @apply touch-target rounded-lg bg-brand-600 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-brand-700;
+    @apply btn bg-brand-600 text-white hover:bg-brand-700 focus:ring-brand-500 shadow-sm hover:shadow;
   }
 
   .btn-secondary {
-    @apply touch-target rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300;
+    @apply btn border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus:ring-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700;
+  }
+
+  .btn-ghost {
+    @apply btn text-slate-600 hover:bg-slate-100 focus:ring-slate-500 dark:text-slate-400 dark:hover:bg-slate-800;
+  }
+
+  .btn-danger {
+    @apply btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-sm hover:shadow;
+  }
+
+  /* ===== FORM ELEMENTS ===== */
+  .form-input {
+    @apply w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500 dark:focus:border-brand-400;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-slate-700 dark:text-slate-300;
+  }
+
+  .form-error {
+    @apply text-xs text-red-600 dark:text-red-400;
+  }
+
+  /* ===== BADGE SYSTEM ===== */
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  .badge-positive {
+    @apply badge bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400;
+  }
+
+  .badge-negative {
+    @apply badge bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400;
+  }
+
+  .badge-neutral {
+    @apply badge bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300;
+  }
+
+  .badge-brand {
+    @apply badge bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-400;
   }
 
   /* ===== TABLE → CARD CONVERSION ===== */
@@ -54,34 +116,29 @@
     @apply mobile-card;
   }
 
-  /* ===== STAT CARD RESPONSIVENESS ===== */
+  /* ===== STAT CARD ===== */
+  .stat-card {
+    @apply card p-5;
+  }
+
   .stat-card-mobile {
     @apply touch-target p-4;
   }
 
   .stat-card-title {
-    @apply text-sm font-medium md:text-base;
+    @apply text-sm font-medium text-slate-500 dark:text-slate-400;
   }
 
   .stat-card-value {
-    @apply text-xl md:text-2xl;
-  }
-
-  /* ===== FORM ELEMENTS ===== */
-  .form-input {
-    @apply touch-target w-full rounded-lg border border-slate-300 px-3 py-2.5 text-base transition-colors md:px-4;
-  }
-
-  .form-label {
-    @apply block text-sm font-medium text-slate-700 dark:text-slate-300;
+    @apply text-2xl font-bold tabular-nums tracking-tight;
   }
 
   /* ===== CHART CONTAINERS ===== */
   .chart-container {
-    @apply w-full h-64 rounded-lg bg-white p-4 dark:bg-slate-900 md:h-80 lg:h-96;
+    @apply card w-full p-4 md:p-6;
   }
 
-  /* ===== NAVIGATION RESPONSIVENESS ===== */
+  /* ===== NAVIGATION ===== */
   .nav-desktop {
     @apply hidden md:flex;
   }
@@ -92,11 +149,11 @@
 
   /* ===== GRID UTILITIES ===== */
   .grid-auto-fit {
-    @apply grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4;
+    @apply grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4;
   }
 
   .grid-auto-fit-2 {
-    @apply grid gap-3 sm:grid-cols-2 md:grid-cols-3;
+    @apply grid gap-4 sm:grid-cols-2 md:grid-cols-3;
   }
 
   /* ===== TEXT RESPONSIVENESS ===== */
@@ -105,16 +162,26 @@
   }
 
   .heading-responsive {
-    @apply text-xl md:text-2xl lg:text-3xl;
+    @apply text-2xl font-bold tracking-tight md:text-3xl;
   }
 
   /* ===== SECTION SPACING ===== */
   .section-spacing {
-    @apply py-4 md:py-6;
+    @apply py-6 md:py-8;
   }
 
   .card-spacing {
-    @apply gap-3 p-3 md:gap-4 md:p-4;
+    @apply gap-4 p-4 md:gap-6 md:p-6;
+  }
+
+  /* ===== DIVIDER ===== */
+  .divider {
+    @apply border-t border-slate-200 dark:border-slate-800;
+  }
+
+  /* ===== EMPTY STATE ===== */
+  .empty-state {
+    @apply flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 py-12 dark:border-slate-700;
   }
 
   /* ===== SAFE AREA SUPPORT ===== */
@@ -152,6 +219,16 @@
       transform: scale(2.5);
       opacity: 0;
     }
+  }
+
+  /* ===== SKELETON LOADING ===== */
+  .skeleton {
+    @apply animate-pulse rounded-lg bg-slate-200 dark:bg-slate-700;
+  }
+
+  /* ===== FOCUS RING ===== */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 dark:focus:ring-brand-400;
   }
 }
 

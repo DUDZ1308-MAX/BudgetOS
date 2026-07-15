@@ -1,17 +1,27 @@
 import { useState } from 'react';
-import { useAccounts, useCreateAccount } from '@/hooks/useAccounts';
+import { useAccounts, useCreateAccount, useUpdateAccount } from '@/hooks/useAccounts';
 import { formatCurrency } from '@/services/transactionService';
-import { CreateAccountModal } from '@/features/transactions/components/CreateAccountModal';
+import { AccountFormModal } from '@/features/transactions/components/AccountFormModal';
 import { IconAccounts } from '@/components/ui/Icons';
+import type { Account } from '@budgetos/database';
+
 export function AccountsPage() {
   const { data: accounts = [], isLoading } = useAccounts();
   const createAccountMutation = useCreateAccount();
+  const updateAccountMutation = useUpdateAccount();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingAccount, setEditingAccount] = useState<Account | null>(null);
 
   async function handleCreate(data: Parameters<typeof createAccountMutation.mutateAsync>[0]) {
     await createAccountMutation.mutateAsync(data);
     setShowCreateModal(false);
   }
+
+  async function handleUpdate(id: string, data: Parameters<typeof updateAccountMutation.mutateAsync>[0]['data']) {
+    await updateAccountMutation.mutateAsync({ id, data });
+  }
+
+  const isPending = createAccountMutation.isPending || updateAccountMutation.isPending;
 
   return (
     <div className="space-y-6">
@@ -55,18 +65,29 @@ export function AccountsPage() {
           {accounts.map((account) => (
             <div
               key={account.id}
-              className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
+              className="group rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
             >
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium text-slate-900 dark:text-white">{account.name}</p>
                   <p className="text-xs text-slate-400 capitalize dark:text-slate-500">{account.type}</p>
                 </div>
-                <p className={`text-lg font-semibold tabular-nums ${
-                  Number(account.balance) >= 0 ? 'text-slate-900 dark:text-white' : 'text-red-500'
-                }`}>
-                  {formatCurrency(Number(account.balance))}
-                </p>
+                <div className="flex items-center gap-3">
+                  <p className={`text-lg font-semibold tabular-nums ${
+                    Number(account.balance) >= 0 ? 'text-slate-900 dark:text-white' : 'text-red-500'
+                  }`}>
+                    {formatCurrency(Number(account.balance))}
+                  </p>
+                  <button
+                    onClick={() => setEditingAccount(account)}
+                    className="rounded-lg p-1.5 text-slate-400 opacity-0 transition-opacity hover:bg-slate-100 hover:text-slate-600 group-hover:opacity-100 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+                    aria-label={`Edit ${account.name}`}
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -74,10 +95,19 @@ export function AccountsPage() {
       )}
 
       {showCreateModal && (
-        <CreateAccountModal
+        <AccountFormModal
           isPending={createAccountMutation.isPending}
           onCreate={handleCreate}
           onClose={() => setShowCreateModal(false)}
+        />
+      )}
+
+      {editingAccount && (
+        <AccountFormModal
+          isPending={updateAccountMutation.isPending}
+          account={editingAccount}
+          onUpdate={handleUpdate}
+          onClose={() => setEditingAccount(null)}
         />
       )}
     </div>

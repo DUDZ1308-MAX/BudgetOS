@@ -9,6 +9,7 @@ interface StatCardProps {
   isCurrency?: boolean;
   accent?: 'default' | 'positive' | 'negative';
   tooltip?: string;
+  icon?: React.ReactNode;
 }
 
 function TrendBadge({ current, previous }: { current: number; previous?: number }) {
@@ -17,7 +18,7 @@ function TrendBadge({ current, previous }: { current: number; previous?: number 
   const isUp = pct >= 0;
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium transition-colors ${
         isUp
           ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400'
           : 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400'
@@ -37,45 +38,56 @@ function TrendBadge({ current, previous }: { current: number; previous?: number 
   );
 }
 
-export function StatCard({ label, value, previousValue, isLoading, isCurrency = true, accent = 'default', tooltip }: StatCardProps) {
-  const colorClass =
-    accent === 'positive'
-      ? 'text-emerald-600 dark:text-emerald-400'
-      : accent === 'negative'
-        ? 'text-red-600 dark:text-red-400'
-        : 'text-slate-900 dark:text-white';
+const accentStyles = {
+  positive: {
+    card: 'border-l-4 border-l-emerald-500',
+    value: 'text-emerald-600 dark:text-emerald-400',
+    icon: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400',
+  },
+  negative: {
+    card: 'border-l-4 border-l-red-500',
+    value: 'text-red-600 dark:text-red-400',
+    icon: 'bg-red-50 text-red-600 dark:bg-red-950 dark:text-red-400',
+  },
+  default: {
+    card: 'border-l-4 border-l-brand-500',
+    value: 'text-slate-900 dark:text-white',
+    icon: 'bg-brand-50 text-brand-600 dark:bg-brand-950 dark:text-brand-400',
+  },
+};
+
+export function StatCard({ label, value, previousValue, isLoading, isCurrency = true, accent = 'default', tooltip, icon }: StatCardProps) {
+  const styles = accentStyles[accent];
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
-      {/* Subtle gradient accent bar on top */}
-      <span
-        className={`absolute inset-x-0 top-0 h-0.5 ${
-          accent === 'positive'
-            ? 'bg-gradient-to-r from-emerald-400 to-emerald-500'
-            : accent === 'negative'
-              ? 'bg-gradient-to-r from-red-400 to-red-500'
-              : 'bg-gradient-to-r from-indigo-400 to-indigo-500'
-        }`}
-      />
-
+    <div className={`group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 ${styles.card}`}>
       <div className="flex items-start justify-between">
-        <div className="flex items-center gap-1">
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p>
-          {tooltip && <InfoTooltip content={tooltip} />}
+        <div className="flex items-center gap-3">
+          {icon && (
+            <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${styles.icon}`}>
+              {icon}
+            </div>
+          )}
+          <div>
+            <div className="flex items-center gap-1.5">
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p>
+              {tooltip && <InfoTooltip content={tooltip} />}
+            </div>
+            {isLoading ? (
+              <div className="mt-2">
+                <div className="h-8 w-24 skeleton" />
+              </div>
+            ) : (
+              <p className={`mt-1 text-2xl font-bold tabular-nums tracking-tight ${styles.value}`}>
+                {isCurrency ? formatCurrency(value) : value}
+              </p>
+            )}
+          </div>
         </div>
         {!isLoading && previousValue !== undefined && (
           <TrendBadge current={value} previous={previousValue} />
         )}
       </div>
-      {isLoading ? (
-        <div className="mt-2">
-          <div className="h-8 w-2/3 animate-pulse rounded-lg bg-slate-200 dark:bg-slate-700" />
-        </div>
-      ) : (
-        <p className={`mt-1.5 text-2xl font-bold tabular-nums tracking-tight ${colorClass}`}>
-          {isCurrency ? formatCurrency(value) : value}
-        </p>
-      )}
     </div>
   );
 }

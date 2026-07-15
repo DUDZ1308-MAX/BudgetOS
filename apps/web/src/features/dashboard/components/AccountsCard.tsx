@@ -15,7 +15,7 @@ export const AccountsCard = memo(function AccountsCard() {
         <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Accounts</h3>
         <button
           onClick={() => navigate('/accounts')}
-          className="text-xs font-medium text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-400"
+          className="text-xs font-medium text-brand-600 transition-colors hover:text-brand-700 dark:text-brand-400"
         >
           View all
         </button>
@@ -26,19 +26,26 @@ export const AccountsCard = memo(function AccountsCard() {
           <div className="space-y-4 py-2">
             {Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="flex items-center justify-between">
-                <SkeletonLoader lines={1} className="w-1/3" />
-                <SkeletonLoader lines={1} className="w-1/4" />
+                <div className="flex items-center gap-3">
+                  <SkeletonLoader variant="circle" className="h-8 w-8" />
+                  <SkeletonLoader lines={2} className="w-24" />
+                </div>
+                <SkeletonLoader lines={1} className="w-16" />
               </div>
             ))}
           </div>
         ) : accounts.length === 0 ? (
-          <EmptyState message="No accounts yet." action={{ label: 'Create Account', onClick: () => navigate('/accounts') }} />
+          <EmptyState
+            message="No accounts yet"
+            description="Add your first account to get started"
+            action={{ label: 'Create Account', onClick: () => navigate('/accounts') }}
+          />
         ) : (
           <div className="divide-y divide-slate-100 dark:divide-slate-800">
             {accounts.map((account) => (
               <div key={account.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 text-xs font-semibold text-brand-600 dark:bg-brand-950 dark:text-brand-400">
                     {account.type.charAt(0).toUpperCase()}
                   </span>
                   <div>

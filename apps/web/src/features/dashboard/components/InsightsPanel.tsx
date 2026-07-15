@@ -25,7 +25,7 @@ export const InsightsPanel = memo(function InsightsPanel() {
       action={
         criticalCount > 0 && (
           <Tooltip content={`${criticalCount} critical insight${criticalCount > 1 ? 's' : ''} requiring attention`}>
-            <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600 dark:bg-red-950 dark:text-red-400">
+            <span className="rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-600 dark:bg-red-950 dark:text-red-400">
               {criticalCount} critical
             </span>
           </Tooltip>
@@ -35,9 +35,10 @@ export const InsightsPanel = memo(function InsightsPanel() {
       {isLoading ? (
         <SkeletonLoader lines={3} />
       ) : insights.length === 0 ? (
-        <p className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">
-          No insights yet. Add transactions and budgets to get started.
-        </p>
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <p className="text-sm text-slate-400 dark:text-slate-500">No insights yet.</p>
+          <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Add transactions and budgets to get started.</p>
+        </div>
       ) : (
         <div className="space-y-2.5">
           {insights.slice(0, 4).map((insight) => {

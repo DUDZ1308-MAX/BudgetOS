@@ -2,7 +2,7 @@
 
 ## Deployment Target
 
-BudgetOS is deployed to **Cloudflare Pages** via GitHub Actions.
+MyBudgetOS is deployed to **Vercel** via GitHub Actions.
 
 ## Build Command
 
@@ -34,15 +34,15 @@ The CI/CD pipeline is defined in `.github/workflows/ci.yml` and runs on pushes t
 2. **Typecheck** — TypeScript compilation check
 3. **Test** — Run engine and web tests
 4. **Build** — Production build
-5. **Deploy** — Deploy to Cloudflare Pages (main branch only)
+5. **Deploy** — Deploy to Vercel (main branch only)
 
 ## Manual Deployment
 
 To deploy manually:
 ```bash
 npm run build
-cd apps/web/dist
-npx wrangler pages deploy . --project-name=budgetos
+cd apps/web
+npx vercel --prod
 ```
 
 ## Environment-Specific Configuration
@@ -50,7 +50,11 @@ npx wrangler pages deploy . --project-name=budgetos
 | Environment | Branch | URL |
 |-------------|--------|-----|
 | Development | local | http://localhost:5173 |
-| Production | main | https://budgetos.pages.dev |
+| Production | main | https://budgetos-rust.vercel.app |
+
+## Old Deployment
+
+The old deployment at `budget-os-web.vercel.app` is permanently redirected (308) to `budgetos-rust.vercel.app`.
 
 ## Supabase Setup
 
