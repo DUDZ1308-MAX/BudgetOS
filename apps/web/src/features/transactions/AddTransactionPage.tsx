@@ -5,6 +5,7 @@ import { useCreateTransaction } from '@/hooks/useTransactions';
 import { TransactionForm } from './components/TransactionForm';
 import { CreateAccountModal } from './components/CreateAccountModal';
 import { SuccessMessage } from '@/components/ui/SuccessMessage';
+import { logger } from '@/core/logger';
 
 export function AddTransactionPage() {
   const { data: accounts = [], isLoading: accountsLoading } = useAccounts();
@@ -75,7 +76,7 @@ export function AddTransactionPage() {
               const result = await createAccountMutation.mutateAsync(data);
               setShowCreateAccount(false);
             } catch (err) {
-              console.error('[AddTransactionPage] mutateAsync rejected', err);
+              logger.error('Account creation rejected', 'AddTransactionPage', err);
               throw err;
             }
           }}

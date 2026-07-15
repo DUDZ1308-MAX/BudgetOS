@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { User, Subscription } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { useProfileStore } from '@/stores/profile';
+import { logger } from '@/core/logger';
 
 let authSubscription: Subscription | null = null;
 
@@ -47,7 +48,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
       authSubscription = subscriptionData.subscription;
     } catch (err) {
-      console.error('[Auth] initialize failed', err);
+      logger.error('Auth initialize failed', 'Auth', err);
       set({ user: null, isLoading: false });
     }
   },
@@ -56,13 +57,13 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        console.error('[Auth] signIn error', error.message);
+        logger.error('Auth signIn error', 'Auth', undefined, { message: error.message });
         return { error: error.message };
       }
       return { error: null };
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Network error. Please check your connection.';
-      console.error('[Auth] signIn threw', err);
+      logger.error('Auth signIn threw', 'Auth', err);
       return { error: message };
     }
   },
@@ -71,13 +72,13 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const { error } = await supabase.auth.signUp({ email, password });
       if (error) {
-        console.error('[Auth] signUp error', error.message);
+        logger.error('Auth signUp error', 'Auth', undefined, { message: error.message });
         return { error: error.message };
       }
       return { error: null };
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Network error. Please check your connection.';
-      console.error('[Auth] signUp threw', err);
+      logger.error('Auth signUp threw', 'Auth', err);
       return { error: message };
     }
   },
@@ -86,7 +87,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       await supabase.auth.signOut();
     } catch (err) {
-      console.error('[Auth] signOut threw', err);
+      logger.error('Auth signOut threw', 'Auth', err);
     }
     set({ user: null });
     useProfileStore.getState().signOut();
@@ -98,13 +99,13 @@ export const useAuthStore = create<AuthState>((set) => ({
         redirectTo: `${window.location.origin}/auth/callback`,
       });
       if (error) {
-        console.error('[Auth] resetPassword error', error.message);
+        logger.error('Auth resetPassword error', 'Auth', undefined, { message: error.message });
         return { error: error.message };
       }
       return { error: null };
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Network error. Please check your connection.';
-      console.error('[Auth] resetPassword threw', err);
+      logger.error('Auth resetPassword threw', 'Auth', err);
       return { error: message };
     }
   },

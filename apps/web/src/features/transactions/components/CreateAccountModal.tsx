@@ -4,6 +4,7 @@ import { accountFormSchema } from '@/services/accountsService';
 import { useToastStore } from '@/stores/toast';
 import { formatError } from '@/lib/formatError';
 import { FocusTrap } from '@/components/ui/FocusTrap';
+import { logger } from '@/core/logger';
 
 interface CreateAccountModalProps {
   isPending: boolean;
@@ -63,7 +64,7 @@ export function CreateAccountModal({ isPending, onCreate, onClose }: CreateAccou
       onClose();
     } catch (err) {
       const { message, detail } = formatError(err);
-      console.error('[CreateAccountModal] onCreate failed', err);
+      logger.error('Account creation failed', 'CreateAccountModal', err);
       const devMsg = import.meta.env.DEV && detail ? `${message} — ${detail}` : message;
       setError(devMsg);
     }

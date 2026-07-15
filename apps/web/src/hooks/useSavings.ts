@@ -5,6 +5,7 @@ import { useAuditStore } from '@/core/audit';
 import { emitEntityEvent } from '@/core/sync';
 import { savingsApi } from '@/lib/api/savings';
 import type { SavingsGoalInsert, SavingsGoalUpdate } from '@/lib/api/savings';
+import { logger } from '@/core/logger';
 
 export function useSavingsGoals() {
   const user = useAuthStore((s) => s.user);
@@ -95,7 +96,7 @@ export function useAddContribution() {
         emitEntityEvent('contribution', created.id, 'created', null, created as any, null);
       }
     },
-    onError: (err: Error) => { console.error(err); },
+    onError: (err: Error) => { logger.error('Contribution add failed', 'useSavings', err); },
   });
 }
 

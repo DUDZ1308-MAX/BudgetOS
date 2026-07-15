@@ -5,6 +5,7 @@ import { useAuditStore } from '@/core/audit';
 import { emitEntityEvent } from '@/core/sync';
 import { getBudgets, createBudget } from '@budgetos/database';
 import type { BudgetInsert } from '@budgetos/database';
+import { logger } from '@/core/logger';
 
 export function useBudgets(year?: number, month?: number) {
   const user = useAuthStore((s) => s.user);
@@ -38,7 +39,7 @@ export function useCreateBudget() {
       }
     },
     onError: (err) => {
-      console.error('[useCreateBudget] mutation failed', err);
+      logger.error('Budget creation failed', 'useBudgets', err);
     },
   });
 }

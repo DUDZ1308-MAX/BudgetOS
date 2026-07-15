@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Category, BudgetInsert } from '@budgetos/database';
 import { formatError } from '@/lib/formatError';
 import { useToastStore } from '@/stores/toast';
+import { logger } from '@/core/logger';
 
 interface CreateBudgetModalProps {
   categories: Category[];
@@ -52,7 +53,7 @@ export function CreateBudgetModal({ categories, isPending, onCreate, onClose }: 
       onClose();
     } catch (err) {
       const { message, detail } = formatError(err);
-      console.error('[CreateBudgetModal] onCreate failed', err);
+      logger.error('Budget creation failed', 'CreateBudgetModal', err);
       const devMsg = import.meta.env.DEV && detail ? `${message} — ${detail}` : message;
       setError(devMsg);
     }

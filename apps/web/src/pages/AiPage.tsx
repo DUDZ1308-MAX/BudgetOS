@@ -17,6 +17,7 @@ import { RecommendationCards } from '@/components/ai/RecommendationCards';
 import { AiSettingsPanel } from '@/components/ai/AiSettingsPanel';
 import { UpgradePrompt } from '@/billing/billingGuard';
 import type { AiContext, ChatSession } from '@/ai/types';
+import { logger } from '@/core/logger';
 
 type AiTab = 'chat' | 'insights' | 'forecasts' | 'recommendations';
 
@@ -58,7 +59,7 @@ export function AiPage() {
         setContext(ctx);
       })
       .catch((err) => {
-        console.error('Failed to build AI context:', err);
+        logger.error('Failed to build AI context', 'AiPage', err);
       })
       .finally(() => setLoading(false));
   }, [user]);

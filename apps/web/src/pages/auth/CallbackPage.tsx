@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/core/logger';
 
 export function CallbackPage() {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ export function CallbackPage() {
         .setSession({ access_token: accessToken, refresh_token: refreshToken ?? '' })
         .then(({ error: sessionError }) => {
           if (sessionError) {
-            console.error('[Callback] setSession error', sessionError.message);
+            logger.error('Callback setSession error', 'Callback', undefined, { message: sessionError.message });
             setError(sessionError.message);
             return;
           }
@@ -36,7 +37,7 @@ export function CallbackPage() {
         })
         .catch((err) => {
           const message = err instanceof Error ? err.message : 'Failed to verify link.';
-          console.error('[Callback] setSession threw', err);
+          logger.error('Callback setSession threw', 'Callback', err);
           setError(message);
         });
     } else {

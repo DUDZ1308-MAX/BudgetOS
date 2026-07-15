@@ -1,3 +1,5 @@
+import { logger } from '@/core/logger';
+
 export interface EnvValidation {
   valid: boolean;
   missing: string[];
@@ -54,10 +56,10 @@ export function validateEnv(): EnvValidation {
   }
 
   if (missing.length > 0) {
-    console.warn('[Env] Missing required environment variables:', missing.join(', '));
+    logger.warn(`Missing required environment variables: ${missing.join(', ')}`, 'Env');
   }
   if (warnings.length > 0) {
-    warnings.forEach((w) => console.warn('[Env] Warning:', w));
+    warnings.forEach((w) => logger.warn(w, 'Env'));
   }
 
   return { valid: missing.length === 0, missing, warnings };

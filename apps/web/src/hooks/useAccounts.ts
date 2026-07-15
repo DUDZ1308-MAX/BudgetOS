@@ -11,6 +11,7 @@ import {
   archiveAccount,
 } from '@budgetos/database';
 import type { AccountInsert, AccountUpdate } from '@budgetos/database';
+import { logger } from '@/core/logger';
 
 export function useAccounts() {
   const user = useAuthStore((s) => s.user);
@@ -54,7 +55,7 @@ export function useCreateAccount() {
       }
     },
     onError: (err) => {
-      console.error('[useCreateAccount] mutation failed', err);
+      logger.error('Account creation failed', 'useAccounts', err);
     },
   });
 }

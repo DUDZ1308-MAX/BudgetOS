@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/core/logger';
 
 export function UpdatePasswordPage() {
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ export function UpdatePasswordPage() {
         setIsSuccess(true);
       }
     } catch (err) {
-      console.error('[UpdatePassword] updateUser threw', err);
+      logger.error('Password update failed', 'UpdatePassword', err);
       setError(err instanceof Error ? err.message : 'Failed to update password.');
     } finally {
       setLoading(false);

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/core/logger';
 
 export interface Profile {
   id: string;
@@ -33,12 +34,12 @@ export const useProfileStore = create<ProfileState>((set) => ({
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('[Profile] fetch failed', error.message);
+        logger.error('Profile fetch failed', 'Profile', undefined, { message: error.message });
         return;
       }
       set({ profile: data as Profile | null, isLoading: false });
     } catch (err) {
-      console.error('[Profile] fetch threw', err);
+      logger.error('Profile fetch threw', 'Profile', err);
       set({ isLoading: false });
     }
   },
@@ -51,7 +52,7 @@ export const useProfileStore = create<ProfileState>((set) => ({
         .eq('id', userId);
 
       if (error) {
-        console.error('[Profile] update failed', error.message);
+        logger.error('Profile update failed', 'Profile', undefined, { message: error.message });
         return;
       }
       const { data } = await supabase
@@ -61,7 +62,7 @@ export const useProfileStore = create<ProfileState>((set) => ({
         .single();
       if (data) set({ profile: data as Profile });
     } catch (err) {
-      console.error('[Profile] update threw', err);
+      logger.error('Profile update threw', 'Profile', err);
     }
   },
 

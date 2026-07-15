@@ -1,3 +1,5 @@
+import { logger } from '@/core/logger';
+
 const SCHEMA_VERSION_KEY = 'budgetos-schema-version';
 const CURRENT_SCHEMA_VERSION = 2;
 
@@ -26,13 +28,13 @@ export class SchemaMigration {
 
     for (const migration of pending) {
       try {
-        if (import.meta.env.DEV) console.debug(`[SchemaMigration] Running v${migration.version}: ${migration.name}`);
+        if (import.meta.env.DEV) logger.debug(`Running v${migration.version}: ${migration.name}`, 'SchemaMigration');
         await migration.migrate();
         this.currentVersion = migration.version;
         this.saveVersion();
         applied++;
       } catch (err) {
-        console.error(`[SchemaMigration] Failed v${migration.version}: ${migration.name}`, err);
+        logger.error(`Migration failed v${migration.version}: ${migration.name}`, 'SchemaMigration', err);
         throw err;
       }
     }
@@ -71,7 +73,7 @@ export class SchemaMigration {
     try {
       localStorage.setItem(SCHEMA_VERSION_KEY, String(this.currentVersion));
     } catch {
-      if (import.meta.env.DEV) console.error('[SchemaMigration] Failed to persist version');
+      if (import.meta.env.DEV) logger.error('Failed to persist version', 'SchemaMigration');
     }
   }
 
