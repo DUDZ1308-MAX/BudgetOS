@@ -1,7 +1,10 @@
+import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/stores/auth';
 import { useDemoStore } from '@/stores/demoMode';
 import { useAnnouncementsStore } from '@/stores/announcements';
+import { notificationService } from '@/services/notifications/notificationService';
 import { IconBell, IconMenu, IconDemo, IconMegaphone } from '@/components/ui/Icons';
+import { NotificationPanel } from './NotificationPanel';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -30,6 +33,20 @@ export function Header({ onMenuClick }: HeaderProps) {
   const displayName = user?.user_metadata?.full_name ?? user?.email?.split('@')[0] ?? 'there';
   const initial = displayName.charAt(0).toUpperCase();
 
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  useEffect(() => {
+    const update = () => {
+      setUnreadCount(notificationService.getUnreadCount());
+    };
+    update();
+    const unsub = notificationService.subscribe(update);
+    return unsub;
+  }, []);
+
+  const totalUnread = unreadCount + unreadAnnouncements;
+
   return (
     <header role="banner" className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white/80 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/80 px-4 md:px-6">
       <div className="flex items-center gap-4">
@@ -55,14 +72,21 @@ export function Header({ onMenuClick }: HeaderProps) {
             Demo
           </span>
         )}
-        <button className="relative rounded-xl p-2 text-slate-500 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800" aria-label="Notifications">
-          <IconBell className="h-5 w-5" />
-          {unreadAnnouncements > 0 && (
-            <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-900">
-              {unreadAnnouncements}
-            </span>
-          )}
-        </button>
+        <div className="relative">
+          <button
+            onClick={() => setShowNotifications(!showNotifications)}
+            className="relative rounded-xl p-2 text-slate-500 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+            aria-label="Notifications"
+          >
+            <IconBell className="h-5 w-5" />
+            {totalUnread > 0 && (
+              <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-900">
+                {totalUnread > 9 ? '9+' : totalUnread}
+              </span>
+            )}
+          </button>
+          <NotificationPanel open={showNotifications} onClose={() => setShowNotifications(false)} />
+        </div>
 
         <div className="mx-2 hidden h-6 w-px bg-slate-200 dark:bg-slate-700 md:block" />
 

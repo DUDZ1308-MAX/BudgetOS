@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import type { Category, BudgetInsert } from '@budgetos/database';
+import { useState, useEffect } from 'react';
+import type { Category, BudgetInsert, Budget } from '@budgetos/database';
 import { formatError } from '@/lib/formatError';
 import { useToastStore } from '@/stores/toast';
 import { logger } from '@/core/logger';
@@ -7,7 +7,9 @@ import { logger } from '@/core/logger';
 interface CreateBudgetModalProps {
   categories: Category[];
   isPending: boolean;
+  budget?: Budget | null;
   onCreate: (data: BudgetInsert) => Promise<void>;
+  onUpdate?: (id: string, data: BudgetInsert) => Promise<void>;
   onClose: () => void;
 }
 
@@ -15,16 +17,25 @@ const now = new Date();
 const defaultYear = now.getFullYear();
 const defaultMonth = now.getMonth() + 1;
 
-export function CreateBudgetModal({ categories, isPending, onCreate, onClose }: CreateBudgetModalProps) {
+export function CreateBudgetModal({ categories, isPending, budget, onCreate, onUpdate, onClose }: CreateBudgetModalProps) {
+  const isEdit = !!budget;
   const expenseCategories = categories.filter((c) => c.type === 'expense' && !c.is_archived);
   const addToast = useToastStore((s) => s.addToast);
 
-  const [categoryId, setCategoryId] = useState('');
-  const [amount, setAmount] = useState('');
-  const [year] = useState(defaultYear);
-  const [month] = useState(defaultMonth);
-  const [rollover, setRollover] = useState(false);
+  const [categoryId, setCategoryId] = useState(budget?.category_id ?? '');
+  const [amount, setAmount] = useState(budget?.amount?.toString() ?? '');
+  const [year] = useState(budget?.year ?? defaultYear);
+  const [month] = useState(budget?.month ?? defaultMonth);
+  const [rollover, setRollover] = useState(budget?.rollover ?? false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+    }
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -42,29 +53,38 @@ export function CreateBudgetModal({ categories, isPending, onCreate, onClose }: 
     }
 
     try {
-      await onCreate({
+      const payload: BudgetInsert = {
         category_id: categoryId,
         year,
         month,
         amount: parsedAmount,
         rollover,
-      });
-      addToast('success', 'Budget created successfully');
+      };
+
+      if (isEdit && onUpdate && budget) {
+        await onUpdate(budget.id, payload);
+        addToast('success', 'Budget updated successfully');
+      } else {
+        await onCreate(payload);
+        addToast('success', 'Budget created successfully');
+      }
       onClose();
     } catch (err) {
       const { message, detail } = formatError(err);
-      logger.error('Budget creation failed', 'CreateBudgetModal', err);
+      logger.error(isEdit ? 'Budget update failed' : 'Budget creation failed', 'CreateBudgetModal', err);
       const devMsg = import.meta.env.DEV && detail ? `${message} — ${detail}` : message;
       setError(devMsg);
     }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" aria-labelledby="budget-modal-title">
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
       <div className="relative w-full max-w-sm rounded-t-2xl bg-white p-6 shadow-xl sm:rounded-2xl dark:bg-slate-900">
         <div className="mb-1 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Create Budget</h2>
+          <h2 id="budget-modal-title" className="text-lg font-semibold text-slate-900 dark:text-white">
+            {isEdit ? 'Edit Budget' : 'Create Budget'}
+          </h2>
           <button
             type="button"
             onClick={onClose}
@@ -165,7 +185,7 @@ export function CreateBudgetModal({ categories, isPending, onCreate, onClose }: 
               disabled={isPending}
               className="flex-1 rounded-xl bg-brand-600 py-2.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
             >
-              {isPending ? 'Creating...' : 'Create'}
+              {isPending ? (isEdit ? 'Saving...' : 'Creating...') : (isEdit ? 'Save Changes' : 'Create')}
             </button>
           </div>
         </form>

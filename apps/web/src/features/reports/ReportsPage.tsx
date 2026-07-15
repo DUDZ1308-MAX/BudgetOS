@@ -7,6 +7,7 @@ import { budgetsApi } from '@/lib/api/budgets';
 import { savingsApi } from '@/lib/api/savings';
 import { mortgageApi } from '@/lib/api/mortgage';
 import { recurringApi } from '@/lib/api/recurring';
+import { categoriesApi } from '@/lib/api/categories';
 import { toMonthlyEquivalent } from '@budgetos/engine';
 import type { RecurringFrequency } from '@budgetos/shared';
 import { formatCurrency } from '@/services/transactionService';
@@ -64,6 +65,7 @@ export function ReportsPage() {
   const { data: savingsGoals = [] } = useQuery({ queryKey: ['savings-goals', user?.id], queryFn: () => savingsApi.list(user!.id), enabled: !!user });
   const { data: mortgages = [] } = useQuery({ queryKey: ['mortgages', user?.id], queryFn: () => mortgageApi.list(user!.id), enabled: !!user });
   const { data: recurrings = [] } = useQuery({ queryKey: ['recurring-transactions', user?.id], queryFn: () => recurringApi.list(user!.id), enabled: !!user });
+  const { data: categories = [] } = useQuery({ queryKey: ['categories', user?.id], queryFn: () => categoriesApi.list(user!.id), enabled: !!user });
 
   const hasData = accounts.length > 0 || allTxns.length > 0 || budgets.length > 0 || savingsGoals.length > 0 || mortgages.length > 0;
 
@@ -118,17 +120,24 @@ export function ReportsPage() {
 
   // Category spending breakdown for charts
   const categorySpending = useMemo(() => {
+    const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
     const map = new Map<string, number>();
     for (const t of monthTxns) {
       const amt = Math.abs(Number(t.amount));
       const cat = t.category_id || 'Uncategorized';
       map.set(cat, (map.get(cat) ?? 0) + amt);
     }
+    const total = Array.from(map.values()).reduce((s, v) => s + v, 0);
     return Array.from(map.entries())
-      .map(([name, value]) => ({ name: name.slice(0, 12), value }))
+      .map(([catId, value]) => ({
+        id: catId,
+        name: categoryMap.get(catId) ?? (catId === 'Uncategorized' ? 'Uncategorized' : catId.slice(0, 12)),
+        value,
+        percent: total > 0 ? Math.round((value / total) * 100) : 0,
+      }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 8);
-  }, [monthTxns]);
+  }, [monthTxns, categories]);
 
   // Monthly spending trend
   const monthlyTrend = useMemo(() => {
@@ -296,16 +305,28 @@ export function ReportsPage() {
               {categorySpending.length === 0 ? (
                 <p className="py-6 text-center text-sm text-slate-400">No spending data.</p>
               ) : (
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={categorySpending} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2} dataKey="value" strokeWidth={0}>
-                        {categorySpending.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                      </Pie>
-                      <Tooltip content={<TooltipCard />} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
+                <>
+                  <div className="h-48">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={categorySpending} cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={2} dataKey="value" strokeWidth={0}>
+                          {categorySpending.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                        </Pie>
+                        <Tooltip content={<TooltipCard />} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    {categorySpending.map((item, i) => (
+                      <div key={item.id} className="flex items-center gap-3">
+                        <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                        <span className="flex-1 truncate text-xs text-slate-700 dark:text-slate-300">{item.name}</span>
+                        <span className="text-xs font-medium text-slate-900 dark:text-white">{formatCurrency(item.value)}</span>
+                        <span className="w-10 text-right text-xs text-slate-400 dark:text-slate-500">{item.percent}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
               )}
             </div>
 
