@@ -4,10 +4,11 @@ import { useMortgages, useCreateMortgage, useUpdateMortgage, useDeleteMortgage, 
 import { formatCurrency } from '@/services/transactionService';
 import { computeMortgage, computeMortgageDashboard } from '@/engine/MortgageEngine';
 
-function EmptyState({ message, action }: { message: string; action?: { label: string; onClick: () => void } }) {
+function EmptyState({ message, description, action }: { message: string; description?: string; action?: { label: string; onClick: () => void } }) {
   return (
     <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 p-12 dark:border-slate-700">
-      <p className="text-sm text-slate-400 dark:text-slate-500">{message}</p>
+      <p className="text-sm font-medium text-slate-600 dark:text-slate-300">{message}</p>
+      {description && <p className="mt-1 max-w-xs text-center text-xs text-slate-400 dark:text-slate-500">{description}</p>}
       {action && <button onClick={action.onClick} className="mt-3 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">{action.label}</button>}
     </div>
   );
@@ -143,7 +144,11 @@ export function MortgagePage() {
           {[1, 2, 3, 4].map((i) => <div key={i} className="h-24 animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800" />)}
         </div>
       ) : !activeMortgage ? (
-        <EmptyState message="No mortgages yet. Add your first mortgage to get started." action={{ label: 'Add Mortgage', onClick: () => setShowForm(true) }} />
+        <EmptyState
+          message="No mortgages yet"
+          description="Add your mortgage to see payoff projections, amortization schedules, and how extra payments save you interest."
+          action={{ label: 'Add Mortgage', onClick: () => setShowForm(true) }}
+        />
       ) : (
         <>
           {/* Dashboard stats */}

@@ -2,11 +2,14 @@ import { NavLink } from 'react-router-dom';
 import { useThemeStore } from '@/stores/theme';
 import { navigation } from '@/lib/navigation';
 import { IconSun, IconMoon } from '@/components/ui/Icons';
+import { releaseHistory } from '@/data/releaseHistory';
 
 interface SidebarProps {
   open: boolean;
   onClose: () => void;
 }
+
+const APP_VERSION = releaseHistory[0]?.version ?? '1.0.0';
 
 export function Sidebar({ open, onClose }: SidebarProps) {
   const { theme, toggle } = useThemeStore();
@@ -71,6 +74,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           )}
           <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
         </button>
+        <p className="px-3 pt-1 text-[10px] text-slate-300 dark:text-slate-600">v{APP_VERSION}</p>
       </div>
     </>
   );

@@ -252,7 +252,9 @@ export function AiPage() {
               <div className="flex flex-1 flex-col rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
                 <ChatWindow messages={session.messages} isTyping={isTyping} />
                 {session.messages.length === 0 && !isExhausted && (
-                  <SuggestionChips onSelect={handleSend} disabled={isTyping} />
+                  <div className="border-t border-slate-100 dark:border-slate-800">
+                    <SuggestionChips onSelect={handleSend} disabled={isTyping} />
+                  </div>
                 )}
                 {isExhausted ? (
                   <div className="p-4">

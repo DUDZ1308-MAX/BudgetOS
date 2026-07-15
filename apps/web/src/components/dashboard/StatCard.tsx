@@ -1,4 +1,5 @@
 import { formatCurrency } from '@/services/transactionService';
+import { InfoTooltip } from '@/components/ui/InfoTooltip';
 
 interface StatCardProps {
   label: string;
@@ -7,6 +8,7 @@ interface StatCardProps {
   isLoading: boolean;
   isCurrency?: boolean;
   accent?: 'default' | 'positive' | 'negative';
+  tooltip?: string;
 }
 
 function TrendBadge({ current, previous }: { current: number; previous?: number }) {
@@ -35,7 +37,7 @@ function TrendBadge({ current, previous }: { current: number; previous?: number 
   );
 }
 
-export function StatCard({ label, value, previousValue, isLoading, isCurrency = true, accent = 'default' }: StatCardProps) {
+export function StatCard({ label, value, previousValue, isLoading, isCurrency = true, accent = 'default', tooltip }: StatCardProps) {
   const colorClass =
     accent === 'positive'
       ? 'text-emerald-600 dark:text-emerald-400'
@@ -57,7 +59,10 @@ export function StatCard({ label, value, previousValue, isLoading, isCurrency = 
       />
 
       <div className="flex items-start justify-between">
-        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p>
+        <div className="flex items-center gap-1">
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p>
+          {tooltip && <InfoTooltip content={tooltip} />}
+        </div>
         {!isLoading && previousValue !== undefined && (
           <TrendBadge current={value} previous={previousValue} />
         )}

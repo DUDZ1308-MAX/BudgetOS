@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useBudgets, useCreateBudget } from '@/hooks/useBudgets';
 import { useCategories } from '@/hooks/useCategories';
 import { CreateBudgetModal } from '@/features/budgets/CreateBudgetModal';
+import { IconBudgets } from '@/components/ui/Icons';
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -43,11 +44,17 @@ export function BudgetsPage() {
         {isLoading ? (
           <p className="col-span-full text-sm text-slate-400">Loading budgets...</p>
         ) : budgets.length === 0 ? (
-          <div className="col-span-full rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-900">
-            <p className="text-sm text-slate-500 dark:text-slate-400">No budgets set for this month.</p>
+          <div className="col-span-full flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 py-12 dark:border-slate-700">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-950/50">
+              <IconBudgets className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+            </div>
+            <h3 className="mt-4 text-sm font-semibold text-slate-900 dark:text-white">No budgets for {MONTH_NAMES[month - 1]}</h3>
+            <p className="mt-1 max-w-sm text-center text-xs text-slate-500 dark:text-slate-400">
+              Set spending limits per category to track where your money goes and stay on target each month.
+            </p>
             <button
               onClick={() => setShowModal(true)}
-              className="mt-3 text-sm font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400"
+              className="mt-4 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
             >
               Create your first budget
             </button>

@@ -14,7 +14,9 @@ import { computeBudgetSummary } from '@/engine/BudgetEngine';
 import { computeCashFlowSummary } from '@/engine/CashFlowEngine';
 import { computeSavingsDashboard } from '@/engine/SavingsEngine';
 import { computeMortgage } from '@/engine/MortgageEngine';
+import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
+import { IconReports } from '@/components/ui/Icons';
 
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6', '#ec4899'];
 
@@ -50,6 +52,7 @@ function TooltipCard({ active, payload, label }: any) {
 
 export function ReportsPage() {
   const user = useAuthStore((s) => s.user);
+  const navigate = useNavigate();
   const [tab, setTab] = useState<ReportTab>('monthly');
   const [rangeTab, setRangeTab] = useState('current');
 
@@ -61,6 +64,8 @@ export function ReportsPage() {
   const { data: savingsGoals = [] } = useQuery({ queryKey: ['savings-goals', user?.id], queryFn: () => savingsApi.list(user!.id), enabled: !!user });
   const { data: mortgages = [] } = useQuery({ queryKey: ['mortgages', user?.id], queryFn: () => mortgageApi.list(user!.id), enabled: !!user });
   const { data: recurrings = [] } = useQuery({ queryKey: ['recurring-transactions', user?.id], queryFn: () => recurringApi.list(user!.id), enabled: !!user });
+
+  const hasData = accounts.length > 0 || allTxns.length > 0 || budgets.length > 0 || savingsGoals.length > 0 || mortgages.length > 0;
 
   const monthTxns = useMemo(() => allTxns.filter((t) => t.date >= range.start && t.date <= range.end), [allTxns, range]);
   const allCategories = [...new Set(allTxns.filter((t) => t.category_id).map((t) => t.category_id!))];
@@ -214,10 +219,34 @@ export function ReportsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Reports</h1>
         <div className="flex gap-2">
-          <button onClick={exportCurrentCSV} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800">CSV</button>
-          <button onClick={exportAllCSV} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800">Export All</button>
+          {hasData && (
+            <>
+              <button onClick={exportCurrentCSV} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800">CSV</button>
+              <button onClick={exportAllCSV} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800">Export All</button>
+            </>
+          )}
         </div>
       </div>
+
+      {!hasData && (
+        <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 py-16 dark:border-slate-700">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-950/50">
+            <IconReports className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+          </div>
+          <h2 className="mt-4 text-base font-semibold text-slate-900 dark:text-white">No data to report on yet</h2>
+          <p className="mt-1 max-w-sm text-center text-sm text-slate-500 dark:text-slate-400">
+            Add accounts, transactions, and budgets to see detailed reports with cash flow trends, category breakdowns, and savings projections.
+          </p>
+          <div className="mt-5 flex gap-3">
+            <button onClick={() => navigate('/accounts')} className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700">
+              Add Account
+            </button>
+            <button onClick={() => navigate('/transactions/add')} className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800">
+              Add Transaction
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Tab bar */}
       <div className="flex gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-slate-50 p-1 dark:border-slate-800 dark:bg-slate-900">

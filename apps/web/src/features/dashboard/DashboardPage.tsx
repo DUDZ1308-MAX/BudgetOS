@@ -9,6 +9,7 @@ import { CashFlowChart } from './components/CashFlowChart';
 import { CategoryChart } from './components/CategoryChart';
 import { InsightsPanel } from './components/InsightsPanel';
 import { UpcomingBillsWidget, UpcomingIncomeWidget } from './components/UpcomingBillsWidget';
+import { SetupChecklist } from '@/components/ui/SetupChecklist';
 
 export function DashboardPage() {
   const user = useAuthStore((s) => s.user);
@@ -38,26 +39,33 @@ export function DashboardPage() {
           value={d.netWorth}
           isLoading={isLoading}
           accent={d.netWorth >= 0 ? 'positive' : 'negative'}
+          tooltip="Total assets minus total liabilities across all accounts"
         />
         <StatCard
           label="Monthly Income"
           value={d.monthlyIncome}
           isLoading={isLoading}
           accent="positive"
+          tooltip="Total income received this month from all sources"
         />
         <StatCard
           label="Monthly Expenses"
           value={d.monthlyExpenses}
           isLoading={isLoading}
           accent="negative"
+          tooltip="Total money spent this month across all categories"
         />
         <StatCard
           label="Cash Flow"
           value={d.cashFlow}
           isLoading={isLoading}
           accent={d.cashFlow >= 0 ? 'positive' : 'negative'}
+          tooltip="Income minus expenses — positive means you're saving money"
         />
       </div>
+
+      {/* Setup Checklist for new users */}
+      <SetupChecklist />
 
       {/* Second Row: Budget Overview + Cash Flow Trend + Insights */}
       <div className="grid gap-6 lg:grid-cols-3" aria-label="Budget and trends">

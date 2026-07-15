@@ -17,6 +17,7 @@ import { FeatureGate } from '@/billing/billingGuard';
 import { computeMonthlyRunRate } from '@budgetos/engine';
 import type { RecurringFrequency } from '@budgetos/shared';
 import type { IntelligenceInput, HealthFactor } from '@/intelligence/types';
+import { InfoTooltip } from '@/components/ui/InfoTooltip';
 
 function getHealthColor(score: number): string {
   if (score >= 80) return 'text-emerald-500';
@@ -154,7 +155,10 @@ export function FinancialHealthPage() {
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-slate-900" aria-label="Financial health score">
-        <h2 className="mb-1 text-xs font-medium uppercase tracking-wider text-slate-400">Overall Score</h2>
+        <div className="mb-1 flex items-center justify-center gap-1.5">
+          <h2 className="text-xs font-medium uppercase tracking-wider text-slate-400">Overall Score</h2>
+          <InfoTooltip content="A composite score from 0-100 based on cash flow, savings rate, budget adherence, debt levels, and emergency fund coverage" />
+        </div>
         <div className={`text-6xl font-bold ${getHealthColor(result.overallScore)}`}>
           {result.overallScore}
         </div>

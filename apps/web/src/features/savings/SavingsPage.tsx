@@ -9,10 +9,11 @@ import { formatCurrency } from '@/services/transactionService';
 import { computeGoalStatus, computeSavingsDashboard } from '@/engine/SavingsEngine';
 import type { SavingsGoal } from '@budgetos/database';
 
-function EmptyState({ message, action }: { message: string; action?: { label: string; onClick: () => void } }) {
+function EmptyState({ message, description, action }: { message: string; description?: string; action?: { label: string; onClick: () => void } }) {
   return (
     <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 p-12 dark:border-slate-700">
-      <p className="text-sm text-slate-400 dark:text-slate-500">{message}</p>
+      <p className="text-sm font-medium text-slate-600 dark:text-slate-300">{message}</p>
+      {description && <p className="mt-1 max-w-xs text-center text-xs text-slate-400 dark:text-slate-500">{description}</p>}
       {action && (
         <button onClick={action.onClick} className="mt-3 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700">
           {action.label}
@@ -275,7 +276,11 @@ export function SavingsPage() {
           ))}
         </div>
       ) : goals.length === 0 ? (
-        <EmptyState message="No savings goals yet. Create your first goal to get started." action={{ label: 'Create Goal', onClick: () => setShowForm(true) }} />
+        <EmptyState
+          message="No savings goals yet"
+          description="Create a goal to track progress toward an emergency fund, vacation, or any financial target."
+          action={{ label: 'Create Goal', onClick: () => setShowForm(true) }}
+        />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {goals.map((goal) => (

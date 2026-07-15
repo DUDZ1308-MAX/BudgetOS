@@ -126,6 +126,35 @@ describe('toMonthlyEquivalent', () => {
       const result = toMonthlyEquivalent(0.01, 'biweekly');
       expect(result).toBeCloseTo(0.0217, 3);
     });
+
+    it('handles negative zero (returns positive zero)', () => {
+      const result = toMonthlyEquivalent(-0, 'monthly');
+      expect(Object.is(result, 0)).toBe(true);
+      expect(Object.is(result, -0)).toBe(false);
+    });
+
+    it('handles negative zero for all frequencies', () => {
+      const frequencies = ['one_time', 'daily', 'weekly', 'biweekly', 'semimonthly', 'monthly', 'quarterly', 'semi_annual', 'yearly'] as const;
+      for (const freq of frequencies) {
+        const result = toMonthlyEquivalent(-0, freq);
+        expect(Object.is(result, -0)).toBe(false);
+      }
+    });
+
+    it('handles very large amounts ($1M monthly)', () => {
+      const result = toMonthlyEquivalent(1_000_000_00, 'monthly');
+      expect(result).toBe(1_000_000_00);
+    });
+
+    it('handles cents precision for daily', () => {
+      const result = toMonthlyEquivalent(1, 'daily');
+      expect(result).toBeCloseTo(30.42, 1);
+    });
+
+    it('handles exact biweekly conversion', () => {
+      const result = toMonthlyEquivalent(100, 'biweekly');
+      expect(result).toBeCloseTo(216.67, 1);
+    });
   });
 });
 

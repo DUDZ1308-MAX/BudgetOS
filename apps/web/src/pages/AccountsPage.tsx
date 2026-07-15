@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAccounts, useCreateAccount } from '@/hooks/useAccounts';
 import { formatCurrency } from '@/services/transactionService';
 import { CreateAccountModal } from '@/features/transactions/components/CreateAccountModal';
+import { IconAccounts } from '@/components/ui/Icons';
 export function AccountsPage() {
   const { data: accounts = [], isLoading } = useAccounts();
   const createAccountMutation = useCreateAccount();
@@ -34,11 +35,17 @@ export function AccountsPage() {
           ))}
         </div>
       ) : accounts.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-900">
-          <p className="text-sm text-slate-500 dark:text-slate-400">No accounts yet. Create one to get started.</p>
+        <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 py-12 dark:border-slate-700">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-950/50">
+            <IconAccounts className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+          </div>
+          <h3 className="mt-4 text-sm font-semibold text-slate-900 dark:text-white">No accounts yet</h3>
+          <p className="mt-1 max-w-sm text-center text-xs text-slate-500 dark:text-slate-400">
+            Create accounts for your bank, credit cards, or cash to start tracking your net worth and balances.
+          </p>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="mt-4 rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-700"
+            className="mt-4 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
           >
             + Create Account
           </button>
