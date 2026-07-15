@@ -3,14 +3,25 @@
   "outputDirectory": "apps/web/dist",
   "redirects": [
     {
-      "source": "/:path*",
+      "source": "/",
       "has": [
         {
           "type": "host",
           "value": "budget-os-web.vercel.app"
         }
       ],
-      "destination": "https://budgetos-rust.vercel.app/:path*",
+      "destination": "https://budgetos-rust.vercel.app/",
+      "permanent": true
+    },
+    {
+      "source": "/:path+",
+      "has": [
+        {
+          "type": "host",
+          "value": "budget-os-web.vercel.app"
+        }
+      ],
+      "destination": "https://budgetos-rust.vercel.app/:path+",
       "permanent": true
     }
   ],
