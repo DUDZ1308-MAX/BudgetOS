@@ -1,5 +1,6 @@
 import { memo, useMemo, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { DashboardCard } from '@/components/dashboard/DashboardCard';
 import { formatCurrency } from '@/services/transactionService';
 
@@ -9,6 +10,8 @@ interface SavingsGoal {
   current_amount: number;
   target_amount: number;
   target_date?: string | null;
+  monthly_contribution?: number;
+  is_completed?: boolean;
   status?: string;
 }
 
@@ -17,84 +20,139 @@ interface Props {
   isLoading?: boolean;
 }
 
-const STATUS_COLORS: Record<string, { ring: string; bg: string; text: string; glow: string }> = {
-  on_track: { ring: '#10b981', bg: 'bg-emerald-50 dark:bg-emerald-950/30', text: 'text-emerald-600 dark:text-emerald-400', glow: '0 0 12px rgba(16, 185, 129, 0.3)' },
-  behind: { ring: '#f59e0b', bg: 'bg-amber-50 dark:bg-amber-950/30', text: 'text-amber-600 dark:text-amber-400', glow: '0 0 12px rgba(245, 158, 11, 0.3)' },
-  completed: { ring: '#6366f1', bg: 'bg-indigo-50 dark:bg-indigo-950/30', text: 'text-indigo-600 dark:text-indigo-400', glow: '0 0 12px rgba(99, 102, 241, 0.3)' },
-  not_started: { ring: 'var(--text-muted)', bg: 'bg-slate-50 dark:bg-slate-800/50', text: 'text-slate-500', glow: 'none' },
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; dot: string }> = {
+  on_track: { label: 'On Track', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/30', dot: 'bg-emerald-500' },
+  behind: { label: 'Behind', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/30', dot: 'bg-amber-500' },
+  completed: { label: 'Completed', color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-950/30', dot: 'bg-indigo-500' },
+  not_started: { label: 'Not Started', color: 'text-slate-500', bg: 'bg-slate-50 dark:bg-slate-800/50', dot: 'bg-slate-400' },
 };
 
-function GoalRing({ goal, index }: { goal: SavingsGoal; index: number }) {
-  const [animated, setAnimated] = useState(0);
-  const pct = Math.min((goal.current_amount / goal.target_amount) * 100, 100);
-  const colors = STATUS_COLORS[goal.status ?? 'not_started'] ?? STATUS_COLORS.not_started!;
-  const circumference = 2 * Math.PI * 32;
-  const offset = circumference * (1 - animated / 100);
-  const isComplete = goal.status === 'completed' || pct >= 100;
+function getGoalStatus(goal: SavingsGoal): string {
+  if (goal.is_completed || goal.status === 'completed') return 'completed';
+  const pct = goal.target_amount > 0 ? (goal.current_amount / goal.target_amount) * 100 : 0;
+  if (pct >= 100) return 'completed';
+  if (goal.target_date) {
+    const now = new Date();
+    const target = new Date(goal.target_date);
+    const monthsLeft = (target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 30);
+    const remaining = goal.target_amount - goal.current_amount;
+    if (goal.monthly_contribution && goal.monthly_contribution > 0) {
+      const monthsNeeded = remaining / goal.monthly_contribution;
+      return monthsNeeded > monthsLeft ? 'behind' : 'on_track';
+    }
+    if (monthsLeft < 0 && pct < 100) return 'behind';
+  }
+  return pct > 0 ? 'on_track' : 'not_started';
+}
+
+function formatDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return '—';
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function AnimatedProgressBar({ percentage, delay = 0 }: { percentage: number; delay?: number }) {
+  const [width, setWidth] = useState(0);
 
   useEffect(() => {
-    const duration = 1200 + index * 200;
+    const duration = 1000;
     const start = performance.now();
     function tick(now: number) {
       const elapsed = now - start;
       const progress = Math.min(elapsed / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
-      setAnimated(pct * eased);
+      setWidth(percentage * eased);
       if (progress < 1) requestAnimationFrame(tick);
     }
     requestAnimationFrame(tick);
-  }, [pct, index]);
+  }, [percentage]);
+
+  return (
+    <div className="h-2.5 overflow-hidden rounded-full" style={{ background: 'var(--bg-elevated)' }}>
+      <motion.div
+        initial={{ width: 0 }}
+        animate={{ width: `${Math.min(width, 100)}%` }}
+        transition={{ duration: 0.1, delay }}
+        className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"
+      />
+    </div>
+  );
+}
+
+function GoalRow({ goal, index }: { goal: SavingsGoal; index: number }) {
+  const pct = goal.target_amount > 0 ? Math.min((goal.current_amount / goal.target_amount) * 100, 100) : 0;
+  const status = getGoalStatus(goal);
+  const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.not_started!;
+  const remaining = goal.target_amount - goal.current_amount;
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
-      className="flex flex-col items-center gap-2"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.2 + index * 0.08 }}
+      className="group rounded-xl p-4 transition-colors"
+      style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)' }}
     >
-      <div className={`relative h-[76px] w-[76px] ${isComplete ? 'celebration-pulse' : ''}`}>
-        <svg className="h-[76px] w-[76px] -rotate-90" viewBox="0 0 76 76">
-          <defs>
-            <linearGradient id={`goalGrad-${goal.id}`} x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={colors.ring} stopOpacity={0.4} />
-              <stop offset="100%" stopColor={colors.ring} stopOpacity={1} />
-            </linearGradient>
-            <filter id={`goalGlow-${goal.id}`}>
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-          <circle cx="38" cy="38" r="32" fill="none" stroke="var(--border-default)" strokeWidth="5" />
-          <circle
-            cx="38" cy="38" r="32"
-            fill="none"
-            stroke={`url(#goalGrad-${goal.id})`}
-            strokeWidth="5"
-            strokeDasharray={circumference}
-            strokeDashoffset={offset}
-            strokeLinecap="round"
-            filter={isComplete ? `url(#goalGlow-${goal.id})` : undefined}
-          />
-        </svg>
-        <span className="absolute inset-0 flex items-center justify-center text-sm font-bold tabular-nums" style={{ color: 'var(--text-primary)' }}>
-          {Math.round(animated)}%
-        </span>
-      </div>
-      <div className="text-center">
-        <p className="text-xs font-medium line-clamp-1" style={{ color: 'var(--text-secondary)' }}>{goal.name}</p>
-        <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-          {formatCurrency(goal.current_amount)} / {formatCurrency(goal.target_amount)}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <h4 className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{goal.name}</h4>
+            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${config.bg} ${config.color}`}>
+              <span className={`h-1.5 w-1.5 rounded-full ${config.dot}`} />
+              {config.label}
+            </span>
+          </div>
+
+          <div className="mt-2">
+            <AnimatedProgressBar percentage={pct} delay={0.3 + index * 0.1} />
+          </div>
+
+          <div className="mt-2 flex items-center gap-4 text-xs" style={{ color: 'var(--text-muted)' }}>
+            <span>
+              <span className="font-semibold tabular-nums" style={{ color: 'var(--text-primary)' }}>{formatCurrency(goal.current_amount)}</span>
+              {' / '}
+              <span className="tabular-nums">{formatCurrency(goal.target_amount)}</span>
+            </span>
+            <span className="font-semibold tabular-nums" style={{ color: 'var(--text-primary)' }}>
+              {pct.toFixed(1)}%
+            </span>
+          </div>
+        </div>
+
+        <div className="shrink-0 text-right space-y-1">
+          {goal.monthly_contribution && goal.monthly_contribution > 0 && (
+            <div className="text-xs">
+              <span style={{ color: 'var(--text-muted)' }}>Monthly: </span>
+              <span className="font-semibold tabular-nums" style={{ color: 'var(--text-primary)' }}>
+                {formatCurrency(goal.monthly_contribution)}
+              </span>
+            </div>
+          )}
+          {goal.target_date && (
+            <div className="text-xs">
+              <span style={{ color: 'var(--text-muted)' }}>Target: </span>
+              <span className="tabular-nums" style={{ color: 'var(--text-secondary)' }}>
+                {formatDate(goal.target_date)}
+              </span>
+            </div>
+          )}
+          {remaining > 0 && (
+            <div className="text-xs">
+              <span style={{ color: 'var(--text-muted)' }}>Remaining: </span>
+              <span className="font-medium tabular-nums text-emerald-600 dark:text-emerald-400">
+                {formatCurrency(remaining)}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
     </motion.div>
   );
 }
 
 export const SavingsGoalProgress = memo(function SavingsGoalProgress({ goals, isLoading }: Props) {
-  const activeGoals = useMemo(() => goals.filter((g) => g.status !== 'completed'), [goals]);
+  const navigate = useNavigate();
+  const activeGoals = useMemo(() => goals.filter((g) => !g.is_completed && g.status !== 'completed'), [goals]);
+  const displayGoals = useMemo(() => activeGoals.slice(0, 5), [activeGoals]);
   const totalSaved = useMemo(() => goals.reduce((s, g) => s + g.current_amount, 0), [goals]);
   const totalTarget = useMemo(() => goals.reduce((s, g) => s + g.target_amount, 0), [goals]);
   const overallPct = totalTarget > 0 ? (totalSaved / totalTarget) * 100 : 0;
@@ -102,9 +160,9 @@ export const SavingsGoalProgress = memo(function SavingsGoalProgress({ goals, is
   if (isLoading) {
     return (
       <DashboardCard title="Savings Goals" delay={0.12}>
-        <div className="flex gap-6">
+        <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 w-20 animate-pulse rounded-xl" style={{ background: 'var(--bg-elevated)' }} />
+            <div key={i} className="h-20 animate-pulse rounded-xl" style={{ background: 'var(--bg-elevated)' }} />
           ))}
         </div>
       </DashboardCard>
@@ -114,8 +172,20 @@ export const SavingsGoalProgress = memo(function SavingsGoalProgress({ goals, is
   if (goals.length === 0) {
     return (
       <DashboardCard title="Savings Goals" delay={0.12}>
-        <div className="flex h-32 items-center justify-center">
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No savings goals yet.</p>
+        <div className="flex h-40 items-center justify-center">
+          <div className="text-center">
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No savings goals yet</p>
+            <button
+              onClick={() => navigate('/savings')}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-medium text-white transition-all hover:opacity-90"
+              style={{ background: 'var(--accent-primary)' }}
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              Create Your First Goal
+            </button>
+          </div>
         </div>
       </DashboardCard>
     );
@@ -124,7 +194,28 @@ export const SavingsGoalProgress = memo(function SavingsGoalProgress({ goals, is
   return (
     <DashboardCard
       title="Savings Goals"
-      subtitle={`${activeGoals.length} active · ${formatCurrency(totalSaved)} saved`}
+      subtitle={`${activeGoals.length} active · ${formatCurrency(totalSaved)} saved of ${formatCurrency(totalTarget)}`}
+      action={
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate('/savings')}
+            className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors"
+            style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border-default)' }}
+          >
+            View All Goals
+          </button>
+          <button
+            onClick={() => navigate('/savings')}
+            className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-white transition-all hover:opacity-90"
+            style={{ background: 'var(--accent-primary)' }}
+          >
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Add Goal
+          </button>
+        </div>
+      }
       delay={0.12}
     >
       <div className="mb-4">
@@ -132,21 +223,35 @@ export const SavingsGoalProgress = memo(function SavingsGoalProgress({ goals, is
           <span style={{ color: 'var(--text-muted)' }}>Overall Progress</span>
           <span className="font-semibold tabular-nums" style={{ color: 'var(--text-primary)' }}>{overallPct.toFixed(1)}%</span>
         </div>
-        <div className="mt-1.5 h-2 overflow-hidden rounded-full" style={{ background: 'var(--bg-elevated)' }}>
+        <div className="mt-1.5 h-3 overflow-hidden rounded-full" style={{ background: 'var(--bg-elevated)' }}>
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${Math.min(overallPct, 100)}%` }}
-            transition={{ duration: 1, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500"
+            transition={{ duration: 1.2, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"
           />
+        </div>
+        <div className="mt-1.5 flex justify-between text-[10px]" style={{ color: 'var(--text-muted)' }}>
+          <span>{formatCurrency(totalSaved)} saved</span>
+          <span>{formatCurrency(totalTarget - totalSaved)} to go</span>
         </div>
       </div>
 
-      <div className="flex gap-6 overflow-x-auto pb-2" role="list" aria-label="Savings goals progress">
-        {goals.slice(0, 5).map((goal, i) => (
-          <GoalRing key={goal.id} goal={goal} index={i} />
+      <div className="space-y-2" role="list" aria-label="Savings goals">
+        {displayGoals.map((goal, i) => (
+          <GoalRow key={goal.id} goal={goal} index={i} />
         ))}
       </div>
+
+      {activeGoals.length > 5 && (
+        <button
+          onClick={() => navigate('/savings')}
+          className="mt-3 w-full rounded-lg py-2 text-center text-xs font-medium transition-colors"
+          style={{ color: 'var(--accent-text)', background: 'var(--accent-muted)' }}
+        >
+          View {activeGoals.length - 5} more goal{activeGoals.length - 5 !== 1 ? 's' : ''} →
+        </button>
+      )}
     </DashboardCard>
   );
 });

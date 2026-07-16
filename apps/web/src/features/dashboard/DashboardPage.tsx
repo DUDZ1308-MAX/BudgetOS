@@ -182,13 +182,17 @@ export function DashboardPage() {
       {/* Setup Checklist for new users */}
       <SetupChecklist />
 
-      {/* Row 2: Health Score + Savings Goals */}
-      <div className="grid gap-6 lg:grid-cols-2" aria-label="Health and savings overview">
+      {/* Row 2: Health Score */}
+      <div aria-label="Financial health">
         <FinancialHealthScore result={healthResult} isLoading={isLoading} />
+      </div>
+
+      {/* Row 3: Savings Goals — full width */}
+      <div aria-label="Savings goals overview">
         <SavingsGoalProgress goals={savingsGoals} isLoading={savingsLoading} />
       </div>
 
-      {/* Row 3: Cash Flow Trend + Spending Breakdown + AI Insights */}
+      {/* Row 4: Cash Flow Trend + Spending Breakdown + AI Insights */}
       <div className="grid gap-6 lg:grid-cols-3" aria-label="Trends and insights">
         <AnimatedCashFlow data={cashFlowData} isLoading={isLoading} />
         {spendingBreakdown.length > 0 ? (
