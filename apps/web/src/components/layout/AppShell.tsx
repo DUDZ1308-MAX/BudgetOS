@@ -16,6 +16,7 @@ import { useDemoStore } from '@/stores/demoMode';
 import { useOnboardingStore } from '@/stores/onboarding';
 import { useAuthStore } from '@/stores/auth';
 import { useFeatureFlagsStore } from '@/stores/featureFlags';
+import { RecurringPostingService } from '@/services/RecurringPostingService';
 
 export function AppShell() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -28,6 +29,11 @@ export function AppShell() {
     const timer = setTimeout(() => start(), 1000);
     return () => clearTimeout(timer);
   }, [user, isDemo, start]);
+
+  useEffect(() => {
+    if (!user || isDemo) return;
+    RecurringPostingService.processDue(user.id).catch(() => {});
+  }, [user, isDemo]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">

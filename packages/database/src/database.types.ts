@@ -4,11 +4,13 @@ export interface Database {
       profiles: {
         Row: {
           id: string;
+          full_name: string | null;
           display_name: string | null;
           avatar_url: string | null;
           currency: string;
           locale: string;
           timezone: string;
+          onboarding_complete: boolean;
           onboarding_completed: boolean;
           theme_preference: string | null;
           created_at: string;
@@ -16,20 +18,24 @@ export interface Database {
         };
         Insert: {
           id: string;
+          full_name?: string | null;
           display_name?: string | null;
           avatar_url?: string | null;
           currency?: string;
           locale?: string;
           timezone?: string;
+          onboarding_complete?: boolean;
           onboarding_completed?: boolean;
           theme_preference?: string | null;
         };
         Update: {
+          full_name?: string | null;
           display_name?: string | null;
           avatar_url?: string | null;
           currency?: string;
           locale?: string;
           timezone?: string;
+          onboarding_complete?: boolean;
           onboarding_completed?: boolean;
           theme_preference?: string | null;
         };
@@ -43,6 +49,7 @@ export interface Database {
           color: string | null;
           type: 'income' | 'expense' | 'transfer' | 'saving';
           is_system: boolean;
+          is_archived: boolean;
           sort_order: number;
           created_at: string;
           updated_at: string;
@@ -54,6 +61,7 @@ export interface Database {
           color?: string | null;
           type: 'income' | 'expense' | 'transfer' | 'saving';
           is_system?: boolean;
+          is_archived?: boolean;
           sort_order?: number;
         };
         Update: {
@@ -61,6 +69,7 @@ export interface Database {
           icon?: string | null;
           color?: string | null;
           type?: 'income' | 'expense' | 'transfer' | 'saving';
+          is_archived?: boolean;
           sort_order?: number;
         };
       };
@@ -69,7 +78,7 @@ export interface Database {
           id: string;
           user_id: string;
           name: string;
-          type: 'checking' | 'savings' | 'credit_card' | 'investment' | 'loan' | 'cash' | 'other';
+          type: 'checking' | 'savings' | 'credit' | 'credit_card' | 'investment' | 'loan' | 'cash' | 'other';
           balance: number;
           currency: string;
           institution: string | null;
@@ -82,7 +91,7 @@ export interface Database {
         Insert: {
           user_id: string;
           name: string;
-          type: 'checking' | 'savings' | 'credit_card' | 'investment' | 'loan' | 'cash' | 'other';
+          type: 'checking' | 'savings' | 'credit' | 'credit_card' | 'investment' | 'loan' | 'cash' | 'other';
           balance?: number;
           currency?: string;
           institution?: string | null;
@@ -92,7 +101,7 @@ export interface Database {
         };
         Update: {
           name?: string;
-          type?: 'checking' | 'savings' | 'credit_card' | 'investment' | 'loan' | 'cash' | 'other';
+          type?: 'checking' | 'savings' | 'credit' | 'credit_card' | 'investment' | 'loan' | 'cash' | 'other';
           balance?: number;
           institution?: string | null;
           is_active?: boolean;
@@ -109,10 +118,13 @@ export interface Database {
           amount: number;
           currency: string;
           description: string | null;
+          note: string | null;
           merchant: string | null;
           date: string;
+          is_archived: boolean;
           is_recurring: boolean;
           is_pending: boolean;
+          recurring_id: string | null;
           notes: string | null;
           tags: string[] | null;
           created_at: string;
@@ -125,10 +137,13 @@ export interface Database {
           amount: number;
           currency?: string;
           description?: string | null;
+          note?: string | null;
           merchant?: string | null;
           date: string;
+          is_archived?: boolean;
           is_recurring?: boolean;
           is_pending?: boolean;
+          recurring_id?: string | null;
           notes?: string | null;
           tags?: string[] | null;
         };
@@ -137,9 +152,12 @@ export interface Database {
           category_id?: string | null;
           amount?: number;
           description?: string | null;
+          note?: string | null;
           merchant?: string | null;
           date?: string;
+          is_archived?: boolean;
           is_pending?: boolean;
+          recurring_id?: string | null;
           notes?: string | null;
           tags?: string[] | null;
         };
