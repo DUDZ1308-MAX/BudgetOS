@@ -122,3 +122,22 @@ export const recurringTransactionUpdateSchema = z.object({
   reminder_type: reminderTypeEnum,
   status: recurringStatusEnum.optional(),
 });
+
+const feedbackTypeEnum = z.enum(['bug', 'feature', 'general']);
+const feedbackStatusEnum = z.enum(['pending', 'reviewed', 'resolved']);
+
+export const feedbackInsertSchema = z.object({
+  type: feedbackTypeEnum,
+  title: z.string().min(1).max(255),
+  message: z.string().min(10).max(5000),
+  email: z.string().email().nullable().optional(),
+});
+
+export const feedbackUpdateSchema = z.object({
+  type: feedbackTypeEnum.optional(),
+  title: z.string().min(1).max(255).optional(),
+  message: z.string().min(10).max(5000).optional(),
+  email: z.string().email().nullable().optional(),
+  status: feedbackStatusEnum.optional(),
+  admin_notes: z.string().max(5000).nullable().optional(),
+});

@@ -51,8 +51,16 @@ export function useDeleteMortgage() {
 export function useExtraPayments(mortgageId: string | undefined) {
   return useQuery({
     queryKey: ['mortgage-extra-payments', mortgageId],
-    queryFn: () => mortgageApi.listExtraPayments(mortgageId!),
+    queryFn: async () => {
+      try {
+        return await mortgageApi.listExtraPayments(mortgageId!);
+      } catch {
+        // Table may not exist yet (migration pending) — return empty list
+        return [];
+      }
+    },
     enabled: !!mortgageId,
+    retry: false,
   });
 }
 
@@ -60,8 +68,16 @@ export function useAddExtraPayment() {
   const qc = useQueryClient();
   const toast = useToastStore((s) => s.addToast);
   return useMutation({
-    mutationFn: ({ mortgageId, amount, date, notes }: { mortgageId: string; amount: number; date: string; notes?: string }) =>
-      mortgageApi.addExtraPayment(mortgageId, { amount, date, notes }),
+    mutationFn: async ({ mortgageId, amount, date, notes }: { mortgageId: string; amount: number; date: string; notes?: string }) => {
+      try {
+        return await mortgageApi.addExtraPayment(mortgageId, { amount, date, notes });
+      } catch (err: any) {
+        if (err?.message?.includes('relation') || err?.code === '42P01') {
+          throw new Error('Extra payments table not yet available. Please run the database migration.');
+        }
+        throw err;
+      }
+    },
     onSuccess: (created, vars) => {
       qc.invalidateQueries({ queryKey: ['mortgage-extra-payments', vars.mortgageId] });
       toast('success', 'Extra payment added');

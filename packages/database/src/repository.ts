@@ -16,6 +16,9 @@ import type {
   RecurringTransaction,
   RecurringTransactionInsert,
   RecurringTransactionUpdate,
+  Feedback,
+  FeedbackInsert,
+  FeedbackUpdate,
 } from './types';
 
 const DEFAULT_INCOME_NAMES = [
@@ -328,5 +331,39 @@ export function getDueRecurringTransactions(client: SupabaseClient, userId: stri
       .eq('auto_post', true)
       .lte('next_run', asOfDate)
       .order('next_run', { ascending: true }),
+  );
+}
+
+// ============================================================
+// Feedback
+// ============================================================
+
+export function getFeedback(client: SupabaseClient, userId: string) {
+  return asList<Feedback>(
+    client.from('feedback').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
+  );
+}
+
+export function getFeedbackById(client: SupabaseClient, feedbackId: string) {
+  return as<Feedback>(
+    client.from('feedback').select('*').eq('id', feedbackId).single(),
+  );
+}
+
+export function createFeedback(client: SupabaseClient, userId: string, data: FeedbackInsert) {
+  return as<Feedback>(
+    client.from('feedback').insert({ user_id: userId, ...data }).select('*').single(),
+  );
+}
+
+export function updateFeedback(client: SupabaseClient, feedbackId: string, data: FeedbackUpdate) {
+  return as<Feedback>(
+    client.from('feedback').update(data).eq('id', feedbackId).select('*').single(),
+  );
+}
+
+export function deleteFeedback(client: SupabaseClient, feedbackId: string) {
+  return as<Feedback>(
+    client.from('feedback').delete().eq('id', feedbackId).select('*').single(),
   );
 }

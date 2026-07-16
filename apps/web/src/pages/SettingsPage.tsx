@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth';
 import { useProfileStore } from '@/stores/profile';
-import { useThemeStore } from '@/stores/theme';
+import { useThemeStore, THEMES } from '@/stores/theme';
 import { useSyncStore } from '@/stores/sync';
 import { useSubscriptionStore } from '@/stores/subscription';
 import { useUsageStore } from '@/stores/usage';
@@ -12,8 +12,10 @@ import { FeatureGate } from '@/billing/billingGuard';
 import { getPlan } from '@/billing/pricingPlans';
 import type { SubscriptionTier } from '@/billing/pricingPlans';
 import { InlineValidation } from '@/components/ui/InlineValidation';
+import { FeedbackForm } from '@/components/feedback/FeedbackForm';
+import { FeedbackList } from '@/components/feedback/FeedbackList';
 
-type SettingsTab = 'account' | 'billing' | 'ai' | 'notifications' | 'data' | 'appearance' | 'privacy' | 'about';
+type SettingsTab = 'account' | 'billing' | 'ai' | 'notifications' | 'data' | 'appearance' | 'privacy' | 'feedback' | 'about';
 
 const TABS: { id: SettingsTab; label: string }[] = [
   { id: 'account', label: 'Account' },
@@ -23,6 +25,7 @@ const TABS: { id: SettingsTab; label: string }[] = [
   { id: 'data', label: 'Data' },
   { id: 'appearance', label: 'Appearance' },
   { id: 'privacy', label: 'Privacy' },
+  { id: 'feedback', label: 'Feedback' },
   { id: 'about', label: 'About' },
 ];
 
@@ -62,6 +65,7 @@ export function SettingsPage() {
         {activeTab === 'data' && <DataSection />}
         {activeTab === 'appearance' && <AppearanceSection />}
         {activeTab === 'privacy' && <PrivacySection />}
+        {activeTab === 'feedback' && <FeedbackSection />}
         {activeTab === 'about' && <AboutSection />}
       </div>
     </div>
@@ -479,50 +483,57 @@ function DataSection() {
 }
 
 function AppearanceSection() {
-  const { theme, toggle } = useThemeStore();
+  const { theme, setTheme } = useThemeStore();
 
   return (
     <div className="space-y-4">
       <section className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-        <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-white">Appearance</h2>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-900 dark:text-white">Dark Mode</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Switch between light and dark themes</p>
-            </div>
+        <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-white">Theme</h2>
+        <p className="mb-4 text-xs text-slate-500 dark:text-slate-400">
+          Choose a theme that matches your style. Your preference is saved automatically.
+        </p>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {THEMES.map((t) => (
             <button
-              role="switch"
-              aria-checked={theme === 'dark'}
-              aria-label="Dark Mode"
-              onClick={toggle}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                theme === 'dark' ? 'bg-brand-600' : 'bg-slate-300'
+              key={t.id}
+              onClick={() => setTheme(t.id)}
+              className={`group relative overflow-hidden rounded-xl border-2 p-3 text-left transition-all ${
+                theme === t.id
+                  ? 'border-brand-500 ring-2 ring-brand-500/20'
+                  : 'border-slate-200 hover:border-slate-300 dark:border-slate-700 dark:hover:border-slate-600'
               }`}
+              aria-label={`Select ${t.name} theme`}
+              aria-pressed={theme === t.id}
             >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-400 dark:text-slate-500">Theme Color</p>
-              <p className="text-xs text-slate-400 dark:text-slate-500">Coming soon</p>
-            </div>
-            <div className="flex gap-1">
-              {['brand', 'emerald', 'violet', 'amber'].map((color) => (
+              <div className="flex items-start gap-3">
                 <div
-                  key={color}
-                  className={`h-6 w-6 rounded-full border-2 border-transparent ${
-                    color === 'brand' ? 'bg-brand-600' : color === 'emerald' ? 'bg-emerald-500' : color === 'violet' ? 'bg-violet-500' : 'bg-amber-500'
-                  } opacity-30`}
-                />
-              ))}
-            </div>
-          </div>
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg shadow-inner"
+                  style={{ backgroundColor: t.preview.bg }}
+                >
+                  <div
+                    className="h-6 w-6 rounded"
+                    style={{ backgroundColor: t.preview.accent }}
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-slate-900 dark:text-white">{t.name}</p>
+                    {theme === t.id && (
+                      <svg className="h-4 w-4 text-brand-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                  <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{t.description}</p>
+                </div>
+              </div>
+              <div className="mt-3 flex gap-1">
+                <div className="h-2 flex-1 rounded-full" style={{ backgroundColor: t.preview.bg }} />
+                <div className="h-2 flex-1 rounded-full" style={{ backgroundColor: t.preview.surface }} />
+                <div className="h-2 flex-1 rounded-full" style={{ backgroundColor: t.preview.accent }} />
+              </div>
+            </button>
+          ))}
         </div>
       </section>
     </div>
@@ -714,6 +725,28 @@ function AboutSection() {
         <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
           This software uses open-source components. Licensed under the MIT License. See the LICENSE file for details. Notable dependencies include React, Tailwind CSS, Supabase, Zustand, Recharts, and more.
         </p>
+      </section>
+    </div>
+  );
+}
+
+function FeedbackSection() {
+  return (
+    <div className="space-y-6">
+      <section className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+        <h2 className="mb-1 text-sm font-semibold text-slate-900 dark:text-white">Send Feedback</h2>
+        <p className="mb-4 text-xs text-slate-500 dark:text-slate-400">
+          Help us improve MyBudgetOS by reporting bugs, suggesting features, or sharing general feedback.
+        </p>
+        <FeedbackForm />
+      </section>
+
+      <section className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+        <h2 className="mb-1 text-sm font-semibold text-slate-900 dark:text-white">Your Submissions</h2>
+        <p className="mb-4 text-xs text-slate-500 dark:text-slate-400">
+          View and manage your previously submitted feedback.
+        </p>
+        <FeedbackList />
       </section>
     </div>
   );

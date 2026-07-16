@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import type { Mortgage } from '@budgetos/database';
+import type { PaymentFrequency } from '@/lib/finance';
 
 // TODO: In production, validate all inputs with Zod schemas before sending to Supabase.
 
@@ -12,7 +13,10 @@ export type MortgageInsert = {
   principal: number;
   annual_rate: number;
   term_years: number;
+  amortization_years?: number;
   start_date?: string | null;
+  payment_frequency?: PaymentFrequency;
+  compound_semi_annual?: boolean;
   down_payment?: number;
   purchase_price?: number;
   notes?: string | null;
@@ -26,6 +30,7 @@ export interface ExtraPayment {
   mortgage_id: string;
   amount: number;
   date: string;
+  type: string;
   notes: string | null;
   created_at: string;
 }
@@ -83,7 +88,7 @@ export const mortgageApi = {
     return data ?? [];
   },
 
-  async addExtraPayment(mortgageId: string, data: { amount: number; date: string; notes?: string }): Promise<ExtraPayment> {
+  async addExtraPayment(mortgageId: string, data: { amount: number; date: string; type?: string; notes?: string }): Promise<ExtraPayment> {
     debug('addExtraPayment', mortgageId, data);
     const { data: result, error } = await supabase
       .from('mortgage_extra_payments')
@@ -94,7 +99,7 @@ export const mortgageApi = {
     return result;
   },
 
-  async updateExtraPayment(id: string, data: { amount?: number; date?: string; notes?: string }): Promise<ExtraPayment> {
+  async updateExtraPayment(id: string, data: { amount?: number; date?: string; type?: string; notes?: string }): Promise<ExtraPayment> {
     debug('updateExtraPayment', id, data);
     const { data: result, error } = await supabase
       .from('mortgage_extra_payments')

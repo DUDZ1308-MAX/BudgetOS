@@ -39,7 +39,7 @@ export function AppShell() {
           onClick={() => setSidebarOpen(false)}
         />
       )}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col">
         <DemoBanner />
         <AnnouncementBanner />
         <Header onMenuClick={() => setSidebarOpen(true)} />

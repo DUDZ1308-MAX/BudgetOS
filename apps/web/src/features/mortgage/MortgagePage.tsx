@@ -4,6 +4,18 @@ import { useMortgages, useCreateMortgage, useUpdateMortgage, useDeleteMortgage, 
 import { formatCurrency } from '@/services/transactionService';
 import { computeMortgage, computeMortgageDashboard } from '@/engine/MortgageEngine';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
+import { MortgagePayoffTimeline } from '@/components/dashboard/MortgagePayoffTimeline';
+import { InterestSaved } from '@/components/dashboard/InterestSaved';
+import type { PaymentFrequency } from '@/lib/finance';
+
+const PAYMENT_FREQUENCY_OPTIONS: { value: PaymentFrequency; label: string; description: string }[] = [
+  { value: 'monthly', label: 'Monthly', description: '12 payments/year' },
+  { value: 'semi_monthly', label: 'Semi-Monthly', description: '24 payments/year' },
+  { value: 'bi_weekly', label: 'Bi-Weekly', description: '26 payments/year' },
+  { value: 'accelerated_bi_weekly', label: 'Accelerated Bi-Weekly', description: '26 payments/year, pays off faster' },
+  { value: 'weekly', label: 'Weekly', description: '52 payments/year' },
+  { value: 'accelerated_weekly', label: 'Accelerated Weekly', description: '52 payments/year, pays off faster' },
+];
 
 function EmptyState({ message, description, action }: { message: string; description?: string; action?: { label: string; onClick: () => void } }) {
   return (
@@ -15,31 +27,49 @@ function EmptyState({ message, description, action }: { message: string; descrip
   );
 }
 
+function devError(field: string, value: unknown) {
+  if (import.meta.env?.DEV && (value === undefined || value === null)) {
+    console.error(`[MortgagePage] ${field} is ${value}. This indicates a data or calculation issue.`);
+  }
+}
+
 function MortgageFormModal({ open, onClose, onSave, mortgage }: { open: boolean; onClose: () => void; onSave: (data: any) => void; mortgage?: any }) {
   const isEdit = !!mortgage;
   const [name, setName] = useState(mortgage?.name ?? '');
   const [principal, setPrincipal] = useState(mortgage?.principal?.toString() ?? '');
   const [annualRate, setAnnualRate] = useState(mortgage?.annual_rate?.toString() ?? '');
-  const [termYears, setTermYears] = useState(mortgage?.term_years?.toString() ?? '30');
+  const [termYears, setTermYears] = useState(mortgage?.term_years?.toString() ?? '25');
+  const [amortizationYears, setAmortizationYears] = useState(mortgage?.amortization_years?.toString() ?? mortgage?.term_years?.toString() ?? '25');
   const [startDate, setStartDate] = useState(mortgage?.start_date ?? new Date().toISOString().slice(0, 10));
+  const [paymentFrequency, setPaymentFrequency] = useState<PaymentFrequency>(mortgage?.payment_frequency ?? 'monthly');
+  const [compoundSemiAnnual, setCompoundSemiAnnual] = useState(mortgage?.compound_semi_annual ?? true);
+  const [downPayment, setDownPayment] = useState(mortgage?.down_payment?.toString() ?? '');
   const initialValuesRef = useRef({
     name: mortgage?.name ?? '',
     principal: mortgage?.principal?.toString() ?? '',
     annualRate: mortgage?.annual_rate?.toString() ?? '',
-    termYears: mortgage?.term_years?.toString() ?? '30',
+    termYears: mortgage?.term_years?.toString() ?? '25',
+    amortizationYears: mortgage?.amortization_years?.toString() ?? mortgage?.term_years?.toString() ?? '25',
     startDate: mortgage?.start_date ?? new Date().toISOString().slice(0, 10),
+    paymentFrequency: mortgage?.payment_frequency ?? 'monthly',
+    compoundSemiAnnual: mortgage?.compound_semi_annual ?? true,
+    downPayment: mortgage?.down_payment?.toString() ?? '',
   });
   const isDirty = name !== initialValuesRef.current.name ||
     principal !== initialValuesRef.current.principal ||
     annualRate !== initialValuesRef.current.annualRate ||
     termYears !== initialValuesRef.current.termYears ||
-    startDate !== initialValuesRef.current.startDate;
+    amortizationYears !== initialValuesRef.current.amortizationYears ||
+    startDate !== initialValuesRef.current.startDate ||
+    paymentFrequency !== initialValuesRef.current.paymentFrequency ||
+    compoundSemiAnnual !== initialValuesRef.current.compoundSemiAnnual ||
+    downPayment !== initialValuesRef.current.downPayment;
   useUnsavedChanges(isDirty && open);
 
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm" onClick={onClose}>
-      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{isEdit ? 'Edit Mortgage' : 'New Mortgage'}</h2>
         <div className="mt-4 space-y-4">
           <div>
@@ -58,18 +88,71 @@ function MortgageFormModal({ open, onClose, onSave, mortgage }: { open: boolean;
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
+              <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Amortization (years)</label>
+              <input type="number" value={amortizationYears} onChange={(e) => setAmortizationYears(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-transparent px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:text-white" />
+            </div>
+            <div>
               <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Term (years)</label>
               <input type="number" value={termYears} onChange={(e) => setTermYears(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-transparent px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:text-white" />
             </div>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Payment Frequency</label>
+            <select
+              value={paymentFrequency}
+              onChange={(e) => setPaymentFrequency(e.target.value as PaymentFrequency)}
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-transparent px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:text-white"
+            >
+              {PAYMENT_FREQUENCY_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label} — {opt.description}</option>
+              ))}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Start Date</label>
               <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-transparent px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:text-white" />
             </div>
+            <div>
+              <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Down Payment</label>
+              <input type="number" value={downPayment} onChange={(e) => setDownPayment(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-transparent px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:text-white" placeholder="Optional" />
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="compoundSemiAnnual"
+              checked={compoundSemiAnnual}
+              onChange={(e) => setCompoundSemiAnnual(e.target.checked)}
+              className="h-4 w-4 rounded border-slate-300 text-indigo-600"
+            />
+            <label htmlFor="compoundSemiAnnual" className="text-sm text-slate-700 dark:text-slate-300">
+              Canadian semi-annual compounding (recommended for fixed-rate)
+            </label>
           </div>
         </div>
         <div className="mt-6 flex gap-3">
           <button onClick={onClose} className="flex-1 rounded-xl border border-slate-200 py-2 text-sm font-medium text-slate-600 dark:border-slate-700 dark:text-slate-400">Cancel</button>
-          <button onClick={() => { onSave({ name, principal: Number(principal), annual_rate: Number(annualRate), term_years: Number(termYears), start_date: startDate }); onClose(); }} disabled={!name || !principal || !annualRate} className="flex-1 rounded-xl bg-indigo-600 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50">{isEdit ? 'Save Changes' : 'Create'}</button>
+          <button
+            onClick={() => {
+              onSave({
+                name,
+                principal: Number(principal),
+                annual_rate: Number(annualRate),
+                term_years: Number(termYears),
+                amortization_years: Number(amortizationYears),
+                start_date: startDate,
+                payment_frequency: paymentFrequency,
+                compound_semi_annual: compoundSemiAnnual,
+                down_payment: downPayment ? Number(downPayment) : undefined,
+              });
+              onClose();
+            }}
+            disabled={!name || !principal || !annualRate}
+            className="flex-1 rounded-xl bg-indigo-600 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+          >
+            {isEdit ? 'Save Changes' : 'Create'}
+          </button>
         </div>
       </div>
     </div>
@@ -130,8 +213,21 @@ export function MortgagePage() {
       principal: Number(activeMortgage.principal),
       annualRate: Number(activeMortgage.annual_rate),
       termYears: Number(activeMortgage.term_years),
+      amortizationYears: Number((activeMortgage as any).amortization_years ?? activeMortgage.term_years),
       startDate: activeMortgage.start_date ?? new Date().toISOString().slice(0, 10),
-      extraPayments: extraPayments.map((ep) => ({ amount: Number(ep.amount), date: ep.date })),
+      paymentFrequency: ((activeMortgage as any).payment_frequency ?? 'monthly') as PaymentFrequency,
+      compoundSemiAnnual: (activeMortgage as any).compound_semi_annual ?? true,
+      extraPayments: extraPayments.map((ep) => {
+        const startDate = new Date(activeMortgage.start_date ?? new Date().toISOString().slice(0, 10));
+        const epDate = new Date(ep.date);
+        const monthsSinceStart = (epDate.getFullYear() - startDate.getFullYear()) * 12 + (epDate.getMonth() - startDate.getMonth());
+        const startMonth = Math.max(1, monthsSinceStart + 1);
+        return {
+          amount: Number(ep.amount),
+          type: (ep as any).type ?? 'one_time',
+          startMonth,
+        };
+      }),
     });
   }, [activeMortgage, extraPayments]);
 
@@ -182,19 +278,43 @@ export function MortgagePage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Remaining Balance</p>
-              <p className="mt-1.5 text-2xl font-bold text-indigo-600 dark:text-indigo-400">{formatCurrency(dashboard?.remainingBalance ?? 0)}</p>
+              {(() => { devError('remainingBalance', dashboard?.remainingBalance); return null; })()}
+              <p className="mt-1.5 text-2xl font-bold text-indigo-600 dark:text-indigo-400">{dashboard ? formatCurrency(dashboard.remainingBalance) : '—'}</p>
+              <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+                of {dashboard ? formatCurrency(dashboard.originalAmount) : '—'} original
+              </p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Monthly Payment</p>
-              <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">{formatCurrency(dashboard?.monthlyPayment ?? 0)}</p>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                {calcResult?.paymentFrequency === 'monthly' ? 'Monthly' :
+                 calcResult?.paymentFrequency === 'semi_monthly' ? 'Semi-Monthly' :
+                 calcResult?.paymentFrequency === 'bi_weekly' ? 'Bi-Weekly' :
+                 calcResult?.paymentFrequency === 'accelerated_bi_weekly' ? 'Accel. Bi-Weekly' :
+                 calcResult?.paymentFrequency === 'weekly' ? 'Weekly' : 'Accel. Weekly'} Payment
+              </p>
+              {(() => { devError('paymentAmount', calcResult?.paymentAmount); return null; })()}
+              <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">{calcResult ? formatCurrency(calcResult.paymentAmount) : '—'}</p>
+              {calcResult && calcResult.paymentFrequency !== 'monthly' && (
+                <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+                  ({formatCurrency(calcResult.monthlyEquivalent)}/mo equivalent)
+                </p>
+              )}
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Payoff Date</p>
-              <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">{dashboard?.payoffDate ? new Date(dashboard.payoffDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '-'}</p>
+              {(() => { devError('payoffDate', dashboard?.payoffDate); return null; })()}
+              <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">{dashboard?.payoffDate ? new Date(dashboard.payoffDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '—'}</p>
+              <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+                {calcResult?.payoffMonths ?? 0} months ({Math.round((calcResult?.payoffMonths ?? 0) / 12 * 10) / 10} years)
+              </p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Interest</p>
-              <p className="mt-1.5 text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(dashboard?.totalInterest ?? 0)}</p>
+              {(() => { devError('totalInterest', dashboard?.totalInterest); return null; })()}
+              <p className="mt-1.5 text-2xl font-bold text-red-600 dark:text-red-400">{dashboard ? formatCurrency(dashboard.totalInterest) : '—'}</p>
+              <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+                EAR: {((calcResult?.effectiveAnnualRate ?? 0) * 100).toFixed(2)}%
+              </p>
             </div>
           </div>
 
@@ -207,23 +327,49 @@ export function MortgagePage() {
                   <circle cx="50" cy="50" r="42" fill="none" stroke="url(#progressGrad)" strokeWidth="8" strokeDasharray={`${2 * Math.PI * 42}`} strokeDashoffset={`${2 * Math.PI * 42 * (1 - Math.min((dashboard?.progressPct ?? 0) / 100, 1))}`} strokeLinecap="round" className="transition-all duration-700" />
                   <defs><linearGradient id="progressGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#6366f1" /><stop offset="100%" stopColor="#8b5cf6" /></linearGradient></defs>
                 </svg>
-                <span className="absolute text-lg font-bold text-slate-900 dark:text-white">{Math.round(dashboard?.progressPct ?? 0)}%</span>
+                <span className="absolute text-lg font-bold text-slate-900 dark:text-white">{dashboard ? `${Math.round(dashboard.progressPct)}%` : '—'}</span>
               </div>
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-4">
                   <span className="text-slate-500 dark:text-slate-400 w-28">Principal Paid</span>
-                  <span className="font-semibold text-slate-900 dark:text-white">{formatCurrency(dashboard?.principalPaid ?? 0)}</span>
+                  {(() => { devError('paidSoFar.principal', dashboard?.paidSoFar?.principal); return null; })()}
+                  <span className="font-semibold text-slate-900 dark:text-white">{dashboard ? formatCurrency(dashboard.paidSoFar.principal) : '—'}</span>
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-slate-500 dark:text-slate-400 w-28">Interest Paid</span>
-                  <span className="font-semibold text-slate-900 dark:text-white">{formatCurrency(dashboard?.interestPaid ?? 0)}</span>
+                  {(() => { devError('paidSoFar.interest', dashboard?.paidSoFar?.interest); return null; })()}
+                  <span className="font-semibold text-slate-900 dark:text-white">{dashboard ? formatCurrency(dashboard.paidSoFar.interest) : '—'}</span>
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-slate-500 dark:text-slate-400 w-28">Interest Saved</span>
-                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">{formatCurrency(calcResult?.interestSaved ?? 0)}</span>
+                  {(() => { devError('interestSaved', calcResult?.interestSaved); return null; })()}
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">{calcResult ? formatCurrency(calcResult.interestSaved) : '—'}</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-slate-500 dark:text-slate-400 w-28">Equity Built</span>
+                  {(() => { devError('equityBuilt', dashboard?.equityBuilt); return null; })()}
+                  <span className="font-semibold text-slate-900 dark:text-white">{dashboard ? formatCurrency(dashboard.equityBuilt) : '—'}</span>
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Premium Visualizations: Payoff Timeline + Interest Saved */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            {calcResult?.schedule && (
+              <MortgagePayoffTimeline
+                schedule={calcResult.schedule}
+                monthlyPayment={calcResult.paymentAmount}
+              />
+            )}
+            <InterestSaved
+              interestSaved={calcResult?.interestSaved ?? 0}
+              totalInterest={calcResult?.totalInterest ?? 0}
+              monthlyPayment={calcResult?.paymentAmount ?? 0}
+              payoffMonthsOriginal={Number(activeMortgage.term_years) * 12}
+              payoffMonthsCurrent={calcResult?.payoffMonths ?? Number(activeMortgage.term_years) * 12}
+              monthsSaved={Number(activeMortgage.term_years) * 12 - (calcResult?.payoffMonths ?? Number(activeMortgage.term_years) * 12)}
+            />
           </div>
 
           {/* Extra Payments + Schedule */}

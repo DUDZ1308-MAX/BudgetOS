@@ -2,6 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth';
 import { computeDashboard } from '@/lib/dashboard/computeDashboard';
 import { StatCard } from '@/components/dashboard/StatCard';
+import { FinancialHealthScore } from '@/components/dashboard/FinancialHealthScore';
+import { AnimatedCashFlow } from '@/components/dashboard/AnimatedCashFlow';
+import { SavingsGoalProgress } from '@/components/dashboard/SavingsGoalProgress';
 import { RecentTransactionsCard } from './components/RecentTransactionsCard';
 import { AccountsCard } from './components/AccountsCard';
 import { BudgetChart } from './components/BudgetChart';
@@ -10,6 +13,8 @@ import { CategoryChart } from './components/CategoryChart';
 import { InsightsPanel } from './components/InsightsPanel';
 import { UpcomingBillsWidget, UpcomingIncomeWidget } from './components/UpcomingBillsWidget';
 import { SetupChecklist } from '@/components/ui/SetupChecklist';
+import { useHealthStore } from '@/stores/intelligence/healthStore';
+import { useSavingsGoals } from '@/hooks/useSavings';
 
 function WalletIcon() {
   return (
@@ -53,6 +58,8 @@ function BanknotesIcon() {
 
 export function DashboardPage() {
   const user = useAuthStore((s) => s.user);
+  const healthResult = useHealthStore((s) => s.result);
+  const { data: savingsGoals = [], isLoading: savingsLoading } = useSavingsGoals();
 
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard-summary', user?.id],
@@ -118,6 +125,12 @@ export function DashboardPage() {
 
       {/* Setup Checklist for new users */}
       <SetupChecklist />
+
+      {/* Premium Visualizations: Health Score + Savings Goals */}
+      <div className="grid gap-6 lg:grid-cols-2" aria-label="Health and savings overview">
+        <FinancialHealthScore result={healthResult} isLoading={isLoading} />
+        <SavingsGoalProgress goals={savingsGoals} isLoading={savingsLoading} />
+      </div>
 
       {/* Second Row: Budget Overview + Cash Flow Trend + Insights */}
       <div className="grid gap-6 lg:grid-cols-3" aria-label="Budget and trends">

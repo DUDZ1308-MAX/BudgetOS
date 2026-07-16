@@ -48,7 +48,7 @@ export function Header({ onMenuClick }: HeaderProps) {
   const totalUnread = unreadCount + unreadAnnouncements;
 
   return (
-    <header role="banner" className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white/80 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/80 px-4 md:px-6">
+    <header role="banner" className="relative z-[60] flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white/80 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/80 px-4 md:px-6">
       <div className="flex items-center gap-4">
         <button
           onClick={onMenuClick}

@@ -18,6 +18,7 @@ import { computeMortgage } from '@/engine/MortgageEngine';
 import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
 import { IconReports } from '@/components/ui/Icons';
+import { InteractiveDonut } from '@/components/dashboard/InteractiveDonut';
 
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6', '#ec4899'];
 
@@ -299,36 +300,11 @@ export function ReportsPage() {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            {/* Spending breakdown */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <h3 className="mb-4 text-sm font-semibold text-slate-900 dark:text-white">Spending Breakdown</h3>
-              {categorySpending.length === 0 ? (
-                <p className="py-6 text-center text-sm text-slate-400">No spending data.</p>
-              ) : (
-                <>
-                  <div className="h-48">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie data={categorySpending} cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={2} dataKey="value" strokeWidth={0}>
-                          {categorySpending.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                        </Pie>
-                        <Tooltip content={<TooltipCard />} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="mt-4 space-y-2">
-                    {categorySpending.map((item, i) => (
-                      <div key={item.id} className="flex items-center gap-3">
-                        <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                        <span className="flex-1 truncate text-xs text-slate-700 dark:text-slate-300">{item.name}</span>
-                        <span className="text-xs font-medium text-slate-900 dark:text-white">{formatCurrency(item.value)}</span>
-                        <span className="w-10 text-right text-xs text-slate-400 dark:text-slate-500">{item.percent}%</span>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
+            {/* Spending breakdown - Premium Interactive Donut */}
+            <InteractiveDonut
+              data={categorySpending.map((c) => ({ name: c.name, value: c.value, percent: c.percent / 100 }))}
+              title="Spending Breakdown"
+            />
 
             {/* Monthly trend */}
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -462,7 +438,7 @@ export function ReportsPage() {
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                   <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Monthly Payment</p>
-                  <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">{formatCurrency(mortgageCalc.monthlyPayment)}</p>
+                  <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">{formatCurrency(mortgageCalc.paymentAmount)}</p>
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                   <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Interest</p>

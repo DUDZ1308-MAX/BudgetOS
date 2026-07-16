@@ -18,9 +18,10 @@ export {
   calculateMonthlyIncome, calculateMonthlyExpenses, calculateCashFlow,
   calculateNetFlow, calculateIncomeVsExpenseRatio, calculateBurnRate,
   calculateAverageMonthlySpend, calculateSafeToSpend,
-  calculateMonthlyPayment, generateAmortizationSchedule, calculateInterestSaved,
+  generateAmortizationSchedule, calculateInterestSaved,
   calculatePayoffDate, calculateRemainingBalance, calculateExtraPaymentScenario,
   calculateInvestVsMortgage, computeMortgageDashboard, computeMortgage,
+  computeEffectiveAnnualRate, compareScenarios, computeMortgageLegacy,
   calculateGoalProgress, calculateRemainingAmount,
   calculateRequiredMonthlyContribution, calculateGoalCompletionDate,
   calculateSavingsAllocation, calculateSurplus, computeGoalStatus,
@@ -45,6 +46,8 @@ export type {
   FinancialHealthScore, IncomeVsExpenseReport, CategoryBreakdownReport,
   MerchantTotalReport, MonthlyComparisonReport, YearOverYearReport,
   RecurringVsManualReport, AccountInput, ScheduleInput, ScheduleFrequency,
+  PaymentFrequency, ScenarioComparison, ScenarioResult, ScenarioInput,
+  InvestVsMortgageResult,
 } from '@/lib/finance';
 
 // Legacy types re-exports

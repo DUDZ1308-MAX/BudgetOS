@@ -227,3 +227,35 @@ export interface RecurringTransactionUpdate {
   reminder_type?: 'today' | 'day_before' | 'three_days_before' | 'week_before' | null;
   status?: 'active' | 'paused' | 'completed' | 'cancelled';
 }
+
+export type FeedbackType = 'bug' | 'feature' | 'general';
+export type FeedbackStatus = 'pending' | 'reviewed' | 'resolved';
+
+export interface Feedback {
+  id: string;
+  user_id: string;
+  type: FeedbackType;
+  title: string;
+  message: string;
+  email: string | null;
+  status: FeedbackStatus;
+  admin_notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FeedbackInsert {
+  type: FeedbackType;
+  title: string;
+  message: string;
+  email?: string | null;
+}
+
+export interface FeedbackUpdate {
+  type?: FeedbackType;
+  title?: string;
+  message?: string;
+  email?: string | null;
+  status?: FeedbackStatus;
+  admin_notes?: string | null;
+}

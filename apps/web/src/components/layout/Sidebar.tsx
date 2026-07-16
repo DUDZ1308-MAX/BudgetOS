@@ -99,12 +99,12 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         aria-label="Toggle dark mode"
         className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/60"
       >
-        {theme === 'dark' ? (
+        {theme !== 'light' ? (
           <IconSun className="h-5 w-5 text-slate-400" />
         ) : (
           <IconMoon className="h-5 w-5 text-slate-400" />
         )}
-        <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+        <span>{theme !== 'light' ? 'Light Mode' : 'Dark Mode'}</span>
       </button>
       <p className="px-3 pt-1 text-[10px] text-slate-300 dark:text-slate-600">v{APP_VERSION}</p>
     </div>

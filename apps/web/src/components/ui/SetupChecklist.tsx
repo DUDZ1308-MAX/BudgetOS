@@ -27,6 +27,7 @@ export function SetupChecklist() {
   const doneCount = completed.length;
   const total = ITEMS.length;
   const allDone = doneCount === total;
+  const percent = Math.round((doneCount / total) * 100);
 
   if (allDone || isDismissed) return null;
 
@@ -39,7 +40,9 @@ export function SetupChecklist() {
           </div>
           <div>
             <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Getting Started</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">{doneCount} of {total} complete</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {doneCount} of {total} complete ({percent}%)
+            </p>
           </div>
         </div>
         <button onClick={dismiss} className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800" aria-label="Dismiss checklist">
@@ -50,12 +53,24 @@ export function SetupChecklist() {
       </div>
 
       {/* Progress bar */}
-      <div className="mb-4 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800">
+      <div className="mb-4 h-2 rounded-full bg-slate-100 dark:bg-slate-800">
         <div
-          className="h-1.5 rounded-full bg-gradient-to-r from-brand-500 to-brand-600 transition-all duration-500 ease-out"
-          style={{ width: `${(doneCount / total) * 100}%` }}
+          className="h-2 rounded-full bg-gradient-to-r from-brand-500 to-brand-600 transition-all duration-500 ease-out"
+          style={{ width: `${percent}%` }}
         />
       </div>
+
+      {/* Milestone indicator */}
+      {doneCount > 0 && doneCount < total && (
+        <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+          {doneCount === 1 && "Great start! Keep going to unlock all features."}
+          {doneCount === 2 && "Nice progress! You're building good habits."}
+          {doneCount === 3 && "Over halfway there! Your finances are taking shape."}
+          {doneCount === 4 && "Almost done! Just a few more steps."}
+          {doneCount === 5 && "Fantastic work! You're nearly a pro."}
+          {doneCount === 6 && "One more to go! You've got this."}
+        </p>
+      )}
 
       <div className="space-y-1">
         {ITEMS.map((item) => {
@@ -92,6 +107,12 @@ export function SetupChecklist() {
           );
         })}
       </div>
+
+      {doneCount === 0 && (
+        <p className="mt-3 text-center text-xs text-slate-400 dark:text-slate-500">
+          Complete these steps to get the most out of MyBudgetOS
+        </p>
+      )}
     </div>
   );
 }

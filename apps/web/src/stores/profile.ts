@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { supabase } from '@/lib/supabase';
 import { logger } from '@/core/logger';
+import type { Theme } from '@/stores/theme';
 
 export interface Profile {
   id: string;
@@ -10,6 +11,7 @@ export interface Profile {
   timezone: string;
   locale: string;
   onboarding_complete: boolean;
+  theme_preference: Theme | null;
 }
 
 interface ProfileState {

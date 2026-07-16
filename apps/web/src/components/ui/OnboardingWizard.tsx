@@ -11,35 +11,20 @@ const STEP_CONFIG: Record<OnboardingStep, {
     description: 'Take control of your finances with smart budgeting, AI-powered insights, and beautiful visualizations. Let\'s get you set up in under 5 minutes.',
     illustration: <IconRocket className="h-16 w-16 text-brand-600" />,
   },
-  'create-budget': {
-    title: 'Create Your First Budget',
-    description: 'Budgets help you track spending and stay on top of your finances. Start simple — pick a category and set a monthly limit. MyBudgetOS will track everything automatically.',
-    illustration: <IconChart className="h-16 w-16 text-brand-600" />,
-  },
-  'add-income': {
-    title: 'Add Your Income',
-    description: 'Add your salary, freelance income, or any regular deposits. MyBudgetOS will use this to calculate your savings rate and give you better financial insights.',
-    illustration: <IconRocket className="h-16 w-16 text-emerald-600" />,
-  },
-  'add-expenses': {
-    title: 'Track Your Expenses',
-    description: 'Start recording your spending. Add transactions manually or import from a CSV file. The more data you add, the smarter your AI insights become.',
-    illustration: <IconChart className="h-16 w-16 text-amber-600" />,
-  },
-  'savings-goal': {
-    title: 'Set a Savings Goal',
-    description: 'Save for something that matters — an emergency fund, a vacation, or a big purchase. Set a target and MyBudgetOS will help you track progress.',
+  profile: {
+    title: 'Set Up Your Profile',
+    description: 'Tell us a bit about yourself so we can personalize your experience. Your profile helps us give you better financial insights and recommendations.',
     illustration: <IconTarget className="h-16 w-16 text-brand-600" />,
   },
-  'explore-ai': {
-    title: 'Meet Your AI Copilot',
-    description: 'Your AI Financial Copilot can answer questions about your spending, suggest budget improvements, and provide personalized financial advice. Try asking it anything!',
-    illustration: <IconSparkles className="h-16 w-16 text-brand-600" />,
+  accounts: {
+    title: 'Connect Your Accounts',
+    description: 'Link your bank accounts, credit cards, or other financial accounts. Your data is encrypted and secure — we never store your login credentials.',
+    illustration: <IconSparkles className="h-16 w-16 text-emerald-600" />,
   },
-  'enable-sync': {
-    title: 'Enable Cloud Sync',
-    description: 'Turn on cloud sync to keep your data safe and accessible across all your devices. Your data is encrypted and securely stored.',
-    illustration: <IconBadgeCheck className="h-16 w-16 text-emerald-600" />,
+  budgets: {
+    title: 'Create Your First Budget',
+    description: 'Set up your first budget to start tracking spending. Choose a category and set a monthly limit. MyBudgetOS will track everything automatically.',
+    illustration: <IconChart className="h-16 w-16 text-brand-600" />,
   },
   complete: {
     title: 'You\'re All Set!',
@@ -48,16 +33,13 @@ const STEP_CONFIG: Record<OnboardingStep, {
   },
 };
 
-const stepNames: OnboardingStep[] = [
-  'welcome', 'create-budget', 'add-income', 'add-expenses',
-  'savings-goal', 'explore-ai', 'enable-sync', 'complete',
-];
+const STEP_ORDER: OnboardingStep[] = ['welcome', 'profile', 'accounts', 'budgets', 'complete'];
 
 export function OnboardingWizard() {
-  const { isActive, currentStep, nextStep, prevStep, skip, complete, start } = useOnboardingStore();
+  const { isActive, currentStep, nextStep, prevStep, skip, complete } = useOnboardingStore();
 
-  const currentIndex = stepNames.indexOf(currentStep);
-  const totalSteps = stepNames.length;
+  const currentIndex = STEP_ORDER.indexOf(currentStep);
+  const totalSteps = STEP_ORDER.length;
   const progress = ((currentIndex + 1) / totalSteps) * 100;
   const isLast = currentStep === 'complete';
   const step = STEP_CONFIG[currentStep];
@@ -82,7 +64,7 @@ export function OnboardingWizard() {
 
           <div className="flex items-center justify-between border-t border-slate-200 px-6 py-4 dark:border-slate-800">
             <div className="flex gap-1">
-              {stepNames.map((s, i) => (
+              {STEP_ORDER.map((s, i) => (
                 <div key={s} className={`h-1.5 w-4 rounded-full transition-colors ${
                   i <= currentIndex ? 'bg-brand-600' : 'bg-slate-200 dark:bg-slate-700'
                 }`} />

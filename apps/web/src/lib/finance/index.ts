@@ -20,8 +20,31 @@ export { calculateMonthlyIncome, calculateMonthlyExpenses, calculateCashFlow, ca
 export type { DailyBalance, CashFlowSummary } from './cashFlow';
 
 // Mortgage
-export { calculateMonthlyPayment, generateAmortizationSchedule, calculateInterestSaved, calculatePayoffDate, calculateRemainingBalance, calculateExtraPaymentScenario, calculateInvestVsMortgage, computeMortgageDashboard, computeMortgage } from './mortgage';
-export type { MortgageInput, ExtraPaymentInput, AmortizationRow, MortgageResult, MortgageDashboard } from './mortgage';
+export {
+  generateAmortizationSchedule,
+  calculateInterestSaved,
+  calculatePayoffDate,
+  calculateRemainingBalance,
+  calculateExtraPaymentScenario,
+  calculateInvestVsMortgage,
+  computeMortgageDashboard,
+  computeMortgage,
+  computeEffectiveAnnualRate,
+  compareScenarios,
+  computeMortgageLegacy,
+} from './mortgage';
+export type {
+  PaymentFrequency,
+  MortgageInput,
+  ExtraPaymentInput,
+  AmortizationRow,
+  MortgageResult,
+  MortgageDashboard,
+  ScenarioComparison,
+  ScenarioResult,
+  ScenarioInput,
+  InvestVsMortgageResult,
+} from './mortgage';
 
 // Savings
 export { calculateGoalProgress, calculateRemainingAmount, calculateRequiredMonthlyContribution, calculateGoalCompletionDate, calculateSavingsAllocation, calculateSurplus, computeGoalStatus, computeSavingsDashboard } from './savings';

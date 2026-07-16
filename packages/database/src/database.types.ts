@@ -251,12 +251,17 @@ export interface Database {
           principal: number;
           annual_rate: number;
           term_years: number;
+          amortization_years: number;
           start_date: string;
+          payment_frequency: 'monthly' | 'semi_monthly' | 'bi_weekly' | 'accelerated_bi_weekly' | 'weekly' | 'accelerated_weekly';
+          compound_semi_annual: boolean;
           extra_payments: {
             type: string;
             amount: number;
             month?: number;
           }[];
+          down_payment: number;
+          purchase_price: number | null;
           is_active: boolean;
           created_at: string;
           updated_at: string;
@@ -267,12 +272,17 @@ export interface Database {
           principal: number;
           annual_rate: number;
           term_years: number;
+          amortization_years?: number;
           start_date: string;
+          payment_frequency?: 'monthly' | 'semi_monthly' | 'bi_weekly' | 'accelerated_bi_weekly' | 'weekly' | 'accelerated_weekly';
+          compound_semi_annual?: boolean;
           extra_payments?: {
             type: string;
             amount: number;
             month?: number;
           }[];
+          down_payment?: number;
+          purchase_price?: number | null;
           is_active?: boolean;
         };
         Update: {
@@ -280,13 +290,42 @@ export interface Database {
           principal?: number;
           annual_rate?: number;
           term_years?: number;
+          amortization_years?: number;
           start_date?: string;
+          payment_frequency?: 'monthly' | 'semi_monthly' | 'bi_weekly' | 'accelerated_bi_weekly' | 'weekly' | 'accelerated_weekly';
+          compound_semi_annual?: boolean;
           extra_payments?: {
             type: string;
             amount: number;
             month?: number;
           }[];
+          down_payment?: number;
+          purchase_price?: number | null;
           is_active?: boolean;
+        };
+      };
+      mortgage_extra_payments: {
+        Row: {
+          id: string;
+          mortgage_id: string;
+          amount: number;
+          date: string;
+          type: string;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          mortgage_id: string;
+          amount: number;
+          date: string;
+          type?: string;
+          notes?: string | null;
+        };
+        Update: {
+          amount?: number;
+          date?: string;
+          type?: string;
+          notes?: string | null;
         };
       };
       amortization_cache: {

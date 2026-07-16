@@ -1,5 +1,6 @@
-import { useWaitlistStore, type WaitlistEntry } from '@/stores/waitlist';
-import { useFeedbackStore, type FeedbackEntry } from '@/stores/feedback';
+import { useWaitlistStore } from '@/stores/waitlist';
+import { useFeedbackStore } from '@/stores/feedback';
+import type { FeedbackEntry } from '@/stores/feedback';
 import { useFeatureFlagsStore } from '@/stores/featureFlags';
 import { useAdminStore } from '@/stores/admin';
 import { useAuditStore } from '@/core/audit';

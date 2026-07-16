@@ -1,11 +1,11 @@
 import { useState, useRef, useCallback } from 'react';
-import { useFeedbackStore, type FeedbackType } from '@/stores/feedback';
-import { IconFeedback, IconStar, IconSparkles } from '@/components/ui/Icons';
+import { useFeedbackStore } from '@/stores/feedback';
+import type { FeedbackType } from '@/stores/feedback';
+import { IconFeedback, IconSparkles } from '@/components/ui/Icons';
 
 const TYPE_OPTIONS: { value: FeedbackType; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { value: 'bug', label: 'Report Bug', icon: IconBugIcon },
   { value: 'feature', label: 'Suggest Feature', icon: IconSparkles },
-  { value: 'ai-rating', label: 'Rate AI Response', icon: IconStar },
   { value: 'general', label: 'General Feedback', icon: IconMessageSquareIcon },
 ];
 
@@ -35,7 +35,6 @@ export function FeedbackWidget() {
   const [type, setType] = useState<FeedbackType>('general');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [aiRating, setAiRating] = useState(0);
   const [screenshot, setScreenshot] = useState<string | undefined>();
   const [submitted, setSubmitted] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -61,7 +60,6 @@ export function FeedbackWidget() {
       setTitle('');
       setDescription('');
       setType('general');
-      setAiRating(0);
       setScreenshot(undefined);
     }, 2000);
   }, [type, title, description, screenshot, submit, setOpen]);
@@ -127,28 +125,6 @@ export function FeedbackWidget() {
                     ))}
                   </div>
                 </div>
-
-                {type === 'ai-rating' && (
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Rating</label>
-                    <div className="flex gap-1">
-                      {[1, 2, 3, 4, 5].map((n) => (
-                        <button
-                          key={n}
-                          type="button"
-                          onClick={() => setAiRating(n)}
-                          className={`h-8 w-8 rounded-lg text-xs font-bold transition-colors ${
-                            n <= aiRating
-                              ? 'bg-amber-400 text-white'
-                              : 'bg-slate-100 text-slate-400 dark:bg-slate-800'
-                          }`}
-                        >
-                          {n}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
 
                 <div>
                   <label htmlFor="fb-title" className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Title</label>

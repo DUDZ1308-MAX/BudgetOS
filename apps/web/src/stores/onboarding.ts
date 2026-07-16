@@ -1,95 +1,118 @@
 import { create } from 'zustand';
 
-export type OnboardingStep =
-  | 'welcome'
-  | 'create-budget'
-  | 'add-income'
-  | 'add-expenses'
-  | 'savings-goal'
-  | 'explore-ai'
-  | 'enable-sync'
-  | 'complete';
+export type OnboardingStep = 'welcome' | 'profile' | 'accounts' | 'budgets' | 'complete';
 
 interface OnboardingState {
+  isCompleted: boolean;
   isActive: boolean;
   currentStep: OnboardingStep;
-  completedSteps: OnboardingStep[];
-  isDismissed: boolean;
+  startedAt: string | null;
+  completedAt: string | null;
   start: () => void;
+  setStep: (step: OnboardingStep) => void;
   nextStep: () => void;
   prevStep: () => void;
-  goToStep: (step: OnboardingStep) => void;
-  skip: () => void;
   complete: () => void;
-  dismiss: () => void;
+  reset: () => void;
+  skip: () => void;
 }
 
-const stepsOrder: OnboardingStep[] = [
-  'welcome',
-  'create-budget',
-  'add-income',
-  'add-expenses',
-  'savings-goal',
-  'explore-ai',
-  'enable-sync',
-  'complete',
-];
+const ONBOARDING_STEPS: OnboardingStep[] = ['welcome', 'profile', 'accounts', 'budgets', 'complete'];
 
-function loadDismissed(): boolean {
+function loadState(): { isCompleted: boolean; startedAt: string | null; completedAt: string | null } {
   try {
-    return localStorage.getItem('budgetos_onboarding_dismissed') === 'true';
-  } catch { return false; }
+    const raw = localStorage.getItem('budgetos_onboarding');
+    if (raw) return JSON.parse(raw);
+  } catch { /* ignore */ }
+  return { isCompleted: false, startedAt: null, completedAt: null };
 }
 
-function saveDismissed() {
-  localStorage.setItem('budgetos_onboarding_dismissed', 'true');
+function saveState(state: { isCompleted: boolean; startedAt: string | null; completedAt: string | null }) {
+  try {
+    localStorage.setItem('budgetos_onboarding', JSON.stringify(state));
+  } catch { /* ignore */ }
 }
+
+const initial = loadState();
 
 export const useOnboardingStore = create<OnboardingState>((set, get) => ({
+  isCompleted: initial.isCompleted,
   isActive: false,
   currentStep: 'welcome',
-  completedSteps: [],
-  isDismissed: loadDismissed(),
+  startedAt: initial.startedAt,
+  completedAt: initial.completedAt,
 
   start: () => {
-    if (get().isDismissed) return;
-    set({ isActive: true, currentStep: 'welcome', completedSteps: [] });
+    if (get().isCompleted) return;
+    const state = get();
+    if (!state.startedAt) {
+      const startedAt = new Date().toISOString();
+      saveState({ ...state, startedAt });
+      set({ isActive: true, currentStep: 'welcome', startedAt });
+    } else {
+      set({ isActive: true });
+    }
+  },
+
+  setStep: (step) => {
+    const state = get();
+    if (!state.startedAt) {
+      const startedAt = new Date().toISOString();
+      saveState({ ...state, startedAt });
+      set({ currentStep: step, startedAt });
+    } else {
+      set({ currentStep: step });
+    }
   },
 
   nextStep: () => {
-    const { currentStep, completedSteps } = get();
-    const currentIndex = stepsOrder.indexOf(currentStep);
-    if (currentIndex < stepsOrder.length - 1) {
-      const next = stepsOrder[currentIndex + 1];
-      set({
-        currentStep: next,
-        completedSteps: [...completedSteps, currentStep],
-      });
+    const { currentStep } = get();
+    const idx = ONBOARDING_STEPS.indexOf(currentStep);
+    if (idx < ONBOARDING_STEPS.length - 1) {
+      set({ currentStep: ONBOARDING_STEPS[idx + 1] });
     }
   },
 
   prevStep: () => {
     const { currentStep } = get();
-    const currentIndex = stepsOrder.indexOf(currentStep);
-    if (currentIndex > 0) {
-      set({ currentStep: stepsOrder[currentIndex - 1] });
+    const idx = ONBOARDING_STEPS.indexOf(currentStep);
+    if (idx > 0) {
+      set({ currentStep: ONBOARDING_STEPS[idx - 1] });
     }
   },
 
-  goToStep: (step) => set({ currentStep: step }),
+  complete: () => {
+    const completedAt = new Date().toISOString();
+    saveState({ isCompleted: true, startedAt: get().startedAt, completedAt });
+    set({ isCompleted: true, isActive: false, completedAt });
+  },
+
+  reset: () => {
+    saveState({ isCompleted: false, startedAt: null, completedAt: null });
+    set({ isCompleted: false, isActive: false, currentStep: 'welcome', startedAt: null, completedAt: null });
+  },
 
   skip: () => {
-    saveDismissed();
-    set({ isActive: false, isDismissed: true });
-  },
-
-  complete: () => {
-    saveDismissed();
-    set({ isActive: false, isDismissed: true, completedSteps: [...stepsOrder] });
-  },
-
-  dismiss: () => {
-    saveDismissed();
-    set({ isDismissed: true });
+    const completedAt = new Date().toISOString();
+    saveState({ isCompleted: true, startedAt: get().startedAt, completedAt });
+    set({ isCompleted: true, isActive: false, currentStep: 'complete', completedAt });
   },
 }));
+
+export function getNextStep(current: OnboardingStep): OnboardingStep {
+  const idx = ONBOARDING_STEPS.indexOf(current);
+  return ONBOARDING_STEPS[Math.min(idx + 1, ONBOARDING_STEPS.length - 1)] ?? 'complete';
+}
+
+export function getPrevStep(current: OnboardingStep): OnboardingStep {
+  const idx = ONBOARDING_STEPS.indexOf(current);
+  return ONBOARDING_STEPS[Math.max(idx - 1, 0)] ?? 'welcome';
+}
+
+export function getStepIndex(step: OnboardingStep): number {
+  return ONBOARDING_STEPS.indexOf(step);
+}
+
+export function getTotalSteps(): number {
+  return ONBOARDING_STEPS.length;
+}

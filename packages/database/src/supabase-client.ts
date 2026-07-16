@@ -1,13 +1,10 @@
-import { createClient } from '@supabase/supabase-js';
+// Re-export the singleton Supabase client from the web app.
+// The database package should NOT create its own client — that causes
+// "Multiple GoTrueClient instances" warnings in the browser.
+//
+// If this package is used outside the web app, create a thin wrapper
+// that accepts a client instance instead of creating one here.
 
-const supabaseUrl =
-  (typeof process !== 'undefined' && process.env.VITE_SUPABASE_URL) ||
-  (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SUPABASE_URL) ||
-  '';
-
-const supabaseAnonKey =
-  (typeof process !== 'undefined' && process.env.VITE_SUPABASE_ANON_KEY) ||
-  (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SUPABASE_ANON_KEY) ||
-  '';
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Lazy re-export: the actual client lives in apps/web/src/lib/supabase.ts
+// For type-only usage (which is the primary use case), no client is needed.
+export type { SupabaseClient } from '@supabase/supabase-js';
