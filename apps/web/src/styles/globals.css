@@ -49,6 +49,20 @@
 
   --ring-focus: rgba(99, 102, 241, 0.5);
   --ring-offset: #0f172a;
+
+  /* Premium glassmorphism tokens */
+  --glass-bg: rgba(15, 23, 42, 0.6);
+  --glass-border: rgba(99, 102, 241, 0.12);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(99, 102, 241, 0.08);
+  --glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(99, 102, 241, 0.15);
+  --glass-blur: 16px;
+  --card-gradient: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+  --card-gradient-hover: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 1) 100%);
+  --depth-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.2), 0 8px 16px rgba(0, 0, 0, 0.15);
+  --depth-shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.3), 0 8px 16px rgba(0, 0, 0, 0.25), 0 16px 32px rgba(0, 0, 0, 0.2);
+  --glow-accent: 0 0 20px rgba(99, 102, 241, 0.15);
+  --glow-success: 0 0 20px rgba(52, 211, 153, 0.15);
+  --glow-error: 0 0 20px rgba(248, 113, 113, 0.15);
 }
 
 /* === Midnight Blue === */
@@ -89,6 +103,19 @@
 
   --ring-focus: rgba(59, 130, 246, 0.5);
   --ring-offset: #0f1629;
+
+  --glass-bg: rgba(15, 22, 41, 0.6);
+  --glass-border: rgba(59, 130, 246, 0.12);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(59, 130, 246, 0.08);
+  --glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(59, 130, 246, 0.15);
+  --glass-blur: 16px;
+  --card-gradient: linear-gradient(135deg, rgba(21, 29, 51, 0.8) 0%, rgba(15, 22, 41, 0.9) 100%);
+  --card-gradient-hover: linear-gradient(135deg, rgba(21, 29, 51, 0.9) 0%, rgba(15, 22, 41, 1) 100%);
+  --depth-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.2), 0 8px 16px rgba(0, 0, 0, 0.15);
+  --depth-shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.3), 0 8px 16px rgba(0, 0, 0, 0.25), 0 16px 32px rgba(0, 0, 0, 0.2);
+  --glow-accent: 0 0 20px rgba(59, 130, 246, 0.15);
+  --glow-success: 0 0 20px rgba(16, 185, 129, 0.15);
+  --glow-error: 0 0 20px rgba(239, 68, 68, 0.15);
 }
 
 /* === Forest === */
@@ -129,6 +156,19 @@
 
   --ring-focus: rgba(34, 197, 94, 0.5);
   --ring-offset: #0f1a14;
+
+  --glass-bg: rgba(15, 26, 20, 0.6);
+  --glass-border: rgba(34, 197, 94, 0.12);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(34, 197, 94, 0.08);
+  --glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(34, 197, 94, 0.15);
+  --glass-blur: 16px;
+  --card-gradient: linear-gradient(135deg, rgba(22, 32, 25, 0.8) 0%, rgba(15, 26, 20, 0.9) 100%);
+  --card-gradient-hover: linear-gradient(135deg, rgba(22, 32, 25, 0.9) 0%, rgba(15, 26, 20, 1) 100%);
+  --depth-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.2), 0 8px 16px rgba(0, 0, 0, 0.15);
+  --depth-shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.3), 0 8px 16px rgba(0, 0, 0, 0.25), 0 16px 32px rgba(0, 0, 0, 0.2);
+  --glow-accent: 0 0 20px rgba(34, 197, 94, 0.15);
+  --glow-success: 0 0 20px rgba(34, 197, 94, 0.15);
+  --glow-error: 0 0 20px rgba(249, 115, 22, 0.15);
 }
 
 /* === Slate === */
@@ -169,6 +209,19 @@
 
   --ring-focus: rgba(161, 161, 170, 0.5);
   --ring-offset: #18181b;
+
+  --glass-bg: rgba(24, 24, 27, 0.6);
+  --glass-border: rgba(161, 161, 170, 0.12);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(161, 161, 170, 0.08);
+  --glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(161, 161, 170, 0.15);
+  --glass-blur: 16px;
+  --card-gradient: linear-gradient(135deg, rgba(39, 39, 42, 0.8) 0%, rgba(24, 24, 27, 0.9) 100%);
+  --card-gradient-hover: linear-gradient(135deg, rgba(39, 39, 42, 0.9) 0%, rgba(24, 24, 27, 1) 100%);
+  --depth-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.2), 0 8px 16px rgba(0, 0, 0, 0.15);
+  --depth-shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.3), 0 8px 16px rgba(0, 0, 0, 0.25), 0 16px 32px rgba(0, 0, 0, 0.2);
+  --glow-accent: 0 0 20px rgba(161, 161, 170, 0.1);
+  --glow-success: 0 0 20px rgba(52, 211, 153, 0.15);
+  --glow-error: 0 0 20px rgba(248, 113, 113, 0.15);
 }
 
 /* === Light === */
@@ -209,11 +262,105 @@
 
   --ring-focus: rgba(79, 70, 229, 0.4);
   --ring-offset: #ffffff;
+
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(79, 70, 229, 0.1);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(79, 70, 229, 0.06);
+  --glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(79, 70, 229, 0.1);
+  --glass-blur: 16px;
+  --card-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.95) 100%);
+  --card-gradient-hover: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(248, 250, 252, 1) 100%);
+  --depth-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 8px rgba(0, 0, 0, 0.04), 0 8px 16px rgba(0, 0, 0, 0.03);
+  --depth-shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.06), 0 8px 16px rgba(0, 0, 0, 0.06), 0 16px 32px rgba(0, 0, 0, 0.05);
+  --glow-accent: 0 0 20px rgba(79, 70, 229, 0.08);
+  --glow-success: 0 0 20px rgba(5, 150, 105, 0.08);
+  --glow-error: 0 0 20px rgba(220, 38, 38, 0.08);
 }
 
 /* === Theme transition === */
 * {
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* === Premium card system === */
+.premium-card {
+  background: var(--card-gradient);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 1rem;
+  box-shadow: var(--depth-shadow);
+  transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+}
+
+.premium-card:hover {
+  box-shadow: var(--depth-shadow-hover);
+  border-color: color-mix(in srgb, var(--glass-border) 200%, transparent);
+}
+
+.premium-card-glow:hover {
+  box-shadow: var(--depth-shadow-hover), var(--glow-accent);
+}
+
+/* === Premium stat card accent borders === */
+.stat-card-positive {
+  border-left: 3px solid var(--status-success);
+}
+
+.stat-card-negative {
+  border-left: 3px solid var(--status-error);
+}
+
+.stat-card-default {
+  border-left: 3px solid var(--accent-primary);
+}
+
+/* === Animated gradient background for hero stats === */
+.gradient-hero-success {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--status-success) 8%, transparent) 0%, color-mix(in srgb, var(--status-success) 3%, transparent) 100%);
+}
+
+.gradient-hero-error {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--status-error) 8%, transparent) 0%, color-mix(in srgb, var(--status-error) 3%, transparent) 100%);
+}
+
+.gradient-hero-accent {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent-primary) 8%, transparent) 0%, color-mix(in srgb, var(--accent-primary) 3%, transparent) 100%);
+}
+
+/* === Chart depth shadows === */
+.chart-depth {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.chart-depth-lg {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+}
+
+/* === Premium gauge glow === */
+.gauge-glow {
+  filter: drop-shadow(0 0 8px var(--accent-primary)) drop-shadow(0 0 16px color-mix(in srgb, var(--accent-primary) 30%, transparent));
+}
+
+/* === Completion celebration effect === */
+@keyframes celebration-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.8; }
+}
+
+.celebration-pulse {
+  animation: celebration-pulse 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--accent-primary) 10%, transparent) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
 }
 
 /* === Apply theme variables to Tailwind utilities === */
@@ -233,11 +380,13 @@
   .dark\:bg-brand-900\/10 { background-color: color-mix(in srgb, var(--accent-primary) 10%, transparent) !important; }
   .dark\:bg-red-950 { background-color: color-mix(in srgb, var(--status-error) 15%, transparent) !important; }
   .dark\:bg-emerald-950 { background-color: color-mix(in srgb, var(--status-success) 15%, transparent) !important; }
+  .dark\:bg-emerald-950\/30 { background-color: color-mix(in srgb, var(--status-success) 15%, transparent) !important; }
   .dark\:bg-amber-950\/30 { background-color: color-mix(in srgb, var(--status-warning) 15%, transparent) !important; }
   .dark\:bg-blue-950 { background-color: color-mix(in srgb, #3b82f6 15%, transparent) !important; }
   .dark\:bg-purple-950 { background-color: color-mix(in srgb, #8b5cf6 15%, transparent) !important; }
   .dark\:bg-pink-950 { background-color: color-mix(in srgb, #ec4899 15%, transparent) !important; }
   .dark\:bg-orange-950 { background-color: color-mix(in srgb, #f97316 15%, transparent) !important; }
+  .dark\:bg-indigo-950\/30 { background-color: color-mix(in srgb, #6366f1 15%, transparent) !important; }
 
   .dark\:text-white { color: var(--text-primary) !important; }
   .dark\:text-slate-100 { color: var(--text-primary) !important; }

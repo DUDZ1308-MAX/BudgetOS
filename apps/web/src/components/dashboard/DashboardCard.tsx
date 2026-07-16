@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { motion } from 'framer-motion';
 
 interface DashboardCardProps {
   title: string;
@@ -6,21 +7,25 @@ interface DashboardCardProps {
   action?: ReactNode;
   children: ReactNode;
   className?: string;
+  delay?: number;
 }
 
-export function DashboardCard({ title, subtitle, action, children, className = '' }: DashboardCardProps) {
+export function DashboardCard({ title, subtitle, action, children, className = '', delay = 0 }: DashboardCardProps) {
   return (
-    <div
-      className={`overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 ${className}`}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
+      className={`premium-card premium-card-glow overflow-hidden ${className}`}
     >
-      <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+      <div className="flex items-center justify-between border-b px-5 py-4" style={{ borderColor: 'var(--border-default)' }}>
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{title}</h3>
-          {subtitle && <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">{subtitle}</p>}
+          <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{title}</h3>
+          {subtitle && <p className="mt-0.5 text-xs" style={{ color: 'var(--text-muted)' }}>{subtitle}</p>}
         </div>
         {action && <div className="ml-4 shrink-0">{action}</div>}
       </div>
       <div className="px-5 py-4">{children}</div>
-    </div>
+    </motion.div>
   );
 }

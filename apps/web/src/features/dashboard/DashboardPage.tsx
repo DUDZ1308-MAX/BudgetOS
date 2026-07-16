@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import { useAuthStore } from '@/stores/auth';
 import { computeDashboard } from '@/lib/dashboard/computeDashboard';
 import { StatCard } from '@/components/dashboard/StatCard';
@@ -48,13 +49,20 @@ function TrendingIcon() {
   );
 }
 
-function BanknotesIcon() {
-  return (
-    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
-    </svg>
-  );
-}
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+    },
+  },
+};
+
+const staggerItem = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] } },
+};
 
 export function DashboardPage() {
   const user = useAuthStore((s) => s.user);
@@ -80,15 +88,26 @@ export function DashboardPage() {
   return (
     <div className="page-container">
       {/* Welcome Header */}
-      <div className="page-header">
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="page-header"
+      >
         <div>
           <h1 className="page-title">Dashboard</h1>
           <p className="page-subtitle">Your financial picture at a glance</p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Top Row: 4 metric cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Financial overview">
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        animate="show"
+        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+        aria-label="Financial overview"
+      >
         <StatCard
           label="Net Worth"
           value={d.netWorth}
@@ -121,7 +140,7 @@ export function DashboardPage() {
           tooltip="Income minus expenses — positive means you're saving money"
           icon={<TrendingIcon />}
         />
-      </div>
+      </motion.div>
 
       {/* Setup Checklist for new users */}
       <SetupChecklist />
