@@ -36,6 +36,13 @@ export async function computeDashboard(userId: string): Promise<DashboardSummary
 
   // Net Worth = sum of all account balances
   const netWorth = accounts.reduce((sum, a) => sum + Number(a.balance ?? 0), 0);
+  const liabilityTypes = new Set(['credit', 'loan']);
+  const totalAssets = accounts
+    .filter((a) => !liabilityTypes.has(a.type))
+    .reduce((sum, a) => sum + Math.max(0, Number(a.balance ?? 0)), 0);
+  const totalLiabilities = accounts
+    .filter((a) => liabilityTypes.has(a.type))
+    .reduce((sum, a) => sum + Math.abs(Number(a.balance ?? 0)), 0);
 
   // Monthly income / expenses (from current month transactions)
   let monthlyIncome = 0;
@@ -119,6 +126,8 @@ export async function computeDashboard(userId: string): Promise<DashboardSummary
 
   const result: DashboardSummaryData = {
     netWorth,
+    totalAssets,
+    totalLiabilities,
     monthlyIncome,
     monthlyExpenses,
     cashFlow,

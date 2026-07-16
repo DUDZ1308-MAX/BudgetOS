@@ -9,6 +9,8 @@ export interface CategoryBudgetStatus {
 
 export interface DashboardSummaryData {
   netWorth: number;
+  totalAssets: number;
+  totalLiabilities: number;
   monthlyIncome: number;
   monthlyExpenses: number;
   cashFlow: number;
