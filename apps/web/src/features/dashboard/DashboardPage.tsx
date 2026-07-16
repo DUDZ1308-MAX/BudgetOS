@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '@/stores/auth';
@@ -5,14 +6,17 @@ import { computeDashboard } from '@/lib/dashboard/computeDashboard';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { FinancialHealthScore } from '@/components/dashboard/FinancialHealthScore';
 import { AnimatedCashFlow } from '@/components/dashboard/AnimatedCashFlow';
+import { InteractiveDonut } from '@/components/dashboard/InteractiveDonut';
 import { SavingsGoalProgress } from '@/components/dashboard/SavingsGoalProgress';
 import { RecentTransactionsCard } from './components/RecentTransactionsCard';
 import { AccountsCard } from './components/AccountsCard';
 import { BudgetChart } from './components/BudgetChart';
-import { CashFlowChart } from './components/CashFlowChart';
 import { CategoryChart } from './components/CategoryChart';
 import { InsightsPanel } from './components/InsightsPanel';
 import { UpcomingBillsWidget, UpcomingIncomeWidget } from './components/UpcomingBillsWidget';
+import { MortgageSnapshotCard } from './components/MortgageSnapshotCard';
+import { AIInsightCard } from './components/AIInsightCard';
+import { QuickActionsCard } from './components/QuickActionsCard';
 import { SetupChecklist } from '@/components/ui/SetupChecklist';
 import { useHealthStore } from '@/stores/intelligence/healthStore';
 import { useSavingsGoals } from '@/hooks/useSavings';
@@ -49,6 +53,23 @@ function TrendingIcon() {
   );
 }
 
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+function formatLastUpdated(): string {
+  return new Date().toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
 const staggerContainer = {
   hidden: { opacity: 0 },
   show: {
@@ -57,11 +78,6 @@ const staggerContainer = {
       staggerChildren: 0.08,
     },
   },
-};
-
-const staggerItem = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] } },
 };
 
 export function DashboardPage() {
@@ -85,9 +101,25 @@ export function DashboardPage() {
     recentTransactions: [],
   };
 
+  const spendingBreakdown = useMemo(() => {
+    return d.topSpendingCategories.map((c) => ({
+      name: c.categoryName,
+      value: c.amount,
+    }));
+  }, [d.topSpendingCategories]);
+
+  const cashFlowData = useMemo(() => {
+    if (!data) return [];
+    return [
+      { month: 'This Month', income: d.monthlyIncome, expenses: d.monthlyExpenses, net: d.cashFlow },
+    ];
+  }, [data, d]);
+
+  const displayName = (user as any)?.user_metadata?.full_name ?? (user as any)?.email?.split('@')[0] ?? 'there';
+
   return (
     <div className="page-container">
-      {/* Welcome Header */}
+      {/* Greeting Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -95,8 +127,13 @@ export function DashboardPage() {
         className="page-header"
       >
         <div>
-          <h1 className="page-title">Dashboard</h1>
-          <p className="page-subtitle">Your financial picture at a glance</p>
+          <h1 className="page-title">{getGreeting()}, {displayName}</h1>
+          <div className="flex items-center gap-3">
+            <p className="page-subtitle">Your financial command center</p>
+            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+              Updated {formatLastUpdated()}
+            </span>
+          </div>
         </div>
       </motion.div>
 
@@ -145,26 +182,37 @@ export function DashboardPage() {
       {/* Setup Checklist for new users */}
       <SetupChecklist />
 
-      {/* Premium Visualizations: Health Score + Savings Goals */}
+      {/* Row 2: Health Score + Savings Goals */}
       <div className="grid gap-6 lg:grid-cols-2" aria-label="Health and savings overview">
         <FinancialHealthScore result={healthResult} isLoading={isLoading} />
         <SavingsGoalProgress goals={savingsGoals} isLoading={savingsLoading} />
       </div>
 
-      {/* Second Row: Budget Overview + Cash Flow Trend + Insights */}
-      <div className="grid gap-6 lg:grid-cols-3" aria-label="Budget and trends">
-        <BudgetChart budgets={d.budgetUtilization} isLoading={isLoading} />
-        <CashFlowChart />
+      {/* Row 3: Cash Flow Trend + Spending Breakdown + AI Insights */}
+      <div className="grid gap-6 lg:grid-cols-3" aria-label="Trends and insights">
+        <AnimatedCashFlow data={cashFlowData} isLoading={isLoading} />
+        {spendingBreakdown.length > 0 ? (
+          <InteractiveDonut data={spendingBreakdown} isLoading={isLoading} />
+        ) : (
+          <BudgetChart budgets={d.budgetUtilization} isLoading={isLoading} />
+        )}
+        <AIInsightCard />
+      </div>
+
+      {/* Row 4: Mortgage + Quick Actions + Budget */}
+      <div className="grid gap-6 lg:grid-cols-3" aria-label="Mortgage and actions">
+        <MortgageSnapshotCard />
+        <QuickActionsCard />
         <InsightsPanel />
       </div>
 
-      {/* Fourth Row: Recurring widgets */}
+      {/* Row 5: Recurring widgets */}
       <div className="grid gap-6 lg:grid-cols-2" aria-label="Upcoming recurring transactions">
         <UpcomingBillsWidget />
         <UpcomingIncomeWidget />
       </div>
 
-      {/* Third Row: Top Categories + Accounts + Recent Transactions */}
+      {/* Row 6: Top Categories + Accounts + Recent Transactions */}
       <div className="grid gap-6 lg:grid-cols-3" aria-label="Detailed breakdown">
         <CategoryChart categories={d.topSpendingCategories} isLoading={isLoading} />
         <AccountsCard />

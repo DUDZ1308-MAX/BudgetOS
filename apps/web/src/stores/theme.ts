@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { supabase } from '@/lib/supabase';
+import { logger } from '@/core/logger';
 
 export type Theme =
   | 'mybudgetos-dark'
@@ -111,7 +113,9 @@ function applyTheme(theme: Theme) {
 interface ThemeState {
   theme: Theme;
   setTheme: (theme: Theme) => void;
+  setThemeFromProfile: (theme: Theme) => void;
   toggle: () => void;
+  persistToDatabase: (userId: string, theme: Theme) => void;
 }
 
 export const useThemeStore = create<ThemeState>((set) => ({
@@ -124,6 +128,33 @@ export const useThemeStore = create<ThemeState>((set) => ({
       // ignore
     }
     set({ theme });
+
+    // Persist to database if user is logged in
+    try {
+      const authData = localStorage.getItem('budgetos-auth');
+      if (authData) {
+        const parsed = JSON.parse(authData);
+        const userId = parsed?.state?.user?.id;
+        if (userId) {
+          useThemeStore.getState().persistToDatabase(userId, theme);
+        }
+      }
+    } catch {
+      // ignore
+    }
+  },
+  setThemeFromProfile: (theme) => {
+    // Only apply if different from current to avoid loops
+    const current = useThemeStore.getState().theme;
+    if (current !== theme) {
+      applyTheme(theme);
+      try {
+        localStorage.setItem(STORAGE_KEY, theme);
+      } catch {
+        // ignore
+      }
+      set({ theme });
+    }
   },
   toggle: () =>
     set((state) => {
@@ -136,6 +167,20 @@ export const useThemeStore = create<ThemeState>((set) => ({
       }
       return { theme: next };
     }),
+  persistToDatabase: async (userId, theme) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ theme_preference: theme } as any)
+        .eq('id', userId);
+
+      if (error) {
+        logger.error('Theme persistence failed', 'Theme', undefined, { message: error.message });
+      }
+    } catch (err) {
+      logger.error('Theme persistence threw', 'Theme', err);
+    }
+  },
 }));
 
 // Apply theme on load

@@ -484,13 +484,14 @@ function DataSection() {
 
 function AppearanceSection() {
   const { theme, setTheme } = useThemeStore();
+  const user = useAuthStore((s) => s.user);
 
   return (
     <div className="space-y-4">
       <section className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
         <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-white">Theme</h2>
         <p className="mb-4 text-xs text-slate-500 dark:text-slate-400">
-          Choose a theme that matches your style. Your preference is saved automatically.
+          Choose a theme that matches your style. {user ? 'Your preference is synced across devices.' : 'Sign in to sync your theme across devices.'}
         </p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {THEMES.map((t) => (

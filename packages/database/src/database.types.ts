@@ -10,6 +10,7 @@ export interface Database {
           locale: string;
           timezone: string;
           onboarding_completed: boolean;
+          theme_preference: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -21,6 +22,7 @@ export interface Database {
           locale?: string;
           timezone?: string;
           onboarding_completed?: boolean;
+          theme_preference?: string | null;
         };
         Update: {
           display_name?: string | null;
@@ -29,6 +31,7 @@ export interface Database {
           locale?: string;
           timezone?: string;
           onboarding_completed?: boolean;
+          theme_preference?: string | null;
         };
       };
       categories: {

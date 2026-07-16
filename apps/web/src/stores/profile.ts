@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { supabase } from '@/lib/supabase';
 import { logger } from '@/core/logger';
 import type { Theme } from '@/stores/theme';
+import { useThemeStore } from '@/stores/theme';
 
 export interface Profile {
   id: string;
@@ -40,6 +41,11 @@ export const useProfileStore = create<ProfileState>((set) => ({
         return;
       }
       set({ profile: data as Profile | null, isLoading: false });
+
+      // Apply theme from database if available
+      if (data && (data as any).theme_preference) {
+        useThemeStore.getState().setThemeFromProfile((data as any).theme_preference as Theme);
+      }
     } catch (err) {
       logger.error('Profile fetch threw', 'Profile', err);
       set({ isLoading: false });
