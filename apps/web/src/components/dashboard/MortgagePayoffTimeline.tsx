@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { DashboardCard } from '@/components/dashboard/DashboardCard';
 import { formatCurrency } from '@/services/transactionService';
-import type { AmortizationRow } from '@/lib/finance';
+import type { AmortizationRow } from '@budgetos/shared';
 
 interface Props {
   schedule: AmortizationRow[];

@@ -1,5 +1,5 @@
 import type { AiContext, FinancialForecast, ForecastPoint } from '@/ai/types';
-import type { MortgageCalcResult } from '@/engine/MortgageEngine';
+import type { MortgageResult } from '@/engine/MortgageEngine';
 
 let forecastCounter = 0;
 function nextId(): string {

@@ -13,7 +13,7 @@ import type { RecurringFrequency } from '@budgetos/shared';
 import { formatCurrency } from '@/services/transactionService';
 import { FinancialEngine } from '@/services/FinancialEngine';
 import { useNavigate } from 'react-router-dom';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend, Cell } from 'recharts';
 import { IconReports } from '@/components/ui/Icons';
 import { InteractiveDonut } from '@/components/dashboard/InteractiveDonut';
 
@@ -137,7 +137,9 @@ export function ReportsPage() {
   // Mortgage balance projection
   const mortgageBalanceData = useMemo(() => {
     if (!mortgages.length) return [];
-    const schedule = FinancialEngine.getMortgageSchedule(mortgages[0]);
+    const mortgage = mortgages[0];
+    if (!mortgage) return [];
+    const schedule = FinancialEngine.getMortgageSchedule(mortgage);
     if (!schedule.length) return [];
     return schedule.filter((_, i) => i % 12 === 0 || i === schedule.length - 1).map((r) => ({
       year: `${Math.floor(r.month / 12) + 1}y`,

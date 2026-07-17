@@ -1,6 +1,6 @@
 import type { EngineTransaction, EngineCategory, BudgetSummary, CashFlowSummary, Alert, Insight, SafeToSpendResult } from '@/engine/types';
-import type { OldGoalProgressResult as GoalProgressResult, OldSavingsDashboard as SavingsDashboard } from '@/engine/SavingsEngine';
-import type { OldMortgageDashboard as MortgageDashboard, MortgageCalcResult } from '@/engine/MortgageEngine';
+import type { GoalProgressResult, SavingsDashboard } from '@/engine/SavingsEngine';
+import type { MortgageDashboard, MortgageResult } from '@/engine/MortgageEngine';
 
 export type AiProviderName = 'openai' | 'ollama' | 'deepseek';
 
@@ -50,7 +50,7 @@ export interface AiContext {
   };
   mortgage: {
     dashboard: MortgageDashboard | null;
-    details: MortgageCalcResult | null;
+    details: MortgageResult | null;
   };
   safeToSpend: SafeToSpendResult | null;
   recentTransactions: EngineTransaction[];

@@ -89,12 +89,9 @@ describe('RecommendationEngine', () => {
         details: {
           paymentAmount: 1500,
           paymentFrequency: 'monthly',
-          paymentsPerYear: 12,
-          schedule: [{ month: 1, paymentNumber: 1, date: '2025-02-01', payment: 1500, principal: 400, interest: 1100, cumulativePrincipal: 400, cumulativeInterest: 1100, remainingBalance: 299600, extraPayment: 0 }],
-          totalPayments: 360,
+          schedule: [{ month: 1, date: '2025-02-01', payment: 1500, principal: 400, interest: 1100, totalInterestToDate: 1100, remainingBalance: 299600, extraPayment: 0 }],
           totalPrincipal: 300000,
           totalInterest: 180000,
-          totalCost: 480000,
           payoffDate: '2055-01-01',
           payoffMonths: 360,
           interestSaved: 0,
