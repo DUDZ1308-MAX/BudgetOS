@@ -22,8 +22,13 @@ export class RecurringPostingService {
           continue;
         }
 
+        if (!recurring.account_id) {
+          skipped++;
+          continue;
+        }
+
         await createTransaction(supabase, userId, {
-          account_id: recurring.account_id!,
+          account_id: recurring.account_id,
           category_id: recurring.category_id,
           amount: recurring.amount,
           date: today,

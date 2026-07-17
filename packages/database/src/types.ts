@@ -13,6 +13,7 @@ export interface Account {
   include_in_net_worth: boolean;
   sort_order: number;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface AccountInsert {
@@ -48,6 +49,7 @@ export interface Category {
   is_archived: boolean;
   sort_order: number;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface CategoryInsert {
@@ -79,6 +81,7 @@ export interface Transaction {
   is_archived: boolean;
   recurring_id: string | null;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface TransactionInsert {
@@ -118,7 +121,10 @@ export interface Budget {
   month: number;
   amount: number;
   rollover: boolean;
+  month_key: string;
+  rollover_enabled: boolean;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface BudgetInsert {
@@ -144,9 +150,14 @@ export interface SavingsGoal {
   target_amount: number;
   current_amount: number;
   target_date: string | null;
+  monthly_contribution: number;
+  category_id: string | null;
+  is_completed: boolean;
+  sort_order: number;
   priority: number;
   status: string;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface Mortgage {
@@ -160,6 +171,13 @@ export interface Mortgage {
   extra_payment: number;
   is_active: boolean;
   created_at: string;
+  updated_at?: string;
+  amortization_years?: number;
+  payment_frequency?: string;
+  compound_semi_annual?: boolean;
+  down_payment?: number;
+  purchase_price?: number | null;
+  extra_payments?: { type: string; amount: number; month?: number }[];
 }
 
 export interface CoachMessage {

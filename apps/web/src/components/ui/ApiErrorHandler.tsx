@@ -27,6 +27,15 @@ export function classifyApiError(error: unknown): ApiError {
     const code = (error as { code: string }).code;
     if (code === 'PGRST116') return { type: 'not_found', message: 'No matching record found.', retryable: false };
     if (code === '23505') return { type: 'validation', message: 'A record with this value already exists.', retryable: false };
+    if (code === '42P01') return { type: 'server', message: 'Database configuration error. Please contact support.', retryable: false };
+    if (code === '42703') return { type: 'server', message: 'Missing database column. Please refresh and try again.', retryable: true };
+    if (code === '23503') return { type: 'validation', message: 'Referenced record not found. Please check your data.', retryable: false };
+  }
+  if (error && typeof error === 'object' && 'message' in error) {
+    const msg = (error as { message: unknown }).message;
+    if (typeof msg === 'string' && msg.includes('column') && msg.includes('does not exist')) {
+      return { type: 'server', message: 'Database schema mismatch. Please refresh the page.', retryable: true };
+    }
   }
   return { type: 'unknown', message: 'An unexpected error occurred. Please try again.', retryable: true };
 }

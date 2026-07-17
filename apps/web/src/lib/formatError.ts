@@ -15,7 +15,19 @@ export function formatError(err: unknown): FormattedError {
   if (err instanceof Error) {
     return { message: err.message, detail: err.stack ?? '' };
   }
-  return { message: String(err), detail: '' };
+  if (err !== null && typeof err === 'object') {
+    const obj = err as Record<string, unknown>;
+    const msg = typeof obj.message === 'string' ? obj.message
+      : typeof obj.error === 'string' ? obj.error
+      : typeof obj.details === 'string' ? obj.details
+      : typeof obj.hint === 'string' ? obj.hint
+      : JSON.stringify(err);
+    const detail = typeof obj.details === 'string' ? obj.details
+      : typeof obj.hint === 'string' ? obj.hint
+      : '';
+    return { message: msg, detail };
+  }
+  return { message: String(err ?? 'An unknown error occurred'), detail: '' };
 }
 
 function isPostgrestError(err: unknown): err is PostgrestError {

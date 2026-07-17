@@ -62,9 +62,14 @@ export function RecurringPage() {
       return;
     }
 
+    if (!rt.account_id) {
+      addToast('error', 'No account linked to this recurring transaction. Please edit and assign an account.');
+      return;
+    }
+
     try {
       await createTransaction.mutateAsync({
-        account_id: rt.account_id!,
+        account_id: rt.account_id,
         category_id: rt.category_id,
         amount: rt.amount,
         date: today,
@@ -83,8 +88,9 @@ export function RecurringPage() {
       });
 
       addToast('success', `Transaction posted for "${rt.name}"`);
-    } catch {
-      addToast('error', 'Failed to post transaction');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to post transaction. Please check your account and try again.';
+      addToast('error', msg);
     }
   };
 

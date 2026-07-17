@@ -116,7 +116,7 @@ export interface Database {
           account_id: string | null;
           category_id: string | null;
           amount: number;
-          currency: string;
+          currency: string | null;
           description: string | null;
           note: string | null;
           merchant: string | null;
@@ -162,20 +162,28 @@ export interface Database {
           tags?: string[] | null;
         };
       };
-      recurring_templates: {
+      recurring_transactions: {
         Row: {
           id: string;
           user_id: string;
           account_id: string | null;
           category_id: string | null;
-          amount: number;
-          currency: string;
+          type: 'income' | 'expense' | 'transfer';
+          name: string;
           description: string | null;
-          frequency: 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'yearly';
+          amount: number;
+          frequency: 'one_time' | 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
           interval_count: number;
+          day_of_week: number | null;
+          day_of_month: number | null;
+          month_of_year: number | null;
           start_date: string;
           end_date: string | null;
-          is_active: boolean;
+          next_run: string;
+          last_run: string | null;
+          auto_post: boolean;
+          reminder_type: 'today' | 'day_before' | 'three_days_before' | 'week_before' | null;
+          status: 'active' | 'paused' | 'completed' | 'cancelled';
           created_at: string;
           updated_at: string;
         };
@@ -183,25 +191,41 @@ export interface Database {
           user_id: string;
           account_id?: string | null;
           category_id?: string | null;
-          amount: number;
-          currency?: string;
+          type: 'income' | 'expense' | 'transfer';
+          name: string;
           description?: string | null;
-          frequency: 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'yearly';
+          amount: number;
+          frequency: 'one_time' | 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
           interval_count?: number;
+          day_of_week?: number | null;
+          day_of_month?: number | null;
+          month_of_year?: number | null;
           start_date: string;
           end_date?: string | null;
-          is_active?: boolean;
+          next_run?: string;
+          auto_post?: boolean;
+          reminder_type?: 'today' | 'day_before' | 'three_days_before' | 'week_before' | null;
+          status?: 'active' | 'paused' | 'completed' | 'cancelled';
         };
         Update: {
           account_id?: string | null;
           category_id?: string | null;
-          amount?: number;
+          type?: 'income' | 'expense' | 'transfer';
+          name?: string;
           description?: string | null;
-          frequency?: 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'yearly';
+          amount?: number;
+          frequency?: 'one_time' | 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
           interval_count?: number;
+          day_of_week?: number | null;
+          day_of_month?: number | null;
+          month_of_year?: number | null;
           start_date?: string;
           end_date?: string | null;
-          is_active?: boolean;
+          next_run?: string;
+          last_run?: string | null;
+          auto_post?: boolean;
+          reminder_type?: 'today' | 'day_before' | 'three_days_before' | 'week_before' | null;
+          status?: 'active' | 'paused' | 'completed' | 'cancelled';
         };
       };
       budgets: {
@@ -209,8 +233,11 @@ export interface Database {
           id: string;
           user_id: string;
           category_id: string;
-          month_key: string;
+          year: number;
+          month: number;
           amount: number;
+          rollover: boolean;
+          month_key: string;
           rollover_enabled: boolean;
           created_at: string;
           updated_at: string;
@@ -218,12 +245,17 @@ export interface Database {
         Insert: {
           user_id: string;
           category_id: string;
-          month_key: string;
+          year: number;
+          month: number;
           amount: number;
+          rollover?: boolean;
+          month_key?: string;
           rollover_enabled?: boolean;
         };
         Update: {
           amount?: number;
+          rollover?: boolean;
+          month_key?: string;
           rollover_enabled?: boolean;
         };
       };
@@ -239,6 +271,8 @@ export interface Database {
           category_id: string | null;
           is_completed: boolean;
           sort_order: number;
+          priority: number;
+          status: string;
           created_at: string;
           updated_at: string;
         };
@@ -252,6 +286,8 @@ export interface Database {
           category_id?: string | null;
           is_completed?: boolean;
           sort_order?: number;
+          priority?: number;
+          status?: string;
         };
         Update: {
           name?: string;
@@ -262,6 +298,8 @@ export interface Database {
           category_id?: string | null;
           is_completed?: boolean;
           sort_order?: number;
+          priority?: number;
+          status?: string;
         };
       };
       mortgages: {
@@ -273,14 +311,11 @@ export interface Database {
           annual_rate: number;
           term_years: number;
           amortization_years: number;
-          start_date: string;
+          start_date: string | null;
           payment_frequency: 'monthly' | 'semi_monthly' | 'bi_weekly' | 'accelerated_bi_weekly' | 'weekly' | 'accelerated_weekly';
           compound_semi_annual: boolean;
-          extra_payments: {
-            type: string;
-            amount: number;
-            month?: number;
-          }[];
+          extra_payment: number;
+          extra_payments: { type: string; amount: number; month?: number }[];
           down_payment: number;
           purchase_price: number | null;
           is_active: boolean;
@@ -294,14 +329,11 @@ export interface Database {
           annual_rate: number;
           term_years: number;
           amortization_years?: number;
-          start_date: string;
+          start_date?: string | null;
           payment_frequency?: 'monthly' | 'semi_monthly' | 'bi_weekly' | 'accelerated_bi_weekly' | 'weekly' | 'accelerated_weekly';
           compound_semi_annual?: boolean;
-          extra_payments?: {
-            type: string;
-            amount: number;
-            month?: number;
-          }[];
+          extra_payment?: number;
+          extra_payments?: { type: string; amount: number; month?: number }[];
           down_payment?: number;
           purchase_price?: number | null;
           is_active?: boolean;
@@ -312,14 +344,11 @@ export interface Database {
           annual_rate?: number;
           term_years?: number;
           amortization_years?: number;
-          start_date?: string;
+          start_date?: string | null;
           payment_frequency?: 'monthly' | 'semi_monthly' | 'bi_weekly' | 'accelerated_bi_weekly' | 'weekly' | 'accelerated_weekly';
           compound_semi_annual?: boolean;
-          extra_payments?: {
-            type: string;
-            amount: number;
-            month?: number;
-          }[];
+          extra_payment?: number;
+          extra_payments?: { type: string; amount: number; month?: number }[];
           down_payment?: number;
           purchase_price?: number | null;
           is_active?: boolean;
@@ -346,6 +375,30 @@ export interface Database {
           amount?: number;
           date?: string;
           type?: string;
+          notes?: string | null;
+        };
+      };
+      contributions: {
+        Row: {
+          id: string;
+          user_id: string;
+          goal_id: string;
+          amount: number;
+          date: string;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          goal_id: string;
+          amount: number;
+          date: string;
+          notes?: string | null;
+        };
+        Update: {
+          amount?: number;
+          date?: string;
           notes?: string | null;
         };
       };
@@ -444,6 +497,20 @@ export interface Database {
         Update: {
           priorities?: string[];
           custom_rules?: Record<string, unknown>[];
+        };
+      };
+    };
+    Views: {
+      savings_contributions: {
+        Row: {
+          id: string;
+          user_id: string;
+          goal_id: string;
+          amount: number;
+          date: string;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
         };
       };
     };
