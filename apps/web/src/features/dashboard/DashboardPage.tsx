@@ -3,14 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '@/stores/auth';
 import { computeDashboard } from '@/lib/dashboard/computeDashboard';
-import { DashboardCard } from '@/components/dashboard/DashboardCard';
 import { AnimatedCashFlow } from '@/components/dashboard/AnimatedCashFlow';
-import { InteractiveDonut } from '@/components/dashboard/InteractiveDonut';
 import { SavingsGoalProgress } from '@/components/dashboard/SavingsGoalProgress';
-import { MortgagePayoffTimeline } from '@/components/dashboard/MortgagePayoffTimeline';
-import { AccountsCard } from './components/AccountsCard';
-import { CategoryChart } from './components/CategoryChart';
-import { InsightsPanel } from './components/InsightsPanel';
 import { NetWorthCard } from './components/NetWorthCard';
 import { CashFlowCard } from './components/CashFlowCard';
 import { FinancialHealthCard } from './components/FinancialHealthCard';
@@ -19,9 +13,7 @@ import { AIInsightCard } from './components/AIInsightCard';
 import { QuickActionsCard } from './components/QuickActionsCard';
 import { UpcomingActivityCard } from './components/UpcomingActivityCard';
 import { MortgageSnapshotCard } from './components/MortgageSnapshotCard';
-import { RecentTransactionsCard } from './components/RecentTransactionsCard';
 import { SetupChecklist } from '@/components/ui/SetupChecklist';
-import { useHealthStore } from '@/stores/intelligence/healthStore';
 import { useSavingsGoals } from '@/hooks/useSavings';
 
 function getGreeting(): string {
@@ -43,26 +35,28 @@ function formatLastUpdated(): string {
 
 export function DashboardPage() {
   const user = useAuthStore((s) => s.user);
-  const healthResult = useHealthStore((s) => s.result);
   const { data: savingsGoals = [], isLoading: savingsLoading } = useSavingsGoals();
 
-  const { data, isLoading } = useQuery({
+  const { data: result, isLoading, isError } = useQuery({
     queryKey: ['dashboard-summary', user?.id],
     queryFn: () => computeDashboard(user!.id),
     enabled: !!user,
   });
 
-  const d = data ?? {
+  const d = result?.data ?? {
     netWorth: 0,
     totalAssets: 0,
     totalLiabilities: 0,
     monthlyIncome: 0,
     monthlyExpenses: 0,
     cashFlow: 0,
+    financialHealth: null,
+    mortgages: [],
     topSpendingCategories: [],
     budgetUtilization: [],
     recentTransactions: [],
   };
+  const queryErrors = result?.errors ?? [];
 
   const spendingBreakdown = useMemo(() => {
     return d.topSpendingCategories.map((c) => ({
@@ -72,11 +66,11 @@ export function DashboardPage() {
   }, [d.topSpendingCategories]);
 
   const cashFlowData = useMemo(() => {
-    if (!data) return [];
+    if (!result) return [];
     return [
       { month: 'This Month', income: d.monthlyIncome, expenses: d.monthlyExpenses, net: d.cashFlow },
     ];
-  }, [data, d]);
+  }, [result, d]);
 
   const displayName = (user as any)?.user_metadata?.full_name ?? (user as any)?.email?.split('@')[0] ?? 'there';
 
@@ -100,6 +94,28 @@ export function DashboardPage() {
         </div>
       </motion.div>
 
+      {/* Partial data warning */}
+      {queryErrors.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -5 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300"
+        >
+          Some data could not be loaded ({queryErrors.join(', ')}). Showing available data.
+        </motion.div>
+      )}
+
+      {isError && !result && (
+        <motion.div
+          initial={{ opacity: 0, y: -5 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300"
+        >
+          <p className="font-medium">Unable to load dashboard data</p>
+          <p className="mt-1">Please try refreshing the page. If the problem persists, check your connection.</p>
+        </motion.div>
+      )}
+
       {/* Row 1: Executive Summary — 4 KPI cards */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -120,7 +136,7 @@ export function DashboardPage() {
           savings={d.cashFlow}
           isLoading={isLoading}
         />
-        <FinancialHealthCard result={healthResult} isLoading={isLoading} />
+        <FinancialHealthCard result={d.financialHealth} isLoading={isLoading} />
         <BudgetHealthCard budgets={d.budgetUtilization} isLoading={isLoading} />
       </motion.div>
 
@@ -159,7 +175,7 @@ export function DashboardPage() {
         className="grid gap-6 lg:grid-cols-3"
         aria-label="Planning section"
       >
-        <MortgageSnapshotCard />
+        <MortgageSnapshotCard mortgages={d.mortgages} isLoading={isLoading} />
         <UpcomingActivityCard />
         <QuickActionsCard />
       </motion.div>

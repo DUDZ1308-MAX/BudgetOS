@@ -1,5 +1,5 @@
-export type AccountType = 'checking' | 'savings' | 'credit' | 'loan' | 'investment' | 'cash';
-export type CategoryType = 'income' | 'expense';
+export type AccountType = 'checking' | 'savings' | 'credit' | 'credit_card' | 'loan' | 'investment' | 'cash' | 'other';
+export type CategoryType = 'income' | 'expense' | 'transfer' | 'saving';
 
 export interface Account {
   id: string;
@@ -8,7 +8,10 @@ export interface Account {
   type: AccountType;
   balance: number;
   currency: string;
+  institution: string | null;
   is_active: boolean;
+  include_in_net_worth: boolean;
+  sort_order: number;
   created_at: string;
 }
 
@@ -17,7 +20,10 @@ export interface AccountInsert {
   type: AccountType;
   balance?: number;
   currency?: string;
+  institution?: string | null;
   is_active?: boolean;
+  include_in_net_worth?: boolean;
+  sort_order?: number;
 }
 
 export interface AccountUpdate {
@@ -25,7 +31,10 @@ export interface AccountUpdate {
   type?: AccountType;
   balance?: number;
   currency?: string;
+  institution?: string | null;
   is_active?: boolean;
+  include_in_net_worth?: boolean;
+  sort_order?: number;
 }
 
 export interface Category {
@@ -37,6 +46,7 @@ export interface Category {
   color: string | null;
   is_system: boolean;
   is_archived: boolean;
+  sort_order: number;
   created_at: string;
 }
 
@@ -45,6 +55,7 @@ export interface CategoryInsert {
   type: CategoryType;
   icon?: string | null;
   color?: string | null;
+  sort_order?: number;
 }
 
 export interface CategoryUpdate {
@@ -53,6 +64,7 @@ export interface CategoryUpdate {
   icon?: string | null;
   color?: string | null;
   is_archived?: boolean;
+  sort_order?: number;
 }
 
 export interface Transaction {

@@ -7,6 +7,27 @@ export interface CategoryBudgetStatus {
   percentUsed: number;
 }
 
+export interface DashboardFinancialHealth {
+  overallScore: number;
+  tier: string;
+  components: Record<string, { maxPoints: number; earnedPoints: number; percentage: number; details: string }>;
+  recommendations: string[];
+}
+
+export interface DashboardMortgage {
+  id: string;
+  name: string;
+  monthlyPayment: number;
+  remainingBalance: number;
+  totalInterest: number;
+  totalCost: number;
+  interestSaved: number;
+  payoffDate: string;
+  payoffMonths: number;
+  progressPct: number;
+  principalPaidPct: number;
+}
+
 export interface DashboardSummaryData {
   netWorth: number;
   totalAssets: number;
@@ -14,6 +35,8 @@ export interface DashboardSummaryData {
   monthlyIncome: number;
   monthlyExpenses: number;
   cashFlow: number;
+  financialHealth: DashboardFinancialHealth | null;
+  mortgages: DashboardMortgage[];
   topSpendingCategories: { categoryName: string; amount: number }[];
   budgetUtilization: CategoryBudgetStatus[];
   recentTransactions: {

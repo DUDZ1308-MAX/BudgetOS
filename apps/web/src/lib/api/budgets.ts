@@ -37,9 +37,41 @@ export const budgetsApi = {
   async create(userId: string, data: BudgetInsert): Promise<Budget> {
     const { year, month, rollover, ...rest } = data as any;
     const monthKey = year && month ? `${year}-${String(month).padStart(2, '0')}` : undefined;
-    const payload: Record<string, unknown> = { user_id: userId, ...rest };
-    if (monthKey) payload.month_key = monthKey;
+
+    if (!monthKey) {
+      throw new Error('Year and month are required to create a budget.');
+    }
+
+    if (!rest.category_id) {
+      throw new Error('Category is required.');
+    }
+
+    const parsedAmount = Number(rest.amount);
+    if (!parsedAmount || parsedAmount <= 0) {
+      throw new Error('Budget amount must be a positive number.');
+    }
+
+    // Check for duplicate budget (same category + same month)
+    const { data: existing } = await supabase
+      .from('budgets')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('category_id', rest.category_id)
+      .eq('month_key', monthKey)
+      .maybeSingle();
+
+    if (existing) {
+      throw new Error('A budget already exists for this category in this month.');
+    }
+
+    const payload: Record<string, unknown> = {
+      user_id: userId,
+      category_id: rest.category_id,
+      amount: parsedAmount,
+      month_key: monthKey,
+    };
     if (rollover !== undefined) payload.rollover_enabled = rollover;
+
     const { data: result, error } = await supabase
       .from('budgets')
       .insert(payload)

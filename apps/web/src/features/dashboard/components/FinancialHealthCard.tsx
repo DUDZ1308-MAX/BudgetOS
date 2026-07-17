@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { DashboardCard } from '@/components/dashboard/DashboardCard';
-import type { FinancialHealthResult } from '@/intelligence/types';
+import type { DashboardFinancialHealth } from '@/lib/dashboard/types';
 
 function getHealthColor(score: number): string {
   if (score >= 80) return '#10b981';
@@ -19,8 +19,16 @@ function getHealthLabel(score: number): string {
   return 'Critical';
 }
 
+const COMPONENT_LABELS: Record<string, string> = {
+  savingsRate: 'Savings Rate',
+  debtToIncome: 'Debt to Income',
+  emergencyFund: 'Emergency Fund',
+  budgetAdherence: 'Budget Adherence',
+  netWorthTrend: 'Net Worth Trend',
+};
+
 interface Props {
-  result?: FinancialHealthResult | null;
+  result?: DashboardFinancialHealth | null;
   isLoading?: boolean;
 }
 
@@ -29,7 +37,15 @@ export const FinancialHealthCard = memo(function FinancialHealthCard({ result, i
   const color = getHealthColor(score);
   const circumference = 2 * Math.PI * 36;
   const offset = circumference * (1 - score / 100);
-  const topFactors = result?.factors.slice(0, 3) ?? [];
+  const topFactors = result?.components
+    ? Object.entries(result.components)
+        .slice(0, 3)
+        .map(([key, val]) => ({
+          factor: key,
+          label: COMPONENT_LABELS[key] ?? key,
+          score: val.earnedPoints,
+        }))
+    : [];
 
   if (isLoading) {
     return (

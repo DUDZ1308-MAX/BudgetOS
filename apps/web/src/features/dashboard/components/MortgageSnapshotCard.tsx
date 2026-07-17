@@ -1,37 +1,16 @@
-import { memo, useMemo } from 'react';
+import { memo } from 'react';
 import { motion } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
-import { useAuthStore } from '@/stores/auth';
 import { DashboardCard } from '@/components/dashboard/DashboardCard';
-import { mortgageApi } from '@/lib/api/mortgage';
-import { computeMortgage, computeMortgageDashboard } from '@/engine/MortgageEngine';
+import type { DashboardMortgage } from '@/lib/dashboard/types';
 import { formatCurrency } from '@/services/transactionService';
 
-export const MortgageSnapshotCard = memo(function MortgageSnapshotCard() {
-  const user = useAuthStore((s) => s.user);
-  const { data: mortgages = [], isLoading } = useQuery({
-    queryKey: ['mortgages', user?.id],
-    queryFn: () => mortgageApi.list(user!.id),
-    enabled: !!user,
-  });
+interface Props {
+  mortgages?: DashboardMortgage[];
+  isLoading?: boolean;
+}
 
+export const MortgageSnapshotCard = memo(function MortgageSnapshotCard({ mortgages = [], isLoading }: Props) {
   const mortgage = mortgages.length > 0 ? mortgages[0] : null;
-
-  const dashboard = useMemo(() => {
-    if (!mortgage) return null;
-    try {
-      const result = computeMortgage({
-        principal: Number(mortgage.principal),
-        annualRate: Number(mortgage.annual_rate),
-        termYears: Number(mortgage.term_years),
-        startDate: mortgage.start_date ?? new Date().toISOString().slice(0, 10),
-      });
-      if (!result) return null;
-      return computeMortgageDashboard(result);
-    } catch {
-      return null;
-    }
-  }, [mortgage]);
 
   if (isLoading) {
     return (
@@ -45,7 +24,7 @@ export const MortgageSnapshotCard = memo(function MortgageSnapshotCard() {
     );
   }
 
-  if (!mortgage || !dashboard) {
+  if (!mortgage) {
     return (
       <DashboardCard title="Mortgage Snapshot" delay={0.35}>
         <div className="flex h-32 items-center justify-center">
@@ -60,14 +39,12 @@ export const MortgageSnapshotCard = memo(function MortgageSnapshotCard() {
     );
   }
 
-  const progress = dashboard.totalPrincipal > 0
-    ? (dashboard.principalPaid / dashboard.totalPrincipal) * 100
-    : 0;
+  const progress = mortgage.progressPct;
 
   return (
     <DashboardCard
       title="Mortgage Snapshot"
-      subtitle={mortgage.name ?? 'Primary mortgage'}
+      subtitle={mortgage.name || 'Primary mortgage'}
       action={
         <a href="/mortgage" className="text-xs hover:underline" style={{ color: 'var(--accent-text)' }}>
           Details →
@@ -79,14 +56,14 @@ export const MortgageSnapshotCard = memo(function MortgageSnapshotCard() {
         <div className="flex items-center justify-between">
           <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Remaining Balance</span>
           <span className="text-sm font-bold tabular-nums" style={{ color: 'var(--text-primary)' }}>
-            {formatCurrency(dashboard.remainingBalance)}
+            {formatCurrency(mortgage.remainingBalance)}
           </span>
         </div>
 
         <div className="flex items-center justify-between">
           <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Monthly Payment</span>
           <span className="text-sm font-semibold tabular-nums" style={{ color: 'var(--text-primary)' }}>
-            {formatCurrency(dashboard.monthlyPayment)}
+            {formatCurrency(mortgage.monthlyPayment)}
           </span>
         </div>
 
