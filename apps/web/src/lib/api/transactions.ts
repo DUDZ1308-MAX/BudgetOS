@@ -23,8 +23,6 @@ export const transactionsApi = {
     if (filters?.categoryId) query = query.eq('category_id', filters.categoryId);
     if (filters?.is_archived !== undefined) {
       query = query.eq('is_archived', filters.is_archived);
-    } else {
-      query = query.eq('is_archived', false);
     }
 
     const { data, error } = await query;

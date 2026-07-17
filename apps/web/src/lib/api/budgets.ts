@@ -16,22 +16,33 @@ export const budgetsApi = {
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
-    if (year !== undefined) query = query.eq('year', year);
-    if (month !== undefined) query = query.eq('month', month);
+    if (year !== undefined && month !== undefined) {
+      const monthKey = `${year}-${String(month).padStart(2, '0')}`;
+      query = query.eq('month_key', monthKey);
+    } else if (year !== undefined) {
+      query = query.ilike('month_key', `${year}-%`);
+    }
 
     const { data, error } = await query;
     if (error) {
       debug('list error', error);
       throw error;
     }
-    return data ?? [];
+    return (data ?? []).map((row: any) => {
+      const parts = (row.month_key ?? '').split('-');
+      return { ...row, year: parts[0] ? Number(parts[0]) : new Date().getFullYear(), month: parts[1] ? Number(parts[1]) : new Date().getMonth() + 1 };
+    });
   },
 
   async create(userId: string, data: BudgetInsert): Promise<Budget> {
-    debug('create', data);
+    const { year, month, rollover, ...rest } = data as any;
+    const monthKey = year && month ? `${year}-${String(month).padStart(2, '0')}` : undefined;
+    const payload: Record<string, unknown> = { user_id: userId, ...rest };
+    if (monthKey) payload.month_key = monthKey;
+    if (rollover !== undefined) payload.rollover_enabled = rollover;
     const { data: result, error } = await supabase
       .from('budgets')
-      .insert({ user_id: userId, ...data })
+      .insert(payload)
       .select('*')
       .single();
     if (error) {
@@ -42,10 +53,15 @@ export const budgetsApi = {
   },
 
   async update(id: string, data: BudgetUpdate): Promise<Budget> {
-    debug('update', id, data);
+    const { year, month, rollover, ...rest } = data as any;
+    const payload: Record<string, unknown> = { ...rest };
+    if (year !== undefined && month !== undefined) {
+      payload.month_key = `${year}-${String(month).padStart(2, '0')}`;
+    }
+    if (rollover !== undefined) payload.rollover_enabled = rollover;
     const { data: result, error } = await supabase
       .from('budgets')
-      .update(data)
+      .update(payload)
       .eq('id', id)
       .select('*')
       .single();

@@ -232,11 +232,11 @@ export function getBudgets(client: SupabaseClient, userId: string, year?: number
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
-  if (year !== undefined) {
-    query = query.eq('year', year);
-  }
-  if (month !== undefined) {
-    query = query.eq('month', month);
+  if (year !== undefined && month !== undefined) {
+    const monthKey = `${year}-${String(month).padStart(2, '0')}`;
+    query = query.eq('month_key', monthKey);
+  } else if (year !== undefined) {
+    query = query.ilike('month_key', `${year}-%`);
   }
 
   return asList<Budget>(query);
@@ -249,14 +249,25 @@ export function getBudget(client: SupabaseClient, budgetId: string) {
 }
 
 export function createBudget(client: SupabaseClient, userId: string, data: BudgetInsert) {
+  const { year, month, rollover, ...rest } = data as any;
+  const monthKey = year && month ? `${year}-${String(month).padStart(2, '0')}` : undefined;
+  const payload: Record<string, unknown> = { user_id: userId, ...rest };
+  if (monthKey) payload.month_key = monthKey;
+  if (rollover !== undefined) payload.rollover_enabled = rollover;
   return as<Budget>(
-    client.from('budgets').insert({ user_id: userId, ...data }).select('*').single(),
+    client.from('budgets').insert(payload).select('*').single(),
   );
 }
 
 export function updateBudget(client: SupabaseClient, budgetId: string, data: BudgetUpdate) {
+  const { year, month, rollover, ...rest } = data as any;
+  const payload: Record<string, unknown> = { ...rest };
+  if (year !== undefined && month !== undefined) {
+    payload.month_key = `${year}-${String(month).padStart(2, '0')}`;
+  }
+  if (rollover !== undefined) payload.rollover_enabled = rollover;
   return as<Budget>(
-    client.from('budgets').update(data).eq('id', budgetId).select('*').single(),
+    client.from('budgets').update(payload).eq('id', budgetId).select('*').single(),
   );
 }
 
