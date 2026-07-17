@@ -11,12 +11,9 @@ import { categoriesApi } from '@/lib/api/categories';
 import { toMonthlyEquivalent } from '@budgetos/engine';
 import type { RecurringFrequency } from '@budgetos/shared';
 import { formatCurrency } from '@/services/transactionService';
-import { computeBudgetSummary } from '@/engine/BudgetEngine';
-import { computeCashFlowSummary } from '@/engine/CashFlowEngine';
-import { computeSavingsDashboard } from '@/engine/SavingsEngine';
-import { computeMortgage } from '@/engine/MortgageEngine';
+import { FinancialEngine } from '@/services/FinancialEngine';
 import { useNavigate } from 'react-router-dom';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from 'recharts';
 import { IconReports } from '@/components/ui/Icons';
 import { InteractiveDonut } from '@/components/dashboard/InteractiveDonut';
 
@@ -71,53 +68,27 @@ export function ReportsPage() {
   const hasData = accounts.length > 0 || allTxns.length > 0 || budgets.length > 0 || savingsGoals.length > 0 || mortgages.length > 0;
 
   const monthTxns = useMemo(() => allTxns.filter((t) => t.date >= range.start && t.date <= range.end), [allTxns, range]);
-  const allCategories = [...new Set(allTxns.filter((t) => t.category_id).map((t) => t.category_id!))];
 
-  const budgetSummary = useMemo(() => {
-    if (!accounts.length && !monthTxns.length) return null;
-    try {
-      return computeBudgetSummary({
-        transactions: monthTxns.map((t) => ({
-          id: t.id, account_id: t.account_id ?? '', category_id: t.category_id ?? '',
-          amount: Number(t.amount), date: t.date, merchant: t.merchant ?? '', note: t.note ?? '', is_archived: false,
-        })),
-        accounts: accounts.map((a) => ({
-          id: a.id, name: a.name, type: a.type as any, balance: Number(a.balance), is_active: a.is_active ?? true,
-        })),
-        categories: [],
-        budgets: [],
-        dateRange: range,
-      });
-    } catch { return null; }
-  }, [monthTxns, accounts, range]);
+  const netWorth = useMemo(() => FinancialEngine.getNetWorth(accounts), [accounts]);
 
-  const cashFlow = useMemo(() => {
-    if (!accounts.length && !allTxns.length) return null;
-    try {
-      return computeCashFlowSummary({
-        transactions: allTxns.map((t) => ({
-          id: t.id, account_id: t.account_id ?? '', category_id: t.category_id ?? '',
-          amount: Number(t.amount), date: t.date, merchant: t.merchant ?? '', note: t.note ?? '', is_archived: false,
-        })),
-        accounts: accounts.map((a) => ({
-          id: a.id, name: a.name, type: a.type as any, balance: Number(a.balance), is_active: a.is_active ?? true,
-        })),
-      });
-    } catch { return null; }
-  }, [allTxns, accounts]);
+  const cashFlow = useMemo(
+    () => FinancialEngine.getCashFlow(monthTxns, recurrings, range),
+    [monthTxns, recurrings, range],
+  );
 
-  const savingsDash = useMemo(() => computeSavingsDashboard(savingsGoals), [savingsGoals]);
+  const budgetHealth = useMemo(
+    () => FinancialEngine.getBudgetHealth(budgets, monthTxns, categories, cashFlow.monthlyIncome),
+    [budgets, monthTxns, categories, cashFlow.monthlyIncome],
+  );
 
-  const mortgageCalc = useMemo(() => {
-    if (!mortgages.length) return null;
-    const m = mortgages[0]!;
-    return computeMortgage({
-      principal: Number(m.principal),
-      annualRate: Number(m.annual_rate),
-      termYears: Number(m.term_years),
-      startDate: m.start_date ?? new Date().toISOString().slice(0, 10),
-    });
-  }, [mortgages]);
+  const savingsResults = useMemo(() => FinancialEngine.getSavingsGoals(savingsGoals), [savingsGoals]);
+
+  const totalSaved = useMemo(() => savingsResults.reduce((s, g) => s + g.currentAmount, 0), [savingsResults]);
+  const totalTarget = useMemo(() => savingsResults.reduce((s, g) => s + g.targetAmount, 0), [savingsResults]);
+  const completedGoals = useMemo(() => savingsResults.filter((g) => g.percentComplete >= 100).length, [savingsResults]);
+
+  const mortgageResults = useMemo(() => FinancialEngine.getMortgages(mortgages), [mortgages]);
+  const mortgageResult = mortgageResults.length > 0 ? mortgageResults[0] : null;
 
   // Category spending breakdown for charts
   const categorySpending = useMemo(() => {
@@ -165,12 +136,14 @@ export function ReportsPage() {
 
   // Mortgage balance projection
   const mortgageBalanceData = useMemo(() => {
-    if (!mortgageCalc?.schedule) return [];
-    return mortgageCalc.schedule.filter((_, i) => i % 12 === 0 || i === mortgageCalc.schedule.length - 1).map((r) => ({
+    if (!mortgages.length) return [];
+    const schedule = FinancialEngine.getMortgageSchedule(mortgages[0]);
+    if (!schedule.length) return [];
+    return schedule.filter((_, i) => i % 12 === 0 || i === schedule.length - 1).map((r) => ({
       year: `${Math.floor(r.month / 12) + 1}y`,
       balance: r.remainingBalance,
     }));
-  }, [mortgageCalc]);
+  }, [mortgages]);
 
   const tabs: { key: ReportTab; label: string }[] = [
     { key: 'monthly', label: 'Monthly Summary' },
@@ -281,20 +254,20 @@ export function ReportsPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Income</p>
-              <p className="mt-1.5 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(budgetSummary?.income.total ?? 0)}</p>
+              <p className="mt-1.5 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(cashFlow.monthlyIncome)}</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Expenses</p>
-              <p className="mt-1.5 text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(budgetSummary?.expenses.total ?? 0)}</p>
+              <p className="mt-1.5 text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(cashFlow.monthlyExpenses)}</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Cash Flow</p>
-              <p className={`mt-1.5 text-2xl font-bold ${(budgetSummary?.cashFlow.netIncome ?? 0) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>{formatCurrency(budgetSummary?.cashFlow.netIncome ?? 0)}</p>
+              <p className={`mt-1.5 text-2xl font-bold ${cashFlow.cashFlow >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>{formatCurrency(cashFlow.cashFlow)}</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Savings Rate</p>
               <p className="mt-1.5 text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                {budgetSummary && budgetSummary.income.total > 0 ? `${((budgetSummary.cashFlow.netIncome / budgetSummary.income.total) * 100).toFixed(1)}%` : '-'}
+                {cashFlow.monthlyIncome > 0 ? `${((cashFlow.cashFlow / cashFlow.monthlyIncome) * 100).toFixed(1)}%` : '-'}
               </p>
             </div>
           </div>
@@ -336,23 +309,23 @@ export function ReportsPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Budgeted</p>
-              <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">{formatCurrency(budgets.reduce((s, b) => s + Number(b.amount), 0))}</p>
+              <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">{formatCurrency(budgetHealth.totalBudgeted)}</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Spent</p>
-              <p className="mt-1.5 text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(budgetSummary?.expenses.total ?? 0)}</p>
+              <p className="mt-1.5 text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(budgetHealth.totalSpent)}</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Remaining</p>
-              <p className={`mt-1.5 text-2xl font-bold ${budgets.reduce((s, b) => s + Number(b.amount), 0) > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-white'}`}>
-                {formatCurrency(Math.max(0, budgets.reduce((s, b) => s + Number(b.amount), 0) - (budgetSummary?.expenses.total ?? 0)))}
+              <p className={`mt-1.5 text-2xl font-bold ${budgetHealth.remaining > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-white'}`}>
+                {formatCurrency(budgetHealth.remaining)}
               </p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Budget Health</p>
               <p className="mt-1.5 text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                {budgets.reduce((s, b) => s + Number(b.amount), 0) > 0
-                  ? `${Math.round((1 - (budgetSummary?.expenses.total ?? 0) / budgets.reduce((s, b) => s + Number(b.amount), 0)) * 100)}%`
+                {budgetHealth.totalBudgeted > 0
+                  ? `${budgetHealth.adherencePercent.toFixed(0)}%`
                   : '-'}
               </p>
             </div>
@@ -386,21 +359,21 @@ export function ReportsPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Saved</p>
-              <p className="mt-1.5 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(savingsDash.totalSaved)}</p>
+              <p className="mt-1.5 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(totalSaved)}</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Target</p>
-              <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">{formatCurrency(savingsDash.totalTarget)}</p>
+              <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">{formatCurrency(totalTarget)}</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Progress</p>
               <p className="mt-1.5 text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                {savingsDash.totalTarget > 0 ? `${((savingsDash.totalSaved / savingsDash.totalTarget) * 100).toFixed(1)}%` : '-'}
+                {totalTarget > 0 ? `${((totalSaved / totalTarget) * 100).toFixed(1)}%` : '-'}
               </p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Completed Goals</p>
-              <p className="mt-1.5 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{savingsDash.completedGoals}</p>
+              <p className="mt-1.5 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{completedGoals}</p>
             </div>
           </div>
 
@@ -429,7 +402,7 @@ export function ReportsPage() {
 
       {tab === 'mortgage' && (
         <div className="space-y-6">
-          {!mortgageCalc ? (
+          {!mortgageResult ? (
             <div className="rounded-2xl border-2 border-dashed border-slate-200 p-12 text-center dark:border-slate-700">
               <p className="text-sm text-slate-400">No mortgage data. Add a mortgage to see reports.</p>
             </div>
@@ -438,19 +411,19 @@ export function ReportsPage() {
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                   <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Monthly Payment</p>
-                  <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">{formatCurrency(mortgageCalc.paymentAmount)}</p>
+                  <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">{formatCurrency(mortgageResult.monthlyPayment)}</p>
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                   <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Interest</p>
-                  <p className="mt-1.5 text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(mortgageCalc.totalInterest)}</p>
+                  <p className="mt-1.5 text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(mortgageResult.totalInterest)}</p>
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                   <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Payoff Date</p>
-                  <p className="mt-1.5 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{mortgageCalc.payoffDate ? new Date(mortgageCalc.payoffDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '—'}</p>
+                  <p className="mt-1.5 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{mortgageResult.payoffDate ? new Date(mortgageResult.payoffDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '—'}</p>
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                   <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Cost</p>
-                  <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">{formatCurrency(mortgageCalc.totalPrincipal + mortgageCalc.totalInterest)}</p>
+                  <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">{formatCurrency(mortgageResult.totalCost)}</p>
                 </div>
               </div>
 
@@ -525,21 +498,21 @@ export function ReportsPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Net Worth</p>
-              <p className="mt-1.5 text-2xl font-bold text-indigo-600 dark:text-indigo-400">{formatCurrency(accounts.reduce((s, a) => s + Number(a.balance), 0))}</p>
+              <p className="mt-1.5 text-2xl font-bold text-indigo-600 dark:text-indigo-400">{formatCurrency(netWorth.netWorth)}</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Cash Flow</p>
-              <p className={`mt-1.5 text-2xl font-bold ${(budgetSummary?.cashFlow.netIncome ?? 0) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>{formatCurrency(budgetSummary?.cashFlow.netIncome ?? 0)}</p>
+              <p className={`mt-1.5 text-2xl font-bold ${cashFlow.cashFlow >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>{formatCurrency(cashFlow.cashFlow)}</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Savings Rate</p>
               <p className="mt-1.5 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                {budgetSummary && budgetSummary.income.total > 0 ? `${((budgetSummary.cashFlow.netIncome / budgetSummary.income.total) * 100).toFixed(1)}%` : '-'}
+                {cashFlow.monthlyIncome > 0 ? `${((cashFlow.cashFlow / cashFlow.monthlyIncome) * 100).toFixed(1)}%` : '-'}
               </p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Income</p>
-              <p className="mt-1.5 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(budgetSummary?.income.total ?? 0)}</p>
+              <p className="mt-1.5 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(cashFlow.monthlyIncome)}</p>
             </div>
           </div>
         </div>

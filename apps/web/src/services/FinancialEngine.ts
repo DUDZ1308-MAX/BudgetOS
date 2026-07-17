@@ -464,6 +464,20 @@ export const FinancialEngine = {
       });
   },
 
+  getMortgageSchedule(m: Mortgage): { month: number; remainingBalance: number; payment: number; principal: number; interest: number }[] {
+    const result = calculateFullAmortization({
+      principal: Number(m.principal ?? 0),
+      annualRate: Number(m.annual_rate ?? 0),
+      termYears: Number(m.term_years ?? 0),
+      startDate: m.start_date ?? new Date().toISOString().slice(0, 10),
+      extraPayments: m.extra_payment
+        ? [{ type: 'monthly_fixed' as const, amount: Number(m.extra_payment) }]
+        : [],
+    });
+    if (!result.success) return [];
+    return result.data.schedule;
+  },
+
   // -------------------------------------------------------------------------
   // Upcoming Activity — recurring transactions due soon
   // -------------------------------------------------------------------------

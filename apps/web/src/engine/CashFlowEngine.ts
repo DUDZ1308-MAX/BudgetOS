@@ -1,5 +1,9 @@
-import { calculateIncomeVsExpenseRatio } from '@/lib/finance';
 import type { EngineTransaction, EngineAccount, CashFlowSummary, DailyBalance } from './types';
+
+function calculateIncomeVsExpenseRatio(totalIncome: number, totalExpenses: number): number {
+  if (totalExpenses === 0) return totalIncome > 0 ? Infinity : 0;
+  return totalIncome / totalExpenses;
+}
 
 export function computeCashFlowSummary(input: {
   transactions: EngineTransaction[];

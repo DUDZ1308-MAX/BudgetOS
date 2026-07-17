@@ -1,7 +1,6 @@
-import { calculateGoalProgress, calculateSurplus } from '@/lib/finance';
-import type { SavingsGoalInput } from '@/lib/finance';
+import { computeGoalProgress, calculateSurplus } from '@budgetos/engine';
 
-export interface OldGoalProgressResult {
+export interface GoalProgressResult {
   percentComplete: number;
   remainingAmount: number;
   daysRemaining: number;
@@ -11,7 +10,7 @@ export interface OldGoalProgressResult {
   onTrack: boolean;
 }
 
-export interface OldSavingsDashboard {
+export interface SavingsDashboard {
   totalSaved: number;
   totalTarget: number;
   activeGoals: number;
@@ -19,32 +18,54 @@ export interface OldSavingsDashboard {
   largestGoal: { name: string; target: number; current: number } | null;
 }
 
-export function computeGoalStatus(goal: SavingsGoalInput): OldGoalProgressResult {
-  const progress = calculateGoalProgress(goal);
-  const monthsRemaining = Math.max(1, Math.round(progress.daysRemaining / 30));
-  const monthly = progress.requiredMonthly || Math.max(0, goal.target_amount - goal.current_amount) / monthsRemaining;
-  const remaining = progress.remaining;
-  const rate = monthsRemaining > 0 ? monthly : remaining;
-  const estimatedCompletion = rate > 0
-    ? new Date(Date.now() + (remaining / rate) * 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
-    : new Date().toISOString().slice(0, 10);
+export function computeGoalStatus(goal: { target_amount: number; current_amount: number; deadline?: string | null; target_date?: string | null; status?: string; monthly_contribution?: number }): GoalProgressResult {
+  if (goal.target_amount <= 0) {
+    return {
+      percentComplete: 0,
+      remainingAmount: Math.max(0, goal.target_amount - goal.current_amount),
+      daysRemaining: 0,
+      status: 'not_started',
+      estimatedCompletionDate: 'N/A',
+      monthsRemaining: 0,
+      onTrack: false,
+    };
+  }
+
+  const targetDate = goal.deadline || goal.target_date || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const remaining = Math.max(0, goal.target_amount - goal.current_amount);
+  const monthlyContrib = goal.monthly_contribution || (remaining / 12);
+
+  const progress = computeGoalProgress({
+    currentAmount: goal.current_amount,
+    targetAmount: goal.target_amount,
+    targetDate,
+    monthlyContribution: monthlyContrib,
+  });
+
+  const monthsRemaining = progress.monthsRemaining;
+  const daysRemaining = monthsRemaining * 30;
+
+  let status: GoalProgressResult['status'] = 'not_started';
+  if (progress.percentComplete >= 100) status = 'completed';
+  else if (progress.onTrack) status = 'on_track';
+  else status = 'behind';
 
   return {
-    percentComplete: progress.percent,
-    remainingAmount: progress.remaining,
-    daysRemaining: progress.daysRemaining,
-    status: progress.status,
-    estimatedCompletionDate: estimatedCompletion,
+    percentComplete: progress.percentComplete,
+    remainingAmount: remaining,
+    daysRemaining,
+    status,
+    estimatedCompletionDate: progress.estimatedCompletionDate,
     monthsRemaining,
-    onTrack: progress.status === 'on_track' || progress.status === 'completed',
+    onTrack: progress.onTrack,
   };
 }
 
 export function computeSurplus(income: number, expenses: number, sinkingFunds: number = 0): number {
-  return calculateSurplus(income, expenses, sinkingFunds);
+  return Math.max(0, calculateSurplus({ totalIncome: income, totalExpenses: expenses, sinkingFunds }));
 }
 
-export function computeSavingsDashboard(goals: SavingsGoalInput[]): OldSavingsDashboard {
+export function computeSavingsDashboard(goals: { target_amount: number; current_amount: number; name: string; status?: string }[]): SavingsDashboard {
   const totalSaved = goals.reduce((s, g) => s + g.current_amount, 0);
   const totalTarget = goals.reduce((s, g) => s + g.target_amount, 0);
   const activeGoals = goals.filter((g) => g.status !== 'completed' && g.status !== 'cancelled').length;

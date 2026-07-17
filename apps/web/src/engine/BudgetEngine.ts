@@ -1,6 +1,22 @@
-import { calculateBudgetStatus, sumByCategory, daysBetween } from '@/lib/finance';
-import type { TransactionInput, BudgetInput } from '@/lib/finance';
+import { computeCategoryStatus } from '@budgetos/engine';
 import type { EngineTransaction, EngineAccount, EngineBudget, BudgetSummary, CategoryBreakdown, Alert } from './types';
+
+function sumByCategory(transactions: { category_id?: string | null; amount: number; type?: string }[]): Record<string, number> {
+  const result: Record<string, number> = {};
+  for (const t of transactions) {
+    if (t.type === 'income') continue;
+    const catId = t.category_id || '__uncategorized__';
+    result[catId] = (result[catId] ?? 0) + Math.abs(t.amount);
+  }
+  return result;
+}
+
+function daysBetween(start: string, end: string): number {
+  const s = new Date(start);
+  const e = new Date(end);
+  const diff = e.getTime() - s.getTime();
+  return Math.max(1, Math.round(diff / (1000 * 60 * 60 * 24)) + 1);
+}
 
 export function computeBudgetSummary(input: {
   transactions: EngineTransaction[];
@@ -15,32 +31,12 @@ export function computeBudgetSummary(input: {
     (t) => !t.is_archived && t.date >= start && t.date <= end,
   );
 
-  const transactions: TransactionInput[] = activeTransactions.map((t) => ({
-    id: t.id,
-    account_id: t.account_id,
-    category_id: t.category_id,
-    amount: Math.abs(t.amount),
-    date: t.date,
-    merchant: t.merchant,
-    note: t.note,
-    is_archived: t.is_archived ?? false,
-    type: t.amount > 0 ? 'income' as const : 'expense' as const,
-  }));
-
-  const budgets: BudgetInput[] = (input.budgets ?? []).map((b) => ({
-    category_id: b.category_id,
-    year: b.year,
-    month: b.month,
-    amount: b.amount,
-    rollover: b.rollover || false,
-  }));
-
-  const totalIncome = transactions
-    .filter((t) => t.type === 'income')
-    .reduce((s, t) => s + t.amount, 0);
-  const totalExpenses = transactions
-    .filter((t) => t.type === 'expense')
-    .reduce((s, t) => s + t.amount, 0);
+  const totalIncome = activeTransactions
+    .filter((t) => t.amount > 0)
+    .reduce((s, t) => s + Math.abs(t.amount), 0);
+  const totalExpenses = activeTransactions
+    .filter((t) => t.amount < 0)
+    .reduce((s, t) => s + Math.abs(t.amount), 0);
 
   const netFlow = totalIncome - totalExpenses;
   const rangeDays = end && start ? daysBetween(start, end) : 1;
@@ -49,11 +45,11 @@ export function computeBudgetSummary(input: {
   // Expense breakdown by category
   const categoryMap = new Map((input.categories ?? []).map((c: any) => [c.id, c.name]));
   const expenseByCategoryMap = new Map<string, { amount: number; count: number }>();
-  for (const t of transactions) {
-    if (t.type !== 'expense') continue;
+  for (const t of activeTransactions) {
+    if (t.amount >= 0) continue;
     const catId = t.category_id || 'uncategorized';
     const existing = expenseByCategoryMap.get(catId) || { amount: 0, count: 0 };
-    existing.amount += t.amount;
+    existing.amount += Math.abs(t.amount);
     existing.count += 1;
     expenseByCategoryMap.set(catId, existing);
   }
@@ -67,19 +63,24 @@ export function computeBudgetSummary(input: {
   }));
 
   // Budget calculations
-  const sumByCatMap = sumByCategory(transactions.filter((t) => t.type === 'expense'));
-  const categoryBudgetBreakdowns = budgets.map((b) => {
+  const expenseTxns = activeTransactions.filter((t) => t.amount < 0);
+  const sumByCatMap = sumByCategory(expenseTxns);
+  const categoryBudgetBreakdowns = (input.budgets ?? []).map((b) => {
     const catTotal = sumByCatMap[b.category_id] || 0;
     const remaining = b.amount - catTotal;
     const percentUsed = b.amount > 0 ? (catTotal / b.amount) * 100 : (catTotal > 0 ? 100 : 0);
-    const status = calculateBudgetStatus(percentUsed);
+    const engineStatus = computeCategoryStatus(percentUsed);
+    const statusMap: Record<string, 'under' | 'on_track' | 'at_limit' | 'over'> = {
+      on_track: 'on_track', at_limit: 'at_limit', over: 'over', under: 'under',
+    };
+    const status = statusMap[engineStatus] || 'under';
     const catName = categoryMap.get(b.category_id) || '';
-    return { categoryId: b.category_id, categoryName: catName, budgeted: b.amount, spent: catTotal, remaining, percentUsed, status: status as 'under' | 'on_track' | 'at_limit' | 'over' };
+    return { categoryId: b.category_id, categoryName: catName, budgeted: b.amount, spent: catTotal, remaining, percentUsed, status };
   });
 
-  const totalBudgeted = budgets.reduce((s, b) => s + b.amount, 0);
-  const totalSpent = budgets.reduce((s, b) => s + (sumByCatMap[b.category_id] || 0), 0);
-  const totalRemaining = budgets.reduce((s, b) => s + (b.amount - (sumByCatMap[b.category_id] || 0)), 0);
+  const totalBudgeted = (input.budgets ?? []).reduce((s, b) => s + b.amount, 0);
+  const totalSpent = (input.budgets ?? []).reduce((s, b) => s + (sumByCatMap[b.category_id] || 0), 0);
+  const totalRemaining = (input.budgets ?? []).reduce((s, b) => s + (b.amount - (sumByCatMap[b.category_id] || 0)), 0);
 
   // Account metrics
   const activeAccounts = (input.accounts ?? []).filter((a) => a.is_active);
@@ -94,7 +95,6 @@ export function computeBudgetSummary(input: {
   // Savings capacity
   const surplus = netFlow > 0 ? Math.min(netFlow, Math.round(totalIncome * 0.2)) : 0;
   const savingsRate = totalIncome > 0 ? Math.round((surplus / totalIncome) * 100) : 0;
-  const recommendedAmount = surplus;
 
   // Alerts
   const alerts: Alert[] = [];
@@ -116,18 +116,17 @@ export function computeBudgetSummary(input: {
     });
   }
 
-  // Check for unusually high spending
-  const avgTransaction = transactions.length > 0
-    ? transactions.reduce((s, t) => s + t.amount, 0) / transactions.length
+  const avgTransaction = activeTransactions.length > 0
+    ? activeTransactions.reduce((s, t) => s + Math.abs(t.amount), 0) / activeTransactions.length
     : 0;
-  for (const t of transactions) {
-    if (t.type === 'expense' && avgTransaction > 0 && t.amount > avgTransaction * 3) {
+  for (const t of activeTransactions) {
+    if (t.amount < 0 && avgTransaction > 0 && Math.abs(t.amount) > avgTransaction * 3) {
       const merchant = t.merchant || t.note || '';
       if (merchant) {
         alerts.push({
           type: 'unusual_spending',
           severity: 'medium',
-          message: `Unusually high expense at ${merchant}: $${t.amount.toFixed(2)}`,
+          message: `Unusually high expense at ${merchant}: $${Math.abs(t.amount).toFixed(2)}`,
           category: t.category_id ?? undefined,
         });
       }
@@ -161,7 +160,7 @@ export function computeBudgetSummary(input: {
       accountCount: activeAccounts.length,
     },
     savingsCapacity: {
-      recommendedAmount,
+      recommendedAmount: surplus,
       savingsRate,
       surplus,
     },
