@@ -83,13 +83,19 @@ export function DashboardPage() {
         transition={{ duration: 0.5 }}
         className="page-header"
       >
-        <div>
-          <h1 className="page-title">{getGreeting()}, {displayName}</h1>
-          <div className="flex items-center gap-3">
-            <p className="page-subtitle">Your financial command center</p>
-            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-              Updated {formatLastUpdated()}
-            </span>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="page-title">{getGreeting()}, {displayName}</h1>
+            <div className="flex items-center gap-3">
+              <p className="page-subtitle">Your financial command center</p>
+              <span className="premium-badge premium-badge-info">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" style={{ boxShadow: '0 0 6px rgba(52, 211, 153, 0.5)' }} />
+                Live
+              </span>
+              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                Updated {formatLastUpdated()}
+              </span>
+            </div>
           </div>
         </div>
       </motion.div>

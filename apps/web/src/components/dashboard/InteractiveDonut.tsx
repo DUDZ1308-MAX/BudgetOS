@@ -99,6 +99,7 @@ export const InteractiveDonut = memo(function InteractiveDonut({ data, title = '
           transition={{ duration: 0.6, delay: 0.3 }}
           className="h-[200px] w-[200px] shrink-0 chart-depth-lg"
           aria-label={`${title} donut chart`}
+          style={{ perspective: '500px' }}
         >
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>

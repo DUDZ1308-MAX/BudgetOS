@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth';
 import { recurringApi } from '@/lib/api/recurring';
@@ -64,12 +65,19 @@ export const UpcomingActivityCard = memo(function UpcomingActivityCard() {
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No upcoming activity</p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {allItems.map((item) => {
+        <div className="space-y-1.5">
+          {allItems.map((item, i) => {
             const isDue = item.next_run <= today;
             const isIncome = item.type === 'income';
             return (
-              <div key={item.id} className="flex items-center justify-between rounded-lg py-1.5" style={{ borderBottom: '1px solid var(--border-default)' }}>
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: 0.35 + i * 0.05 }}
+                className="flex items-center justify-between rounded-xl py-2 px-3 transition-colors"
+                style={{ background: isDue ? 'color-mix(in srgb, var(--status-error) 5%, transparent)' : 'transparent' }}
+              >
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{item.name}</p>
                   <p className={`text-xs ${isDue ? 'text-red-500 font-medium' : ''}`} style={!isDue ? { color: 'var(--text-muted)' } : undefined}>
@@ -79,7 +87,7 @@ export const UpcomingActivityCard = memo(function UpcomingActivityCard() {
                 <span className={`text-sm font-semibold ${isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
                   {isIncome ? '+' : '-'}{formatCurrency(Math.abs(item.amount))}
                 </span>
-              </div>
+              </motion.div>
             );
           })}
         </div>

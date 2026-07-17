@@ -8,15 +8,25 @@ interface DashboardCardProps {
   children: ReactNode;
   className?: string;
   delay?: number;
+  accent?: 'none' | 'top' | 'left' | 'success' | 'error' | 'warning';
 }
 
-export function DashboardCard({ title, subtitle, action, children, className = '', delay = 0 }: DashboardCardProps) {
+const accentClasses: Record<string, string> = {
+  none: '',
+  top: 'accent-strip-top',
+  left: 'accent-strip-left',
+  success: 'accent-strip-success',
+  error: 'accent-strip-error',
+  warning: 'accent-strip-warning',
+};
+
+export function DashboardCard({ title, subtitle, action, children, className = '', delay = 0, accent = 'none' }: DashboardCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
-      className={`premium-card premium-card-glow overflow-hidden ${className}`}
+      className={`premium-card-3d glass-overlay premium-card-glow overflow-hidden ${accentClasses[accent]} ${className}`}
     >
       <div className="flex items-center justify-between border-b px-5 py-4" style={{ borderColor: 'var(--border-default)' }}>
         <div className="min-w-0">

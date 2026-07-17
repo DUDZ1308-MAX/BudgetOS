@@ -20,11 +20,11 @@ interface Props {
   isLoading?: boolean;
 }
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; dot: string }> = {
-  on_track: { label: 'On Track', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/30', dot: 'bg-emerald-500' },
-  behind: { label: 'Behind', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/30', dot: 'bg-amber-500' },
-  completed: { label: 'Completed', color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-950/30', dot: 'bg-indigo-500' },
-  not_started: { label: 'Not Started', color: 'text-slate-500', bg: 'bg-slate-50 dark:bg-slate-800/50', dot: 'bg-slate-400' },
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; dot: string; badgeClass: string }> = {
+  on_track: { label: 'On Track', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/30', dot: 'bg-emerald-500', badgeClass: 'premium-badge-success' },
+  behind: { label: 'Behind', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/30', dot: 'bg-amber-500', badgeClass: 'premium-badge-warning' },
+  completed: { label: 'Completed', color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-950/30', dot: 'bg-indigo-500', badgeClass: 'premium-badge-info' },
+  not_started: { label: 'Not Started', color: 'text-slate-500', bg: 'bg-slate-50 dark:bg-slate-800/50', dot: 'bg-slate-400', badgeClass: 'premium-badge-info' },
 };
 
 function getGoalStatus(goal: SavingsGoal): string {
@@ -50,30 +50,30 @@ function formatDate(dateStr: string | null | undefined): string {
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function AnimatedProgressBar({ percentage, delay = 0 }: { percentage: number; delay?: number }) {
-  const [width, setWidth] = useState(0);
-
-  useEffect(() => {
-    const duration = 1000;
-    const start = performance.now();
-    function tick(now: number) {
-      const elapsed = now - start;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setWidth(percentage * eased);
-      if (progress < 1) requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
-  }, [percentage]);
+function CircularProgress({ percentage, size = 48, strokeWidth = 4 }: { percentage: number; size?: number; strokeWidth?: number }) {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference * (1 - Math.min(percentage, 100) / 100);
+  const color = percentage >= 80 ? 'var(--status-success)' : percentage >= 50 ? 'var(--accent-primary)' : 'var(--status-warning)';
 
   return (
-    <div className="h-2.5 overflow-hidden rounded-full" style={{ background: 'var(--bg-elevated)' }}>
-      <motion.div
-        initial={{ width: 0 }}
-        animate={{ width: `${Math.min(width, 100)}%` }}
-        transition={{ duration: 0.1, delay }}
-        className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"
-      />
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg className="h-full w-full -rotate-90" viewBox={`0 0 ${size} ${size}`}>
+        <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="var(--border-default)" strokeWidth={strokeWidth} />
+        <circle
+          cx={size/2} cy={size/2} r={radius}
+          fill="none"
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          className="premium-gauge"
+        />
+      </svg>
+      <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold tabular-nums" style={{ color }}>
+        {Math.round(percentage)}%
+      </span>
     </div>
   );
 }
@@ -89,21 +89,30 @@ function GoalRow({ goal, index }: { goal: SavingsGoal; index: number }) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.2 + index * 0.08 }}
-      className="group rounded-xl p-4 transition-colors"
+      className="group rounded-xl p-4 transition-all"
       style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)' }}
     >
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-start gap-3">
+        <CircularProgress percentage={pct} />
+
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h4 className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{goal.name}</h4>
-            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${config.bg} ${config.color}`}>
+            <span className={`premium-badge ${config.badgeClass}`}>
               <span className={`h-1.5 w-1.5 rounded-full ${config.dot}`} />
               {config.label}
             </span>
           </div>
 
           <div className="mt-2">
-            <AnimatedProgressBar percentage={pct} delay={0.3 + index * 0.1} />
+            <div className="premium-progress">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.min(pct, 100)}%` }}
+                transition={{ duration: 0.8, delay: 0.3 + index * 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
+                className="premium-progress-bar premium-progress-bar-gradient"
+              />
+            </div>
           </div>
 
           <div className="mt-2 flex items-center gap-4 text-xs" style={{ color: 'var(--text-muted)' }}>
@@ -195,6 +204,7 @@ export const SavingsGoalProgress = memo(function SavingsGoalProgress({ goals, is
     <DashboardCard
       title="Savings Goals"
       subtitle={`${activeGoals.length} active · ${formatCurrency(totalSaved)} saved of ${formatCurrency(totalTarget)}`}
+      accent="top"
       action={
         <div className="flex items-center gap-2">
           <button
@@ -223,12 +233,12 @@ export const SavingsGoalProgress = memo(function SavingsGoalProgress({ goals, is
           <span style={{ color: 'var(--text-muted)' }}>Overall Progress</span>
           <span className="font-semibold tabular-nums" style={{ color: 'var(--text-primary)' }}>{overallPct.toFixed(1)}%</span>
         </div>
-        <div className="mt-1.5 h-3 overflow-hidden rounded-full" style={{ background: 'var(--bg-elevated)' }}>
+        <div className="premium-progress mt-1.5" style={{ height: '0.75rem' }}>
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${Math.min(overallPct, 100)}%` }}
             transition={{ duration: 1.2, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"
+            className="premium-progress-bar premium-progress-bar-gradient"
           />
         </div>
         <div className="mt-1.5 flex justify-between text-[10px]" style={{ color: 'var(--text-muted)' }}>

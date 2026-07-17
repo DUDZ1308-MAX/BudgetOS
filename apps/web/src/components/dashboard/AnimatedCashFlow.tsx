@@ -22,11 +22,14 @@ function CustomTooltip({ active, payload, label }: any) {
   const expenses = payload.find((p: any) => p.dataKey === 'expenses');
   const net = payload.find((p: any) => p.dataKey === 'net');
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
       className="rounded-xl px-4 py-3 shadow-xl"
       style={{
         background: 'var(--bg-card)',
-        border: '1px solid var(--border-default)',
+        border: '1px solid var(--glass-border)',
+        backdropFilter: 'blur(8px)',
       }}
       role="tooltip"
     >
@@ -48,7 +51,7 @@ function CustomTooltip({ active, payload, label }: any) {
           </p>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -87,23 +90,24 @@ export const AnimatedCashFlow = memo(function AnimatedCashFlow({ data, isLoading
     <DashboardCard
       title="Cash Flow Trend"
       subtitle={`${data.length} month${data.length !== 1 ? 's' : ''} overview`}
+      accent="top"
       delay={0.15}
     >
       <div className="mb-4 flex gap-4">
         <div className="flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" style={{ boxShadow: '0 0 6px rgba(52, 211, 153, 0.4)' }} />
           <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
             Income: {formatCurrency(totalIncome)}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
+          <span className="h-2.5 w-2.5 rounded-full bg-red-400" style={{ boxShadow: '0 0 6px rgba(248, 113, 113, 0.4)' }} />
           <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
             Expenses: {formatCurrency(totalExpenses)}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className={`h-2.5 w-2.5 rounded-full ${netCashFlow >= 0 ? 'bg-emerald-500' : 'bg-red-500'}`} />
+          <span className={`h-2.5 w-2.5 rounded-full ${netCashFlow >= 0 ? 'bg-emerald-500' : 'bg-red-500'}`} style={{ boxShadow: `0 0 6px ${netCashFlow >= 0 ? 'rgba(52, 211, 153, 0.4)' : 'rgba(248, 113, 113, 0.4)'}` }} />
           <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
             Net: {formatCurrency(netCashFlow)}
           </span>
@@ -114,7 +118,7 @@ export const AnimatedCashFlow = memo(function AnimatedCashFlow({ data, isLoading
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
-        className="h-64 chart-depth"
+        className="h-64 chart-depth-lg"
         aria-label="Cash flow area chart"
       >
         <ResponsiveContainer width="100%" height="100%">

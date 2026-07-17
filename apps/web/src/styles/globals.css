@@ -363,6 +363,217 @@
   animation: shimmer 2s ease-in-out infinite;
 }
 
+/* === Premium 3D depth cards === */
+.premium-card-3d {
+  background: var(--card-gradient);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 1rem;
+  box-shadow: var(--depth-shadow);
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+}
+
+.premium-card-3d::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.premium-card-3d:hover {
+  box-shadow: var(--depth-shadow-hover);
+  border-color: color-mix(in srgb, var(--glass-border) 200%, transparent);
+  transform: translateY(-2px);
+}
+
+/* === Premium glass overlay === */
+.glass-overlay {
+  position: relative;
+}
+
+.glass-overlay::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%);
+  pointer-events: none;
+}
+
+/* === Premium icon containers === */
+.premium-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.premium-icon:hover {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.premium-icon-accent {
+  background: var(--accent-muted);
+  color: var(--accent-text);
+  box-shadow: 0 0 0 1px var(--glass-border);
+}
+
+.premium-icon-success {
+  background: color-mix(in srgb, var(--status-success) 15%, transparent);
+  color: var(--status-success);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--status-success) 20%, transparent);
+}
+
+.premium-icon-warning {
+  background: color-mix(in srgb, var(--status-warning) 15%, transparent);
+  color: var(--status-warning);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--status-warning) 20%, transparent);
+}
+
+.premium-icon-error {
+  background: color-mix(in srgb, var(--status-error) 15%, transparent);
+  color: var(--status-error);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--status-error) 20%, transparent);
+}
+
+/* === Premium trend badges === */
+.premium-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 9999px;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.premium-badge-success {
+  background: color-mix(in srgb, var(--status-success) 12%, transparent);
+  color: var(--status-success);
+}
+
+.premium-badge-warning {
+  background: color-mix(in srgb, var(--status-warning) 12%, transparent);
+  color: var(--status-warning);
+}
+
+.premium-badge-error {
+  background: color-mix(in srgb, var(--status-error) 12%, transparent);
+  color: var(--status-error);
+}
+
+.premium-badge-info {
+  background: var(--accent-muted);
+  color: var(--accent-text);
+}
+
+/* === Premium progress bars === */
+.premium-progress {
+  height: 0.5rem;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: var(--bg-elevated);
+  position: relative;
+}
+
+.premium-progress-bar {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.premium-progress-bar-success {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--status-success) 80%, transparent) 0%, var(--status-success) 100%);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--status-success) 30%, transparent);
+}
+
+.premium-progress-bar-warning {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--status-warning) 80%, transparent) 0%, var(--status-warning) 100%);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--status-warning) 30%, transparent);
+}
+
+.premium-progress-bar-error {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--status-error) 80%, transparent) 0%, var(--status-error) 100%);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--status-error) 30%, transparent);
+}
+
+.premium-progress-bar-accent {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent-primary) 80%, transparent) 0%, var(--accent-primary) 100%);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent-primary) 30%, transparent);
+}
+
+.premium-progress-bar-gradient {
+  background: linear-gradient(90deg, #6366f1, #8b5cf6, #a78bfa);
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.3);
+}
+
+/* === Premium gauge enhancements === */
+.premium-gauge {
+  filter: drop-shadow(0 0 6px var(--accent-primary)) drop-shadow(0 0 12px color-mix(in srgb, var(--accent-primary) 20%, transparent));
+}
+
+.premium-gauge-glow {
+  filter: drop-shadow(0 0 8px var(--accent-primary)) drop-shadow(0 0 16px color-mix(in srgb, var(--accent-primary) 30%, transparent));
+}
+
+/* === Premium stat value === */
+.premium-stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+/* === Premium section dividers === */
+.premium-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--border-default) 20%, var(--border-default) 80%, transparent 100%);
+  margin: 0.75rem 0;
+}
+
+/* === Premium card accent strip === */
+.accent-strip-top {
+  position: relative;
+}
+
+.accent-strip-top::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 1rem;
+  right: 1rem;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  background: var(--accent-primary);
+  opacity: 0.6;
+}
+
+.accent-strip-left {
+  border-left: 3px solid var(--accent-primary);
+}
+
+.accent-strip-success {
+  border-left: 3px solid var(--status-success);
+}
+
+.accent-strip-error {
+  border-left: 3px solid var(--status-error);
+}
+
+.accent-strip-warning {
+  border-left: 3px solid var(--status-warning);
+}
+
 /* === Apply theme variables to Tailwind utilities === */
 @layer base {
   body {

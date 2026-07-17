@@ -8,6 +8,7 @@ interface QuickAction {
   href: string;
   icon: React.ReactNode;
   color: string;
+  hoverBg: string;
 }
 
 const ACTIONS: QuickAction[] = [
@@ -20,6 +21,7 @@ const ACTIONS: QuickAction[] = [
       </svg>
     ),
     color: 'var(--accent-primary)',
+    hoverBg: 'var(--accent-muted)',
   },
   {
     label: 'View Reports',
@@ -30,6 +32,7 @@ const ACTIONS: QuickAction[] = [
       </svg>
     ),
     color: 'var(--status-success)',
+    hoverBg: 'color-mix(in srgb, var(--status-success) 10%, transparent)',
   },
   {
     label: 'Check Budget',
@@ -40,6 +43,7 @@ const ACTIONS: QuickAction[] = [
       </svg>
     ),
     color: 'var(--status-warning)',
+    hoverBg: 'color-mix(in srgb, var(--status-warning) 10%, transparent)',
   },
   {
     label: 'Savings Goals',
@@ -50,6 +54,7 @@ const ACTIONS: QuickAction[] = [
       </svg>
     ),
     color: 'var(--chart-6)',
+    hoverBg: 'color-mix(in srgb, var(--chart-6) 10%, transparent)',
   },
 ];
 
@@ -65,16 +70,24 @@ export const QuickActionsCard = memo(function QuickActionsCard() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3, delay: 0.4 + i * 0.05 }}
-            whileHover={{ scale: 1.03 }}
+            whileHover={{ scale: 1.03, background: action.hoverBg }}
             whileTap={{ scale: 0.97 }}
             onClick={() => navigate(action.href)}
-            className="flex items-center gap-2 rounded-xl p-3 text-left transition-colors"
+            className="flex items-center gap-2.5 rounded-xl p-3 text-left transition-all"
             style={{
               background: 'var(--bg-elevated)',
               border: '1px solid var(--border-default)',
             }}
           >
-            <span style={{ color: action.color }}>{action.icon}</span>
+            <div
+              className="flex h-8 w-8 items-center justify-center rounded-lg"
+              style={{
+                background: `color-mix(in srgb, ${action.color} 15%, transparent)`,
+                color: action.color,
+              }}
+            >
+              {action.icon}
+            </div>
             <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>{action.label}</span>
           </motion.button>
         ))}

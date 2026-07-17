@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { DashboardCard } from '@/components/dashboard/DashboardCard';
 import type { DashboardFinancialHealth } from '@/lib/dashboard/types';
@@ -19,6 +19,13 @@ function getHealthLabel(score: number): string {
   return 'Critical';
 }
 
+function getHealthBadgeClass(score: number): string {
+  if (score >= 80) return 'premium-badge-success';
+  if (score >= 60) return 'premium-badge-info';
+  if (score >= 40) return 'premium-badge-warning';
+  return 'premium-badge-error';
+}
+
 const COMPONENT_LABELS: Record<string, string> = {
   savingsRate: 'Savings Rate',
   debtToIncome: 'Debt to Income',
@@ -33,10 +40,35 @@ interface Props {
 }
 
 export const FinancialHealthCard = memo(function FinancialHealthCard({ result, isLoading }: Props) {
+  const [animatedScore, setAnimatedScore] = useState(0);
+  const [isReady, setIsReady] = useState(false);
+
   const score = result?.overallScore ?? 0;
   const color = getHealthColor(score);
   const circumference = 2 * Math.PI * 36;
-  const offset = circumference * (1 - score / 100);
+  const offset = circumference * (1 - animatedScore / 100);
+
+  useEffect(() => {
+    if (!result) return;
+    const target = result.overallScore;
+    const duration = 1400;
+    const start = performance.now();
+    const startVal = animatedScore;
+
+    function tick(now: number) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setAnimatedScore(Math.round(startVal + (target - startVal) * eased));
+      if (progress < 1) {
+        requestAnimationFrame(tick);
+      } else {
+        setIsReady(true);
+      }
+    }
+    requestAnimationFrame(tick);
+  }, [result?.overallScore]);
+
   const topFactors = result?.components
     ? Object.entries(result.components)
         .slice(0, 3)
@@ -66,6 +98,7 @@ export const FinancialHealthCard = memo(function FinancialHealthCard({ result, i
     <DashboardCard
       title="Financial Health"
       subtitle={result ? getHealthLabel(score) : 'No data yet'}
+      accent="left"
       action={
         <a href="/health" className="text-xs hover:underline" style={{ color: 'var(--accent-text)' }}>
           Details →
@@ -81,19 +114,28 @@ export const FinancialHealthCard = memo(function FinancialHealthCard({ result, i
           className="relative h-[80px] w-[80px] shrink-0"
         >
           <svg className="h-[80px] w-[80px] -rotate-90" viewBox="0 0 80 80">
+            <defs>
+              <linearGradient id="healthGaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor={color} stopOpacity={0.3} />
+                <stop offset="50%" stopColor={color} stopOpacity={0.6} />
+                <stop offset="100%" stopColor={color} stopOpacity={1} />
+              </linearGradient>
+            </defs>
             <circle cx="40" cy="40" r="36" fill="none" stroke="var(--border-default)" strokeWidth="5" />
             <circle
               cx="40" cy="40" r="36"
               fill="none"
-              stroke={color}
+              stroke="url(#healthGaugeGrad)"
               strokeWidth="5"
               strokeDasharray={circumference}
               strokeDashoffset={offset}
               strokeLinecap="round"
+              className={isReady ? 'premium-gauge-glow' : ''}
+              style={{ transition: 'filter 0.5s ease' }}
             />
           </svg>
           <span className="absolute inset-0 flex items-center justify-center text-lg font-bold tabular-nums" style={{ color }}>
-            {score}
+            {animatedScore}
           </span>
         </motion.div>
 
