@@ -1,6 +1,6 @@
 import { memo, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Line, ComposedChart, Legend } from 'recharts';
 import { DashboardCard } from '@/components/dashboard/DashboardCard';
 import { formatCurrency } from '@/services/transactionService';
 
@@ -55,18 +55,33 @@ function CustomTooltip({ active, payload, label }: any) {
   );
 }
 
+function CustomLegend({ payload }: any) {
+  return (
+    <div className="flex items-center justify-center gap-4 mt-2">
+      {payload?.map((entry: any, i: number) => (
+        <div key={i} className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: entry.color }} />
+          <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{entry.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export const AnimatedCashFlow = memo(function AnimatedCashFlow({ data, isLoading }: Props) {
   const chartData = useMemo(() => {
     return data.map((d) => ({
       ...d,
       expenses: -Math.abs(d.expenses),
-      net: d.income - d.expenses,
     }));
   }, [data]);
 
-  const totalIncome = useMemo(() => data.reduce((s, d) => s + d.income, 0), [data]);
-  const totalExpenses = useMemo(() => data.reduce((s, d) => s + d.expenses, 0), [data]);
-  const netCashFlow = totalIncome - totalExpenses;
+  const totals = useMemo(() => {
+    const totalIncome = data.reduce((s, d) => s + d.income, 0);
+    const totalExpenses = data.reduce((s, d) => s + d.expenses, 0);
+    const netCashFlow = totalIncome - totalExpenses;
+    return { totalIncome, totalExpenses, netCashFlow };
+  }, [data]);
 
   if (isLoading) {
     return (
@@ -95,21 +110,21 @@ export const AnimatedCashFlow = memo(function AnimatedCashFlow({ data, isLoading
     >
       <div className="mb-4 flex gap-4">
         <div className="flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" style={{ boxShadow: '0 0 6px rgba(52, 211, 153, 0.4)' }} />
+          <span className="h-2.5 w-2.5 rounded-sm bg-emerald-500" style={{ boxShadow: '0 0 6px rgba(52, 211, 153, 0.4)' }} />
           <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            Income: {formatCurrency(totalIncome)}
+            Income: {formatCurrency(totals.totalIncome)}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-red-400" style={{ boxShadow: '0 0 6px rgba(248, 113, 113, 0.4)' }} />
+          <span className="h-2.5 w-2.5 rounded-sm bg-red-400" style={{ boxShadow: '0 0 6px rgba(248, 113, 113, 0.4)' }} />
           <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            Expenses: {formatCurrency(totalExpenses)}
+            Expenses: {formatCurrency(totals.totalExpenses)}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className={`h-2.5 w-2.5 rounded-full ${netCashFlow >= 0 ? 'bg-emerald-500' : 'bg-red-500'}`} style={{ boxShadow: `0 0 6px ${netCashFlow >= 0 ? 'rgba(52, 211, 153, 0.4)' : 'rgba(248, 113, 113, 0.4)'}` }} />
+          <span className={`h-2.5 w-2.5 rounded-full ${totals.netCashFlow >= 0 ? 'bg-emerald-500' : 'bg-red-500'}`} style={{ boxShadow: `0 0 6px ${totals.netCashFlow >= 0 ? 'rgba(52, 211, 153, 0.4)' : 'rgba(248, 113, 113, 0.4)'}` }} />
           <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
-            Net: {formatCurrency(netCashFlow)}
+            Net: {formatCurrency(totals.netCashFlow)}
           </span>
         </div>
       </div>
@@ -119,26 +134,18 @@ export const AnimatedCashFlow = memo(function AnimatedCashFlow({ data, isLoading
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
         className="h-64 chart-depth-lg"
-        aria-label="Cash flow area chart"
+        aria-label="Cash flow bar and line chart"
       >
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+          <ComposedChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
             <defs>
-              <linearGradient id="incomeAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#10b981" stopOpacity={0.4} />
-                <stop offset="100%" stopColor="#10b981" stopOpacity={0.05} />
+              <linearGradient id="incomeBarGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#10b981" stopOpacity={0.9} />
+                <stop offset="100%" stopColor="#10b981" stopOpacity={0.5} />
               </linearGradient>
-              <linearGradient id="expenseAreaGrad" x1="0" y1="1" x2="0" y2="0">
-                <stop offset="0%" stopColor="#ef4444" stopOpacity={0.4} />
-                <stop offset="100%" stopColor="#ef4444" stopOpacity={0.05} />
-              </linearGradient>
-              <linearGradient id="incomeStrokeGrad" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="#10b981" stopOpacity={0.6} />
-                <stop offset="100%" stopColor="#10b981" stopOpacity={1} />
-              </linearGradient>
-              <linearGradient id="expenseStrokeGrad" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="#ef4444" stopOpacity={0.6} />
-                <stop offset="100%" stopColor="#ef4444" stopOpacity={1} />
+              <linearGradient id="expenseBarGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#ef4444" stopOpacity={0.9} />
+                <stop offset="100%" stopColor="#ef4444" stopOpacity={0.5} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-default)" />
@@ -155,28 +162,34 @@ export const AnimatedCashFlow = memo(function AnimatedCashFlow({ data, isLoading
               tickFormatter={(v) => `$${Math.abs(v) >= 1000 ? `${(Math.abs(v) / 1000).toFixed(0)}k` : Math.abs(v).toFixed(0)}`}
             />
             <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--accent-muted)' }} />
-            <Area
-              type="monotone"
+            <Legend content={<CustomLegend />} />
+            <Bar
               dataKey="income"
-              stroke="url(#incomeStrokeGrad)"
-              fill="url(#incomeAreaGrad)"
-              strokeWidth={2.5}
-              dot={false}
-              activeDot={{ r: 5, strokeWidth: 2, stroke: '#10b981', fill: 'var(--bg-card)' }}
-              animationDuration={1200}
+              fill="url(#incomeBarGrad)"
+              radius={[4, 4, 0, 0]}
+              animationDuration={1000}
+              name="Income"
             />
-            <Area
-              type="monotone"
+            <Bar
               dataKey="expenses"
-              stroke="url(#expenseStrokeGrad)"
-              fill="url(#expenseAreaGrad)"
-              strokeWidth={2.5}
-              dot={false}
-              activeDot={{ r: 5, strokeWidth: 2, stroke: '#ef4444', fill: 'var(--bg-card)' }}
-              animationDuration={1200}
-              animationBegin={300}
+              fill="url(#expenseBarGrad)"
+              radius={[4, 4, 0, 0]}
+              animationDuration={1000}
+              animationBegin={200}
+              name="Expenses"
             />
-          </AreaChart>
+            <Line
+              type="monotone"
+              dataKey="net"
+              stroke="#6366f1"
+              strokeWidth={2.5}
+              dot={{ r: 4, strokeWidth: 2, stroke: '#6366f1', fill: 'var(--bg-card)' }}
+              activeDot={{ r: 6, strokeWidth: 2, stroke: '#6366f1', fill: 'var(--bg-card)' }}
+              animationDuration={1200}
+              animationBegin={400}
+              name="Net Cash Flow"
+            />
+          </ComposedChart>
         </ResponsiveContainer>
       </motion.div>
     </DashboardCard>

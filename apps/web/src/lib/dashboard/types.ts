@@ -39,6 +39,14 @@ export interface DashboardSummaryData {
   mortgages: DashboardMortgage[];
   topSpendingCategories: { categoryName: string; amount: number }[];
   budgetUtilization: CategoryBudgetStatus[];
+  upcomingActivity: {
+    id: string;
+    name: string;
+    amount: number;
+    nextRun: string;
+    type: 'income' | 'expense';
+    frequency: string;
+  }[];
   recentTransactions: {
     id: string;
     amount: number;

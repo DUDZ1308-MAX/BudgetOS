@@ -11,7 +11,6 @@ import {
   computeHealthScore,
   computeGoalProgress,
   calculateFullAmortization,
-  toMonthlyEquivalent,
 } from '@budgetos/engine';
 import type { RecurringFrequency, FHSRequest, CategoryBudget, TransactionSummary } from '@budgetos/shared';
 import type { Account, Category, Budget, Transaction, SavingsGoal, Mortgage } from '@budgetos/database';
@@ -181,7 +180,7 @@ async function fetchAllData(userId: string) {
 
   if (accountsResult.status === 'rejected') { debug('accounts fetch failed', accountsResult.reason); errors.push('accounts'); }
   if (categoriesResult.status === 'rejected') { debug('categories fetch failed', categoriesResult.reason); errors.push('categories'); }
-  if (budgetsResult.status === 'rejected') { debug('budgets fetch failed', budgetsResult.reason); errors.push('budgets'); }
+  if (budgetsResult.status === 'rejected') { debug('budgets fetch failed (non-critical)', budgetsResult.reason); }
   if (transactionsResult.status === 'rejected') { debug('transactions fetch failed', transactionsResult.reason); errors.push('transactions'); }
   if (recurringsResult.status === 'rejected') { debug('recurrings fetch failed', recurringsResult.reason); errors.push('recurrings'); }
   if (savingsResult.status === 'rejected') { debug('savings fetch failed', savingsResult.reason); errors.push('savings'); }
@@ -504,6 +503,46 @@ export const FinancialEngine = {
         type: r.type as 'income' | 'expense',
         frequency: r.frequency,
       }));
+  },
+
+  // -------------------------------------------------------------------------
+  // Historical Cash Flow — last N months for trend chart
+  // -------------------------------------------------------------------------
+  async getHistoricalCashFlow(
+    userId: string,
+    months: number = 6,
+  ): Promise<Array<{ month: string; income: number; expenses: number; net: number }>> {
+    const results: Array<{ month: string; income: number; expenses: number; net: number }> = [];
+    const now = new Date();
+
+    for (let i = months - 1; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      const lastDay = new Date(year, month, 0).getDate();
+      const start = `${year}-${String(month).padStart(2, '0')}-01`;
+      const end = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+      const monthLabel = date.toLocaleDateString('en-US', { month: 'short' });
+
+      try {
+        const [txns, recurrings] = await Promise.all([
+          transactionsApi.list(userId, { dateFrom: start, dateTo: end }),
+          recurringApi.list(userId),
+        ]);
+
+        const result = FinancialEngine.getCashFlow(txns, recurrings, { start, end });
+        results.push({
+          month: monthLabel,
+          income: result.monthlyIncome,
+          expenses: result.monthlyExpenses,
+          net: result.cashFlow,
+        });
+      } catch {
+        results.push({ month: monthLabel, income: 0, expenses: 0, net: 0 });
+      }
+    }
+
+    return results;
   },
 
   // -------------------------------------------------------------------------

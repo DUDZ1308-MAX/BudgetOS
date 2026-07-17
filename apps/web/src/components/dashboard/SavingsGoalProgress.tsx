@@ -22,6 +22,7 @@ interface Props {
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; dot: string; badgeClass: string }> = {
   on_track: { label: 'On Track', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/30', dot: 'bg-emerald-500', badgeClass: 'premium-badge-success' },
+  ahead: { label: 'Ahead', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/30', dot: 'bg-emerald-500', badgeClass: 'premium-badge-success' },
   behind: { label: 'Behind', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/30', dot: 'bg-amber-500', badgeClass: 'premium-badge-warning' },
   completed: { label: 'Completed', color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-950/30', dot: 'bg-indigo-500', badgeClass: 'premium-badge-info' },
   not_started: { label: 'Not Started', color: 'text-slate-500', bg: 'bg-slate-50 dark:bg-slate-800/50', dot: 'bg-slate-400', badgeClass: 'premium-badge-info' },
@@ -38,11 +39,36 @@ function getGoalStatus(goal: SavingsGoal): string {
     const remaining = goal.target_amount - goal.current_amount;
     if (goal.monthly_contribution && goal.monthly_contribution > 0) {
       const monthsNeeded = remaining / goal.monthly_contribution;
+      if (monthsNeeded < monthsLeft * 0.8) return 'ahead';
       return monthsNeeded > monthsLeft ? 'behind' : 'on_track';
     }
     if (monthsLeft < 0 && pct < 100) return 'behind';
   }
   return pct > 0 ? 'on_track' : 'not_started';
+}
+
+function getEstimatedCompletion(goal: SavingsGoal): string | null {
+  if (goal.is_completed || goal.status === 'completed') return null;
+  const remaining = goal.target_amount - goal.current_amount;
+  if (remaining <= 0) return null;
+  if (goal.monthly_contribution && goal.monthly_contribution > 0) {
+    const monthsNeeded = Math.ceil(remaining / goal.monthly_contribution);
+    const completion = new Date();
+    completion.setMonth(completion.getMonth() + monthsNeeded);
+    return completion.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  }
+  return null;
+}
+
+function getMonthlyRequired(goal: SavingsGoal): number | null {
+  if (goal.is_completed || goal.status === 'completed') return null;
+  const remaining = goal.target_amount - goal.current_amount;
+  if (remaining <= 0) return null;
+  if (!goal.target_date) return null;
+  const now = new Date();
+  const target = new Date(goal.target_date);
+  const monthsLeft = Math.max(1, Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 30)));
+  return remaining / monthsLeft;
 }
 
 function formatDate(dateStr: string | null | undefined): string {
@@ -83,6 +109,8 @@ function GoalRow({ goal, index }: { goal: SavingsGoal; index: number }) {
   const status = getGoalStatus(goal);
   const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.not_started!;
   const remaining = goal.target_amount - goal.current_amount;
+  const estimatedCompletion = getEstimatedCompletion(goal);
+  const monthlyRequired = getMonthlyRequired(goal);
 
   return (
     <motion.div
@@ -128,11 +156,26 @@ function GoalRow({ goal, index }: { goal: SavingsGoal; index: number }) {
         </div>
 
         <div className="shrink-0 text-right space-y-1">
-          {goal.monthly_contribution && goal.monthly_contribution > 0 && (
+          {goal.monthly_contribution && goal.monthly_contribution > 0 ? (
             <div className="text-xs">
               <span style={{ color: 'var(--text-muted)' }}>Monthly: </span>
               <span className="font-semibold tabular-nums" style={{ color: 'var(--text-primary)' }}>
                 {formatCurrency(goal.monthly_contribution)}
+              </span>
+            </div>
+          ) : monthlyRequired !== null ? (
+            <div className="text-xs">
+              <span style={{ color: 'var(--text-muted)' }}>Need/mo: </span>
+              <span className="font-semibold tabular-nums" style={{ color: 'var(--status-warning)' }}>
+                {formatCurrency(monthlyRequired)}
+              </span>
+            </div>
+          ) : null}
+          {estimatedCompletion && (
+            <div className="text-xs">
+              <span style={{ color: 'var(--text-muted)' }}>Est: </span>
+              <span className="tabular-nums" style={{ color: 'var(--text-secondary)' }}>
+                {estimatedCompletion}
               </span>
             </div>
           )}

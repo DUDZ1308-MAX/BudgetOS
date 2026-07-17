@@ -52,6 +52,7 @@ export async function computeDashboard(userId: string): Promise<DashboardResult>
     mortgages: dashboardData.mortgages,
     topSpendingCategories: dashboardData.topSpendingCategories,
     budgetUtilization,
+    upcomingActivity: dashboardData.upcomingActivity,
     recentTransactions: dashboardData.recentTransactions,
   };
 

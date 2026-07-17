@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '@/stores/auth';
 import { computeDashboard } from '@/lib/dashboard/computeDashboard';
+import { FinancialEngine } from '@/services/FinancialEngine';
 import { AnimatedCashFlow } from '@/components/dashboard/AnimatedCashFlow';
 import { SavingsGoalProgress } from '@/components/dashboard/SavingsGoalProgress';
 import { NetWorthCard } from './components/NetWorthCard';
@@ -43,6 +44,12 @@ export function DashboardPage() {
     enabled: !!user,
   });
 
+  const { data: cashFlowHistory = [], isLoading: cashFlowHistoryLoading } = useQuery({
+    queryKey: ['cash-flow-history', user?.id],
+    queryFn: () => FinancialEngine.getHistoricalCashFlow(user!.id, 6),
+    enabled: !!user,
+  });
+
   const d = result?.data ?? {
     netWorth: 0,
     totalAssets: 0,
@@ -54,6 +61,7 @@ export function DashboardPage() {
     mortgages: [],
     topSpendingCategories: [],
     budgetUtilization: [],
+    upcomingActivity: [],
     recentTransactions: [],
   };
   const queryErrors = result?.errors ?? [];
@@ -66,11 +74,12 @@ export function DashboardPage() {
   }, [d.topSpendingCategories]);
 
   const cashFlowData = useMemo(() => {
+    if (cashFlowHistory.length > 0) return cashFlowHistory;
     if (!result) return [];
     return [
       { month: 'This Month', income: d.monthlyIncome, expenses: d.monthlyExpenses, net: d.cashFlow },
     ];
-  }, [result, d]);
+  }, [result, d, cashFlowHistory]);
 
   const displayName = (user as any)?.user_metadata?.full_name ?? (user as any)?.email?.split('@')[0] ?? 'there';
 
@@ -100,14 +109,15 @@ export function DashboardPage() {
         </div>
       </motion.div>
 
-      {/* Partial data warning */}
+      {/* Partial data warning — only show for non-budget errors */}
       {queryErrors.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300"
+          className="rounded-xl border p-3 text-sm"
+          style={{ borderColor: 'var(--border-default)', background: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}
         >
-          Some data could not be loaded ({queryErrors.join(', ')}). Showing available data.
+          Some data could not be loaded ({queryErrors.filter((e) => e !== 'budgets').join(', ')}). Showing available data.
         </motion.div>
       )}
 
@@ -160,7 +170,7 @@ export function DashboardPage() {
         <div className="lg:col-span-2">
           <AnimatedCashFlow data={cashFlowData} isLoading={isLoading} />
         </div>
-        <AIInsightCard />
+        <AIInsightCard dashboardData={result?.data} isLoading={isLoading} />
       </motion.div>
 
       {/* Row 3: Savings Goals — full width */}
@@ -182,7 +192,7 @@ export function DashboardPage() {
         aria-label="Planning section"
       >
         <MortgageSnapshotCard mortgages={d.mortgages} isLoading={isLoading} />
-        <UpcomingActivityCard />
+        <UpcomingActivityCard activity={d.upcomingActivity} isLoading={isLoading} />
         <QuickActionsCard />
       </motion.div>
     </div>

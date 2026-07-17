@@ -19,20 +19,31 @@ function getHealthLabel(score: number): string {
   return 'Critical';
 }
 
-function getHealthBadgeClass(score: number): string {
-  if (score >= 80) return 'premium-badge-success';
-  if (score >= 60) return 'premium-badge-info';
-  if (score >= 40) return 'premium-badge-warning';
-  return 'premium-badge-error';
+const COMPONENT_META: Record<string, { label: string; icon: string; format: 'percent' | 'ratio' | 'months' | 'score' }> = {
+  savingsRate: { label: 'Savings Rate', icon: '💰', format: 'percent' },
+  debtToIncome: { label: 'Debt-to-Income', icon: '📉', format: 'ratio' },
+  emergencyFund: { label: 'Emergency Fund', icon: '🛡️', format: 'months' },
+  budgetAdherence: { label: 'Budget Score', icon: '📊', format: 'score' },
+  netWorthTrend: { label: 'Net Worth Trend', icon: '📈', format: 'score' },
+};
+
+function formatComponentValue(key: string, value: number, format: string): string {
+  switch (format) {
+    case 'percent': return `${value.toFixed(1)}%`;
+    case 'ratio': return `${value.toFixed(0)}%`;
+    case 'months': return `${value.toFixed(1)} months`;
+    case 'score': return `${value.toFixed(0)}%`;
+    default: return `${value.toFixed(0)}`;
+  }
 }
 
-const COMPONENT_LABELS: Record<string, string> = {
-  savingsRate: 'Savings Rate',
-  debtToIncome: 'Debt to Income',
-  emergencyFund: 'Emergency Fund',
-  budgetAdherence: 'Budget Adherence',
-  netWorthTrend: 'Net Worth Trend',
-};
+function getComponentColor(key: string, value: number): string {
+  if (key === 'savingsRate') return value >= 20 ? '#10b981' : value >= 10 ? 'var(--accent-primary)' : '#f59e0b';
+  if (key === 'debtToIncome') return value <= 20 ? '#10b981' : value <= 36 ? 'var(--accent-primary)' : '#f59e0b';
+  if (key === 'emergencyFund') return value >= 6 ? '#10b981' : value >= 3 ? 'var(--accent-primary)' : '#f59e0b';
+  if (key === 'budgetAdherence') return value >= 80 ? '#10b981' : value >= 60 ? 'var(--accent-primary)' : '#f59e0b';
+  return getHealthColor(value);
+}
 
 interface Props {
   result?: DashboardFinancialHealth | null;
@@ -69,14 +80,19 @@ export const FinancialHealthCard = memo(function FinancialHealthCard({ result, i
     requestAnimationFrame(tick);
   }, [result?.overallScore]);
 
-  const topFactors = result?.components
-    ? Object.entries(result.components)
-        .slice(0, 3)
-        .map(([key, val]) => ({
-          factor: key,
-          label: COMPONENT_LABELS[key] ?? key,
-          score: val.earnedPoints,
-        }))
+  const components = result?.components
+    ? Object.entries(result.components).slice(0, 4).map(([key, val]) => {
+        const meta = COMPONENT_META[key] ?? { label: key, icon: '📋', format: 'score' as const };
+        const displayValue = val.percentage;
+        return {
+          key,
+          label: meta.label,
+          icon: meta.icon,
+          format: meta.format,
+          value: displayValue,
+          color: getComponentColor(key, displayValue),
+        };
+      })
     : [];
 
   if (isLoading) {
@@ -85,7 +101,7 @@ export const FinancialHealthCard = memo(function FinancialHealthCard({ result, i
         <div className="flex items-center gap-4">
           <div className="h-20 w-20 animate-pulse rounded-full" style={{ background: 'var(--bg-elevated)' }} />
           <div className="flex-1 space-y-2">
-            {[1, 2, 3].map((i) => (
+            {[1, 2, 3, 4].map((i) => (
               <div key={i} className="h-3 animate-pulse rounded" style={{ background: 'var(--bg-elevated)' }} />
             ))}
           </div>
@@ -139,14 +155,23 @@ export const FinancialHealthCard = memo(function FinancialHealthCard({ result, i
           </span>
         </motion.div>
 
-        <div className="min-w-0 flex-1 space-y-1.5">
-          {topFactors.map((f) => (
-            <div key={f.factor} className="flex items-center justify-between text-xs">
-              <span className="truncate" style={{ color: 'var(--text-secondary)' }}>{f.label}</span>
-              <span className="ml-2 shrink-0 font-semibold tabular-nums" style={{ color: getHealthColor(f.score) }}>
-                {f.score}
+        <div className="min-w-0 flex-1 space-y-2">
+          {components.map((comp, i) => (
+            <motion.div
+              key={comp.key}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, delay: 0.25 + i * 0.08 }}
+              className="flex items-center justify-between"
+            >
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs">{comp.icon}</span>
+                <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{comp.label}</span>
+              </div>
+              <span className="text-xs font-bold tabular-nums" style={{ color: comp.color }}>
+                {formatComponentValue(comp.key, comp.value, comp.format)}
               </span>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>

@@ -46,6 +46,11 @@ function EquityRing({ progress }: { progress: number }) {
   );
 }
 
+function formatDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return '—';
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+}
+
 export const MortgageSnapshotCard = memo(function MortgageSnapshotCard({ mortgages = [], isLoading }: Props) {
   const mortgage = mortgages.length > 0 ? mortgages[0] : null;
 
@@ -77,6 +82,7 @@ export const MortgageSnapshotCard = memo(function MortgageSnapshotCard({ mortgag
   }
 
   const progress = mortgage.progressPct;
+  const principalPaid = mortgage.totalCost - mortgage.totalInterest - mortgage.remainingBalance;
 
   return (
     <DashboardCard
@@ -104,6 +110,24 @@ export const MortgageSnapshotCard = memo(function MortgageSnapshotCard({ mortgag
             {formatCurrency(mortgage.monthlyPayment)}
           </span>
         </div>
+
+        {mortgage.interestSaved > 0 && (
+          <div className="flex items-center justify-between">
+            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Interest Saved</span>
+            <span className="text-sm font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+              {formatCurrency(mortgage.interestSaved)}
+            </span>
+          </div>
+        )}
+
+        {mortgage.payoffDate && (
+          <div className="flex items-center justify-between">
+            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Est. Payoff</span>
+            <span className="text-xs tabular-nums" style={{ color: 'var(--text-secondary)' }}>
+              {formatDate(mortgage.payoffDate)}
+            </span>
+          </div>
+        )}
 
         <div className="premium-divider" />
 
