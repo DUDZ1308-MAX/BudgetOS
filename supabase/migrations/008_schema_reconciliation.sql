@@ -1,12 +1,18 @@
 -- ============================================================
 -- BudgetOS: Schema Reconciliation Migration
 -- Aligns production DB with codebase expectations
+-- All profile operations wrapped: table may not exist yet
 -- ============================================================
 
 -- 1. Fix profiles: add full_name column (production has display_name)
 -- ============================================================
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS full_name text;
-UPDATE public.profiles SET full_name = display_name WHERE full_name IS NULL AND display_name IS NOT NULL;
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'profiles') THEN
+    ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS full_name text;
+    UPDATE public.profiles SET full_name = display_name WHERE full_name IS NULL AND display_name IS NOT NULL;
+  END IF;
+END $$;
 
 -- 2. Fix profiles: update trigger to use full_name
 -- ============================================================
@@ -23,10 +29,18 @@ begin
 end;
 $$ language plpgsql security definer;
 
--- 3. Fix transactions: add note column (production has description)
+-- 3. Fix transactions: add note column (production may have description)
 -- ============================================================
 ALTER TABLE public.transactions ADD COLUMN IF NOT EXISTS note text;
-UPDATE public.transactions SET note = description WHERE note IS NULL AND description IS NOT NULL;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'transactions' AND column_name = 'description'
+  ) THEN
+    UPDATE public.transactions SET note = description WHERE note IS NULL AND description IS NOT NULL;
+  END IF;
+END $$;
 
 -- 4. Fix transactions: add is_archived column (missing in production)
 -- ============================================================
@@ -46,9 +60,13 @@ END $$;
 
 -- 6. Fix accounts: update CHECK constraint to accept both 'credit' and 'credit_card'
 -- ============================================================
-ALTER TABLE public.accounts DROP CONSTRAINT IF EXISTS accounts_type_check;
-ALTER TABLE public.accounts ADD CONSTRAINT accounts_type_check
-  CHECK (type IN ('checking', 'savings', 'credit', 'credit_card', 'loan', 'investment', 'cash', 'other'));
+DO $$
+BEGIN
+  ALTER TABLE public.accounts DROP CONSTRAINT IF EXISTS accounts_type_check;
+  ALTER TABLE public.accounts ADD CONSTRAINT accounts_type_check
+    CHECK (type IN ('checking', 'savings', 'credit', 'credit_card', 'loan', 'investment', 'cash', 'other'));
+EXCEPTION WHEN undefined_object THEN NULL;
+END $$;
 
 -- 7. Fix categories: add is_archived if missing
 -- ============================================================
