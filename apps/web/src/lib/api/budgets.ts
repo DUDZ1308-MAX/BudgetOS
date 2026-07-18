@@ -88,7 +88,21 @@ export const budgetsApi = {
     const { year, month, rollover, ...rest } = data as any;
     const payload: Record<string, unknown> = { ...rest };
     if (year !== undefined && month !== undefined) {
-      payload.month_key = `${year}-${String(month).padStart(2, '0')}`;
+      const monthKey = `${year}-${String(month).padStart(2, '0')}`;
+      payload.month_key = monthKey;
+
+      if (rest.category_id) {
+        const { data: existing } = await supabase
+          .from('budgets')
+          .select('id')
+          .eq('category_id', rest.category_id)
+          .eq('month_key', monthKey)
+          .neq('id', id)
+          .maybeSingle();
+        if (existing) {
+          throw new Error('A budget already exists for this category in this month.');
+        }
+      }
     }
     if (rollover !== undefined) payload.rollover_enabled = rollover;
     const { data: result, error } = await supabase

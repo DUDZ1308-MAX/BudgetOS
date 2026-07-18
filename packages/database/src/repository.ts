@@ -248,9 +248,26 @@ export function getBudget(client: SupabaseClient, budgetId: string) {
   );
 }
 
-export function createBudget(client: SupabaseClient, userId: string, data: BudgetInsert) {
+export async function createBudget(client: SupabaseClient, userId: string, data: BudgetInsert) {
   const { year, month, rollover, ...rest } = data as any;
   const monthKey = year && month ? `${year}-${String(month).padStart(2, '0')}` : undefined;
+
+  if (!monthKey) {
+    throw new Error('Year and month are required to create a budget.');
+  }
+
+  const { data: existing } = await client
+    .from('budgets')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('category_id', rest.category_id)
+    .eq('month_key', monthKey)
+    .maybeSingle();
+
+  if (existing) {
+    throw new Error('A budget already exists for this category in this month.');
+  }
+
   const payload: Record<string, unknown> = { user_id: userId, ...rest };
   if (monthKey) payload.month_key = monthKey;
   if (rollover !== undefined) payload.rollover_enabled = rollover;
@@ -259,11 +276,25 @@ export function createBudget(client: SupabaseClient, userId: string, data: Budge
   );
 }
 
-export function updateBudget(client: SupabaseClient, budgetId: string, data: BudgetUpdate) {
+export async function updateBudget(client: SupabaseClient, budgetId: string, data: BudgetUpdate) {
   const { year, month, rollover, ...rest } = data as any;
   const payload: Record<string, unknown> = { ...rest };
   if (year !== undefined && month !== undefined) {
-    payload.month_key = `${year}-${String(month).padStart(2, '0')}`;
+    const monthKey = `${year}-${String(month).padStart(2, '0')}`;
+    payload.month_key = monthKey;
+
+    const existing = await client
+      .from('budgets')
+      .select('id')
+      .eq('user_id', (data as any).user_id ?? '')
+      .eq('category_id', rest.category_id)
+      .eq('month_key', monthKey)
+      .neq('id', budgetId)
+      .maybeSingle();
+
+    if (existing.data) {
+      throw new Error('A budget already exists for this category in this month.');
+    }
   }
   if (rollover !== undefined) payload.rollover_enabled = rollover;
   return as<Budget>(

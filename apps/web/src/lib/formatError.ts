@@ -5,8 +5,29 @@ export interface FormattedError {
   detail: string;
 }
 
+const CONSTRAINT_MESSAGES: Record<string, string> = {
+  budgets_user_category_month_unique: 'A budget already exists for this category in this month.',
+  transactions_user_date_account_id_pos: 'Duplicate positive transaction for this date and account.',
+  transactions_user_date_account_id_neg: 'Duplicate negative transaction for this date and account.',
+  transactions_user_date_account_id_pending: 'Duplicate pending transaction for this date and account.',
+  transactions_user_date_account_id_split: 'Duplicate split transaction for this date and account.',
+};
+
+function parseConstraintMessage(err: PostgrestError): string | undefined {
+  if (err.code !== '23505') return undefined;
+  const detail = err.details ?? '';
+  const match = detail.match(/Key \(([^)]+)\)=\(([^)]+)\) already exists/);
+  const constraint = match?.[1] ?? '';
+  return CONSTRAINT_MESSAGES[constraint]
+    ?? `A record with this ${constraint.replace(/_/g, ' ')} already exists.`;
+}
+
 export function formatError(err: unknown): FormattedError {
   if (isPostgrestError(err)) {
+    const constraintMsg = parseConstraintMessage(err);
+    if (constraintMsg) {
+      return { message: constraintMsg, detail: err.hint || '' };
+    }
     return {
       message: err.code ? `[${err.code}] ${err.message}` : err.message,
       detail: err.details || err.hint || '',
