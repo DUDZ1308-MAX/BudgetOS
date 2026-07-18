@@ -306,7 +306,10 @@ describe('Scenario C: Mortgage', () => {
     ];
 
     const resultNoExtra = FinancialEngine.getMortgages(mortgagesNoExtra as any);
-    const resultWithExtra = FinancialEngine.getMortgages(mortgagesWithExtra as any);
+    const extraPaymentsMap = new Map([
+      ['mort-2', [{ amount: 200, date: '2026-02-01', type: 'monthly_fixed' }]],
+    ]);
+    const resultWithExtra = FinancialEngine.getMortgages(mortgagesWithExtra as any, extraPaymentsMap);
 
     expect(resultWithExtra[0]!.interestSaved).toBeGreaterThan(0);
     expect(resultWithExtra[0]!.payoffMonths).toBeLessThan(resultNoExtra[0]!.payoffMonths);

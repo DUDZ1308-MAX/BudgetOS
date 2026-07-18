@@ -10,8 +10,11 @@ import {
   computeBudgetSummary,
   computeHealthScore,
   computeGoalProgress,
-  calculateFullAmortization,
 } from '@budgetos/engine';
+import {
+  computeMortgage as computeMortgageEngine,
+  computeMortgageDashboard as computeMortgageDashboardEngine,
+} from '@/engine/MortgageEngine';
 import type { RecurringFrequency, FHSRequest, CategoryBudget, TransactionSummary } from '@budgetos/shared';
 import type { Account, Category, Budget, Transaction, SavingsGoal, Mortgage } from '@budgetos/database';
 
@@ -407,24 +410,40 @@ export const FinancialEngine = {
   },
 
   // -------------------------------------------------------------------------
-  // Mortgage — uses engine's calculateFullAmortization
+  // Mortgage — uses MortgageEngine (same as Mortgage Page)
   // -------------------------------------------------------------------------
-  getMortgages(mortgages: Mortgage[]): MortgageResult[] {
+  getMortgages(
+    mortgages: Mortgage[],
+    extraPaymentsMap?: Map<string, Array<{ amount: number; date: string; type?: string }>>,
+  ): MortgageResult[] {
     return mortgages
       .filter((m) => m.is_active)
       .map((m) => {
-        const result = calculateFullAmortization({
+        const extraPayments = (extraPaymentsMap?.get(m.id) ?? []).map((ep) => {
+          const startDate = new Date(m.start_date ?? new Date().toISOString().slice(0, 10));
+          const epDate = new Date(ep.date);
+          const monthsSinceStart = (epDate.getFullYear() - startDate.getFullYear()) * 12 + (epDate.getMonth() - startDate.getMonth());
+          const startMonth = Math.max(1, monthsSinceStart + 1);
+          return {
+            amount: Number(ep.amount),
+            type: (ep.type as any) ?? 'one_time',
+            startMonth,
+          };
+        });
+
+        const calcResult = computeMortgageEngine({
           principal: Number(m.principal ?? 0),
           annualRate: Number(m.annual_rate ?? 0),
           termYears: Number(m.term_years ?? 0),
+          amortizationYears: Number((m as any).amortization_years ?? m.term_years),
           startDate: m.start_date ?? new Date().toISOString().slice(0, 10),
-          extraPayments: m.extra_payment
-            ? [{ type: 'monthly_fixed' as const, amount: Number(m.extra_payment) }]
-            : [],
+          paymentFrequency: ((m as any).payment_frequency ?? 'monthly') as string,
+          compoundSemiAnnual: (m as any).compound_semi_annual ?? true,
+          extraPayments,
         });
 
-        if (!result.success) {
-          debug('mortgage calculation failed', result.error);
+        if (!calcResult) {
+          debug('mortgage calculation failed for', m.id);
           return {
             id: m.id,
             name: m.name,
@@ -440,41 +459,40 @@ export const FinancialEngine = {
           };
         }
 
-        const data = result.data;
-        const lastRow = data.schedule.length > 0 ? data.schedule[data.schedule.length - 1] : null;
-        const remainingBalance = lastRow ? lastRow.remainingBalance : Number(m.principal);
-        const principalPaid = Number(m.principal) - remainingBalance;
-        const progressPct = (principalPaid / Number(m.principal)) * 100;
-        const principalPaidPct = (principalPaid / Number(m.principal)) * 100;
+        const dashboard = computeMortgageDashboardEngine(calcResult);
+        const principalPaidPct = calcResult.totalPrincipal > 0
+          ? Math.min(100, (dashboard.principalPaid / calcResult.totalPrincipal) * 100)
+          : 0;
 
         return {
           id: m.id,
           name: m.name,
-          monthlyPayment: data.monthlyPayment,
-          remainingBalance,
-          totalInterest: data.totalInterest,
-          totalCost: data.totalPrincipal + data.totalInterest,
-          interestSaved: data.interestSaved,
-          payoffDate: data.payoffDate,
-          payoffMonths: data.payoffMonths,
-          progressPct,
+          monthlyPayment: dashboard.monthlyPayment,
+          remainingBalance: dashboard.remainingBalance,
+          totalInterest: calcResult.totalInterest,
+          totalCost: calcResult.totalPrincipal + calcResult.totalInterest,
+          interestSaved: calcResult.interestSaved,
+          payoffDate: dashboard.payoffDate ?? '',
+          payoffMonths: calcResult.payoffMonths,
+          progressPct: dashboard.progressPct,
           principalPaidPct,
         };
       });
   },
 
   getMortgageSchedule(m: Mortgage): { month: number; remainingBalance: number; payment: number; principal: number; interest: number }[] {
-    const result = calculateFullAmortization({
+    const calcResult = computeMortgageEngine({
       principal: Number(m.principal ?? 0),
       annualRate: Number(m.annual_rate ?? 0),
       termYears: Number(m.term_years ?? 0),
+      amortizationYears: Number((m as any).amortization_years ?? m.term_years),
       startDate: m.start_date ?? new Date().toISOString().slice(0, 10),
-      extraPayments: m.extra_payment
-        ? [{ type: 'monthly_fixed' as const, amount: Number(m.extra_payment) }]
-        : [],
+      paymentFrequency: ((m as any).payment_frequency ?? 'monthly') as string,
+      compoundSemiAnnual: (m as any).compound_semi_annual ?? true,
+      extraPayments: [],
     });
-    if (!result.success) return [];
-    return result.data.schedule;
+    if (!calcResult) return [];
+    return calcResult.schedule;
   },
 
   // -------------------------------------------------------------------------
@@ -595,8 +613,21 @@ export const FinancialEngine = {
     // 5. Savings Goals
     const savingsGoals = FinancialEngine.getSavingsGoals(savings);
 
-    // 6. Mortgages
-    const mortgageResults = FinancialEngine.getMortgages(mortgages);
+    // 6. Mortgages — fetch extra payments for accurate calculations
+    const activeMortgages = mortgages.filter((m) => m.is_active);
+    const extraPaymentsMap = new Map<string, Array<{ amount: number; date: string; type?: string }>>();
+    if (activeMortgages.length > 0) {
+      const extraResults = await Promise.allSettled(
+        activeMortgages.map((m) => mortgageApi.listExtraPayments(m.id)),
+      );
+      activeMortgages.forEach((m, i) => {
+        const result = extraResults[i];
+        if (result?.status === 'fulfilled') {
+          extraPaymentsMap.set(m.id, result.value);
+        }
+      });
+    }
+    const mortgageResults = FinancialEngine.getMortgages(mortgages, extraPaymentsMap);
 
     // 7. Upcoming Activity
     const upcomingActivity = FinancialEngine.getUpcomingActivity(recurrings);
