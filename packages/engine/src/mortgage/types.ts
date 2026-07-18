@@ -4,6 +4,7 @@ export interface MortgageInput {
   principal: number;
   annualRate: number;
   termYears: number;
+  amortizationYears?: number;
   startDate: string;
   extraPayments: ExtraPayment[];
 }

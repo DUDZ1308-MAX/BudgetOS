@@ -1,4 +1,9 @@
-import { calculateFullAmortization } from '@budgetos/engine';
+import {
+  computeMortgage as computeMortgageLib,
+} from '@/lib/finance/mortgage';
+import type {
+  PaymentFrequency,
+} from '@/lib/finance/mortgage';
 import type { AmortizationRow } from '@budgetos/shared';
 
 export interface MortgageResult {
@@ -38,6 +43,10 @@ export function computeMortgage(input: {
   compoundSemiAnnual?: boolean;
   extraPayments?: { amount: number; date?: string; month?: number; type?: string }[];
 }): MortgageResult | null {
+  const amortizationYears = input.amortizationYears ?? input.termYears;
+  const frequency = (input.paymentFrequency ?? 'monthly') as PaymentFrequency;
+  const isCompoundSemiAnnual = input.compoundSemiAnnual !== false;
+
   const extraPayments = (input.extraPayments ?? []).map((ep) => {
     const type = ep.type ?? 'one_time';
     if (type === 'one_time' || ep.month != null) {
@@ -52,66 +61,74 @@ export function computeMortgage(input: {
     return { type: 'one_time' as const, amount: ep.amount, startMonth: 1 };
   });
 
-  const result = calculateFullAmortization({
+  const result = computeMortgageLib({
     principal: input.principal,
     annualRate: input.annualRate,
+    amortizationYears,
     termYears: input.termYears,
     startDate: input.startDate,
-    extraPayments: extraPayments && extraPayments.length > 0 ? extraPayments : [],
+    paymentFrequency: frequency,
+    extraPayments,
+    isCompoundSemiAnnual,
   });
 
-  if (!result.success) return null;
-
-  const data = result.data;
-  const frequency = input.paymentFrequency ?? 'monthly';
-
-  const paymentsPerYear = frequency === 'monthly' ? 12
-    : frequency === 'semi_monthly' ? 24
-    : frequency === 'bi_weekly' || frequency === 'accelerated_bi_weekly' ? 26
-    : frequency === 'weekly' || frequency === 'accelerated_weekly' ? 52
-    : 12;
-
-  const monthlyEquivalent = frequency === 'monthly' ? data.monthlyPayment
-    : (data.monthlyPayment * paymentsPerYear) / 12;
-
-  const n = input.compoundSemiAnnual !== false ? 2 : 12;
-  const effectiveAnnualRate = Math.pow(1 + (input.annualRate / 100) / n, n) - 1;
-
-  let interestSaved = 0;
-  if (extraPayments.length > 0) {
-    const baseline = calculateFullAmortization({
-      principal: input.principal,
-      annualRate: input.annualRate,
-      termYears: input.termYears,
-      startDate: input.startDate,
-      extraPayments: [],
-    });
-    if (baseline.success) {
-      interestSaved = baseline.data.totalInterest - data.totalInterest;
-    }
-  }
+  if (!result) return null;
 
   return {
-    paymentAmount: data.monthlyPayment,
-    totalPrincipal: input.principal,
-    totalInterest: data.totalInterest,
-    payoffDate: data.payoffDate,
-    payoffMonths: data.payoffMonths,
+    paymentAmount: result.paymentAmount,
+    totalPrincipal: result.totalPrincipal,
+    totalInterest: result.totalInterest,
+    payoffDate: result.payoffDate,
+    payoffMonths: result.payoffMonths,
     paymentFrequency: frequency,
-    monthlyEquivalent,
-    effectiveAnnualRate,
-    interestSaved,
-    schedule: data.schedule,
+    monthlyEquivalent: result.monthlyEquivalent,
+    effectiveAnnualRate: result.effectiveAnnualRate,
+    interestSaved: result.interestSaved,
+    schedule: result.schedule.map((row) => ({
+      month: row.paymentNumber,
+      date: row.date,
+      payment: row.payment,
+      principal: row.principal,
+      interest: row.interest,
+      totalInterestToDate: row.cumulativeInterest,
+      remainingBalance: row.remainingBalance,
+      extraPayment: row.extraPayment,
+    })),
   };
 }
 
 export function computeMortgageDashboard(result: MortgageResult): MortgageDashboard {
-  const lastRow = result.schedule.length > 0 ? result.schedule[result.schedule.length - 1] : undefined;
-  const remainingBalance = lastRow ? lastRow.remainingBalance : result.totalPrincipal;
-  const principalPaid = result.totalPrincipal - remainingBalance;
-  const progressPct = (principalPaid / result.totalPrincipal) * 100;
+  const startDate = result.schedule.length > 0
+    ? result.schedule[0]!.date
+    : new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const start = new Date(startDate);
+  const monthsElapsed =
+    (now.getFullYear() - start.getFullYear()) * 12 +
+    (now.getMonth() - start.getMonth());
+  const currentPaymentIndex = Math.min(
+    Math.max(0, monthsElapsed),
+    result.schedule.length,
+  );
+
+  let cumulativePrincipal = 0;
+  let cumulativeInterest = 0;
+  for (let i = 0; i < currentPaymentIndex; i++) {
+    const row = result.schedule[i]!;
+    cumulativePrincipal += row.principal;
+    cumulativeInterest += row.interest;
+  }
+
+  const remainingBalance = currentPaymentIndex > 0 && currentPaymentIndex <= result.schedule.length
+    ? result.schedule[currentPaymentIndex - 1]!.remainingBalance
+    : result.totalPrincipal;
+
+  const principalPaid = cumulativePrincipal;
+  const interestPaid = cumulativeInterest;
+  const progressPct = result.totalPrincipal > 0
+    ? Math.min(100, (principalPaid / result.totalPrincipal) * 100)
+    : 0;
   const equityBuilt = principalPaid;
-  const paidSoFar = { principal: principalPaid, interest: result.totalInterest - (result.totalPrincipal - principalPaid) };
 
   return {
     monthlyPayment: result.paymentAmount,
@@ -121,8 +138,8 @@ export function computeMortgageDashboard(result: MortgageResult): MortgageDashbo
     progressPct,
     remainingBalance,
     principalPaid,
-    interestPaid: result.totalInterest,
-    paidSoFar,
+    interestPaid,
+    paidSoFar: { principal: principalPaid, interest: interestPaid },
     equityBuilt,
     originalAmount: result.totalPrincipal,
   };

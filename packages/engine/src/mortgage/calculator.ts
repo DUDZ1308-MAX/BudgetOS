@@ -26,8 +26,9 @@ export function calculateFullAmortization(input: MortgageInput): EngineResult<Mo
     return failure(validationError);
   }
 
+  const amortizationYears = input.amortizationYears ?? input.termYears;
   const monthlyRate = input.annualRate / 100 / 12;
-  const totalMonths = input.termYears * 12;
+  const totalMonths = amortizationYears * 12;
   const basePayment = computeMonthlyPayment(input.principal, monthlyRate, totalMonths);
   const schedule: AmortizationRow[] = [];
   let balance = input.principal;
@@ -122,8 +123,9 @@ function getExtraForMonth(extraPayments: MortgageInput['extraPayments'], month: 
 }
 
 function computeBaselineInterest(input: MortgageInput): number {
+  const amortizationYears = input.amortizationYears ?? input.termYears;
   const monthlyRate = input.annualRate / 100 / 12;
-  const totalMonths = input.termYears * 12;
+  const totalMonths = amortizationYears * 12;
   const payment = computeMonthlyPayment(input.principal, monthlyRate, totalMonths);
 
   let balance = input.principal;
