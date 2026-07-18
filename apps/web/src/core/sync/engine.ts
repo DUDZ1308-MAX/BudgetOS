@@ -67,6 +67,19 @@ async function uploadEntry(entry: { entity: SyncEntity; entityId: string; action
       .single();
     if (error) {
       if (error.code === '23505') return { ok: true };
+      if (error.code === '23503' && entry.entity === 'transaction') {
+        const patched = { ...entry.payload, account_id: null };
+        const { error: retryErr } = await supabase
+          .from(info.table)
+          .insert(patched)
+          .select('id')
+          .single();
+        if (retryErr) {
+          if (retryErr.code === '23505') return { ok: true };
+          return { ok: false, error: retryErr.message };
+        }
+        return { ok: true };
+      }
       return { ok: false, error: error.message };
     }
     return { ok: true };

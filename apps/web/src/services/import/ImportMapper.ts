@@ -92,14 +92,41 @@ export class ImportMapper {
     let skipped = 0;
     const errors: string[] = [];
 
+    const validAccountIds = entityType === 'transaction'
+      ? await this.fetchValidIds(userId, 'accounts')
+      : null;
+    const validCategoryIds = entityType === 'transaction'
+      ? await this.fetchValidIds(userId, 'categories')
+      : null;
+
     for (const row of rows) {
       try {
         const mapped = this.mapRow(row, mappings);
-        const payload = { ...mapped, user_id: userId };
+        const payload = { ...mapped, user_id: userId } as Record<string, unknown>;
+
+        if (table === 'transactions') {
+          if (payload.account_id && typeof payload.account_id === 'string' && payload.account_id.trim()) {
+            if (!validAccountIds!.has(payload.account_id)) {
+              errors.push(`Row ${row.rowNumber}: Account "${payload.account_id}" does not exist. Transaction skipped.`);
+              skipped++;
+              continue;
+            }
+          }
+          if (payload.category_id && typeof payload.category_id === 'string' && payload.category_id.trim()) {
+            if (!validCategoryIds!.has(payload.category_id)) {
+              errors.push(`Row ${row.rowNumber}: Category "${payload.category_id}" does not exist. Transaction skipped.`);
+              skipped++;
+              continue;
+            }
+          }
+        }
 
         const { error } = await supabase.from(table).insert(payload);
         if (error) {
           if (error.code === '23505') {
+            skipped++;
+          } else if (error.code === '23503') {
+            errors.push(`Row ${row.rowNumber}: Referenced record does not exist (${error.message}). Skipped.`);
             skipped++;
           } else {
             errors.push(`Row ${row.rowNumber}: ${error.message}`);
@@ -115,6 +142,14 @@ export class ImportMapper {
     }
 
     return { imported, skipped, errors, entityType };
+  }
+
+  private async fetchValidIds(userId: string, table: string): Promise<Set<string>> {
+    const { data } = await supabase
+      .from(table)
+      .select('id')
+      .eq('user_id', userId);
+    return new Set((data ?? []).map((r: { id: string }) => r.id));
   }
 
   private convertValue(field: string, value: string): unknown {

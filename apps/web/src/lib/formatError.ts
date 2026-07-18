@@ -14,6 +14,21 @@ const CONSTRAINT_MESSAGES: Record<string, string> = {
 };
 
 function parseConstraintMessage(err: PostgrestError): string | undefined {
+  if (err.code === '23503') {
+    const detail = err.details ?? '';
+    const fkMatch = detail.match(/Key \((\w+)\)=\(([^)]+)\) is not present in table "(\w+)"/);
+    if (fkMatch) {
+      const [, field, value, table] = fkMatch;
+      if (table === 'accounts') {
+        return `The account "${value}" no longer exists. Please select a different account.`;
+      }
+      if (table === 'categories') {
+        return `The category "${value}" no longer exists. Please select a different category.`;
+      }
+      return `Referenced ${(table ?? 'record').replace(/_/g, ' ')} does not exist (${field}=${value}).`;
+    }
+    return 'A referenced record does not exist. Please check your selections.';
+  }
   if (err.code !== '23505') return undefined;
   const detail = err.details ?? '';
   const match = detail.match(/Key \(([^)]+)\)=\(([^)]+)\) already exists/);

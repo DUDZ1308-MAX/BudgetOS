@@ -199,7 +199,21 @@ export function getTransaction(client: SupabaseClient, transactionId: string) {
   );
 }
 
-export function createTransaction(client: SupabaseClient, userId: string, data: TransactionInsert) {
+export async function createTransaction(client: SupabaseClient, userId: string, data: TransactionInsert) {
+  if (data.account_id) {
+    const { data: account } = await client
+      .from('accounts')
+      .select('id')
+      .eq('id', data.account_id)
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (!account) {
+      return as<Transaction>(
+        Promise.resolve({ data: null, error: { message: 'The selected account no longer exists. Please choose a different account.', code: '23503', details: '', hint: '' } as any }),
+      );
+    }
+  }
+
   return as<Transaction>(
     client.from('transactions').insert({ user_id: userId, ...data }).select('*').single(),
   );
