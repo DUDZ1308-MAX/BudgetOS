@@ -57,6 +57,7 @@ export function Header({ onMenuClick }: HeaderProps) {
         >
           <IconMenu className="h-5 w-5" />
         </button>
+        <img src="/logo.png" alt="MyBudgetOS" className="hidden h-8 w-8 rounded-lg object-contain md:block" />
         <div className="hidden md:block">
           <h1 className="text-base font-semibold text-slate-900 dark:text-white">
             {greeting()}, <span className="text-indigo-600 dark:text-indigo-400">{displayName}</span>

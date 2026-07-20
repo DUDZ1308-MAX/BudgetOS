@@ -35,7 +35,7 @@ export class ErrorBoundary extends Component<Props, State> {
       if (this.props.fallback) return this.props.fallback;
       return (
         <div className="flex flex-col items-center justify-center py-16 text-center" role="alert">
-          <div className="mb-4 text-5xl text-slate-300 dark:text-slate-600">!</div>
+          <img src="/logo.png" alt="MyBudgetOS" className="mb-4 h-12 w-12 rounded-xl object-contain opacity-50" />
           <h3 className="mb-1 text-lg font-semibold text-slate-900 dark:text-white">Something went wrong</h3>
           <p className="mb-4 max-w-xs text-sm text-slate-500 dark:text-slate-400">
             {this.state.error?.message ?? 'An unexpected error occurred.'}

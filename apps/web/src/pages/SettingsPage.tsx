@@ -681,7 +681,7 @@ function AboutSection() {
     <div className="space-y-4">
       <section className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
         <div className="mb-3 flex items-center gap-3">
-          <img src="/BodgetOS_logo.png" alt="MyBudgetOS" className="h-10 w-10 rounded-xl object-contain" />
+          <img src="/logo.png" alt="MyBudgetOS" className="h-10 w-10 rounded-xl object-contain" />
           <h2 className="text-sm font-semibold text-slate-900 dark:text-white">MyBudgetOS</h2>
         </div>
         <div className="space-y-2 text-sm">

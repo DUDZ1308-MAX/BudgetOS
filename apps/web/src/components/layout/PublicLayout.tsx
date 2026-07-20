@@ -1,12 +1,11 @@
 import { Outlet, Link } from 'react-router-dom';
-import { IconCrown } from '@/components/ui/Icons';
 
 export function PublicLayout() {
   return (
     <div className="flex min-h-screen flex-col bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100">
       <nav className="fixed top-0 z-40 flex h-16 w-full items-center justify-between border-b border-slate-200 bg-white/80 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/80 px-4 md:px-8">
         <Link to="/" className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
-          <IconCrown className="h-6 w-6 text-brand-600" />
+          <img src="/logo.png" alt="MyBudgetOS" className="h-6 w-6 rounded-md object-contain" />
           MyBudgetOS
         </Link>
         <div className="flex items-center gap-4">

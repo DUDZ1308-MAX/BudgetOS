@@ -115,7 +115,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       {/* Desktop */}
       <aside className="hidden w-64 flex-col border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 md:flex">
         <div className="flex h-16 items-center gap-3 border-b border-slate-200 px-6 dark:border-slate-800">
-          <img src="/BodgetOS_logo.png" alt="MyBudgetOS logo" className="h-8 w-8 rounded-lg object-contain" />
+          <img src="/logo.png" alt="MyBudgetOS logo" className="h-8 w-8 rounded-lg object-contain" />
           <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">MyBudgetOS</span>
         </div>
         {navContent}
@@ -129,7 +129,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       >
         <div className="flex h-16 items-center justify-between border-b border-slate-200 px-6 dark:border-slate-800">
           <div className="flex items-center gap-3">
-            <img src="/BodgetOS_logo.png" alt="MyBudgetOS logo" className="h-8 w-8 rounded-lg object-contain" />
+            <img src="/logo.png" alt="MyBudgetOS logo" className="h-8 w-8 rounded-lg object-contain" />
             <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">MyBudgetOS</span>
           </div>
           <button

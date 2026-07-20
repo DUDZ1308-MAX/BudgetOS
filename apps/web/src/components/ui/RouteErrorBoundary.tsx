@@ -39,11 +39,7 @@ export class RouteErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div className="flex flex-col items-center justify-center py-20 text-center" role="alert">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
-            <svg className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-            </svg>
-          </div>
+          <img src="/logo.png" alt="MyBudgetOS" className="mb-4 h-12 w-12 rounded-xl object-contain opacity-50" />
           <h3 className="mb-1 text-lg font-semibold text-slate-900 dark:text-white">
             This section encountered an error
           </h3>

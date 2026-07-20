@@ -64,7 +64,7 @@ export function DemoPage() {
       {/* Nav */}
       <nav className="flex h-16 items-center justify-between border-b border-slate-200 bg-white/80 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/80 px-4 md:px-8">
         <div className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
-          <IconCrown className="h-6 w-6 text-brand-600" />
+          <img src="/logo.png" alt="MyBudgetOS" className="h-6 w-6 rounded-md object-contain" />
           MyBudgetOS
         </div>
         <div className="flex items-center gap-3">

@@ -50,7 +50,11 @@ export function OnboardingWizard() {
     <>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
         <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
-          <div className="px-6 pt-6 pb-2">
+          <div className="flex items-center justify-center gap-2 px-6 pt-5 pb-2">
+            <img src="/logo.png" alt="MyBudgetOS" className="h-7 w-7 rounded-lg object-contain" />
+            <span className="text-sm font-bold text-slate-900 dark:text-white">MyBudgetOS</span>
+          </div>
+          <div className="px-6 pt-2 pb-2">
             <div className="h-1.5 w-full rounded-full bg-slate-200 dark:bg-slate-800">
               <div className="h-1.5 rounded-full bg-brand-600 transition-all duration-500" style={{ width: `${progress}%` }} />
             </div>
