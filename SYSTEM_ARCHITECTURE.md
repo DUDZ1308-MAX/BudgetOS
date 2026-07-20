@@ -316,7 +316,6 @@ packages/client/src/
 │   ├── formatters.ts       # Currency, date, percentage formatting
 │   ├── validators.ts       # Zod schemas (shared with engine)
 │   └── constants.ts        # Category defaults, colors, config
-└── service-worker.ts       # PWA service worker (offline cache)
 ```
 
 ### 3.2 API Layer (`packages/api/`)
@@ -1732,7 +1731,6 @@ budgetos/
 │   │   │   ├── hooks/          # React Query hooks
 │   │   │   ├── stores/         # Zustand stores (UI state only)
 │   │   │   ├── lib/            # Client utilities, API client
-│   │   │   └── service-worker.ts
 │   │   ├── public/             # Static assets, icons, manifest
 │   │   ├── index.html
 │   │   ├── vite.config.ts
