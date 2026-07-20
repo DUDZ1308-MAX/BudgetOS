@@ -20,6 +20,7 @@ Required environment variables for production:
 |----------|-------------|
 | `VITE_SUPABASE_URL` | Supabase project URL |
 | `VITE_SUPABASE_ANON_KEY` | Supabase anonymous key |
+| `VITE_APP_URL` | Production URL (`https://budget-os-web.vercel.app`) |
 | `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key |
 | `VITE_STRIPE_PRICE_PRO_MONTH` | Stripe price ID for Pro monthly |
 | `VITE_STRIPE_PRICE_PRO_YEAR` | Stripe price ID for Pro yearly |
@@ -50,11 +51,12 @@ npx vercel --prod
 | Environment | Branch | URL |
 |-------------|--------|-----|
 | Development | local | http://localhost:5173 |
-| Production | main | https://budgetos-rust.vercel.app |
+| Production | main | https://budget-os-web.vercel.app |
 
-## Old Deployment
+## Previous Domains
 
-The old deployment at `budget-os-web.vercel.app` is permanently redirected (308) to `budgetos-rust.vercel.app`.
+- `budgetos-rust.vercel.app` — no longer active (project deleted)
+- `budgetos.vercel.app` — separate legacy project (static landing page)
 
 ## Supabase Setup
 

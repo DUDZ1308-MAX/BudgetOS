@@ -769,7 +769,7 @@ Authentication (pre-login)
 
 ### Base URL
 ```
-https://budgetos-rust.vercel.app    (Vercel deployment)
+https://budget-os-web.vercel.app    (Vercel deployment)
 ```
 
 ### Endpoints
@@ -961,7 +961,7 @@ GET    /me/export                         # Export all data
 |  Vercel (FREE tier)                                         |
 |  - Static site hosting                                      |
 |  - Global CDN                                               |
-|  - Custom domain (budgetos-rust.vercel.app)                 |
+|  - Custom domain (budget-os-web.vercel.app)                 |
 |  - Automatic HTTPS                                          |
 +---------------------------+---------------------------------+
                             | API calls via Supabase JS SDK

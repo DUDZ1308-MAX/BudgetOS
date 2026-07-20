@@ -4,17 +4,17 @@ MyBudgetOS uses a single-domain architecture on Vercel.
 
 ## Production Domain
 
-| Purpose        | Domain                                    | Provider |
-| -------------- | ----------------------------------------- | -------- |
-| Web App        | `budgetos-rust.vercel.app`                | Vercel   |
-| Auth Callback  | `budgetos-rust.vercel.app/auth/callback`  | Supabase |
+| Purpose        | Domain                                          | Provider |
+| -------------- | ----------------------------------------------- | -------- |
+| Web App        | `budget-os-web.vercel.app`                      | Vercel   |
+| Auth Callback  | `budget-os-web.vercel.app/auth/callback`        | Supabase |
 
 ## Environment Variables
 
 These must be set in your hosting provider (Vercel):
 
 ```bash
-VITE_APP_URL=https://budgetos-rust.vercel.app
+VITE_APP_URL=https://budget-os-web.vercel.app
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJ...
 VITE_STRIPE_PUBLISHABLE_KEY=pk_live_...
@@ -29,11 +29,11 @@ VITE_STRIPE_WEBHOOK_ENDPOINT=/api/stripe/webhook
 
 ## Supabase Configuration
 
-1. **Authentication Settings** in Supabase Dashboard:
-   - Site URL: `https://budgetos-rust.vercel.app`
+1. **Authentication → URL Configuration** in Supabase Dashboard:
+   - Site URL: `https://budget-os-web.vercel.app`
    - Redirect URLs:
-     - `https://budgetos-rust.vercel.app/auth/callback`
-     - `http://localhost:5173/auth/callback` (dev)
+     - `https://budget-os-web.vercel.app/**`
+     - `http://localhost:5173/**` (dev)
    - Disable "Confirm email" for testing; enable for production
 
 2. **Row Level Security (RLS)**:
@@ -46,6 +46,7 @@ VITE_STRIPE_WEBHOOK_ENDPOINT=/api/stripe/webhook
 2. Add webhook signing secret to environment variables (server-side)
 3. Test mode uses keys starting with `pk_test_`; live mode uses `pk_live_`
 
-## Old Deployment Redirect
+## Previous Domains
 
-The old deployment at `budget-os-web.vercel.app` is permanently redirected (308) to `budgetos-rust.vercel.app` via vercel.json host-conditional redirects.
+- `budgetos-rust.vercel.app` — no longer active (project deleted)
+- `budgetos.vercel.app` — separate legacy project (static landing page)
