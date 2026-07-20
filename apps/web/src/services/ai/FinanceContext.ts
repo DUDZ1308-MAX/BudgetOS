@@ -43,6 +43,13 @@ export async function buildAiContext(userId: string): Promise<AiContext> {
     merchant: t.merchant,
     note: t.note,
     is_archived: t.is_archived ?? false,
+    is_recurring: t.is_recurring ?? false,
+    is_pending: t.is_pending ?? false,
+    recurring_id: t.recurring_id ?? null,
+    currency: t.currency ?? null,
+    description: t.description ?? null,
+    notes: t.notes ?? null,
+    tags: t.tags ?? null,
   }));
 
   const engineAccounts: EngineAccount[] = (accounts ?? []).map((a) => ({
@@ -51,12 +58,14 @@ export async function buildAiContext(userId: string): Promise<AiContext> {
     type: a.type ?? '',
     balance: Number(a.balance ?? 0),
     is_active: a.is_active ?? true,
+    include_in_net_worth: a.include_in_net_worth ?? true,
+    sort_order: a.sort_order ?? 0,
   }));
 
   const engineCategories: EngineCategory[] = (categories ?? []).map((c) => ({
     id: c.id,
     name: c.name ?? '',
-    type: (c.type === 'income' ? 'income' : 'expense') as 'income' | 'expense',
+    type: c.type as 'income' | 'expense' | 'transfer' | 'saving',
     is_archived: c.is_archived ?? false,
   }));
 
@@ -67,6 +76,8 @@ export async function buildAiContext(userId: string): Promise<AiContext> {
     month: b.month,
     amount: Number(b.amount ?? 0),
     rollover: b.rollover ?? false,
+    month_key: b.month_key ?? `${b.year}-${String(b.month).padStart(2, '0')}`,
+    rollover_enabled: b.rollover_enabled ?? false,
   }));
 
   const budgetSummary = computeBudgetSummary({

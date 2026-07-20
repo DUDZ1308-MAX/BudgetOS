@@ -27,9 +27,9 @@ describe('computeBudgetSummary — income', () => {
     const result = computeBudgetSummary(
       makeInput({
         transactions: [
-          { id: '1', account_id: 'a1', category_id: 'c1', amount: 5000, date: '2025-01-05', merchant: null, note: null, is_archived: false },
-          { id: '2', account_id: 'a1', category_id: 'c1', amount: 2000, date: '2025-01-15', merchant: null, note: null, is_archived: false },
-          { id: '3', account_id: 'a1', category_id: 'c2', amount: -100, date: '2025-01-10', merchant: null, note: null, is_archived: false },
+          { id: '1', account_id: 'a1', category_id: 'c1', amount: 5000, date: '2025-01-05', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
+          { id: '2', account_id: 'a1', category_id: 'c1', amount: 2000, date: '2025-01-15', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
+          { id: '3', account_id: 'a1', category_id: 'c2', amount: -100, date: '2025-01-10', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
         ],
       }),
     );
@@ -41,7 +41,7 @@ describe('computeBudgetSummary — income', () => {
     const result = computeBudgetSummary(
       makeInput({
         transactions: [
-          { id: '1', account_id: 'a1', category_id: 'c1', amount: 10000, date: '2025-01-01', merchant: null, note: null, is_archived: false },
+          { id: '1', account_id: 'a1', category_id: 'c1', amount: 10000, date: '2025-01-01', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
         ],
       }),
     );
@@ -64,9 +64,9 @@ describe('computeBudgetSummary — expenses', () => {
     const result = computeBudgetSummary(
       makeInput({
         transactions: [
-          { id: '1', account_id: 'a1', category_id: 'c1', amount: 5000, date: '2025-01-05', merchant: null, note: null, is_archived: false },
-          { id: '2', account_id: 'a1', category_id: 'c2', amount: -200, date: '2025-01-10', merchant: null, note: null, is_archived: false },
-          { id: '3', account_id: 'a1', category_id: 'c3', amount: -300, date: '2025-01-15', merchant: null, note: null, is_archived: false },
+          { id: '1', account_id: 'a1', category_id: 'c1', amount: 5000, date: '2025-01-05', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
+          { id: '2', account_id: 'a1', category_id: 'c2', amount: -200, date: '2025-01-10', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
+          { id: '3', account_id: 'a1', category_id: 'c3', amount: -300, date: '2025-01-15', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
         ],
       }),
     );
@@ -78,8 +78,8 @@ describe('computeBudgetSummary — expenses', () => {
     const result = computeBudgetSummary(
       makeInput({
         transactions: [
-          { id: '1', account_id: 'a1', category_id: 'cat-a', amount: -100, date: '2025-01-05', merchant: null, note: null, is_archived: false },
-          { id: '2', account_id: 'a1', category_id: 'cat-b', amount: -300, date: '2025-01-10', merchant: null, note: null, is_archived: false },
+          { id: '1', account_id: 'a1', category_id: 'cat-a', amount: -100, date: '2025-01-05', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
+          { id: '2', account_id: 'a1', category_id: 'cat-b', amount: -300, date: '2025-01-10', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
         ],
       }),
     );
@@ -95,8 +95,8 @@ describe('computeBudgetSummary — expenses', () => {
     const result = computeBudgetSummary(
       makeInput({
         transactions: [
-          { id: '1', account_id: 'a1', category_id: 'c1', amount: 5000, date: '2025-01-05', merchant: null, note: null, is_archived: false },
-          { id: '2', account_id: 'a1', category_id: 'c2', amount: -1000, date: '2025-01-10', merchant: null, note: null, is_archived: true },
+          { id: '1', account_id: 'a1', category_id: 'c1', amount: 5000, date: '2025-01-05', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
+          { id: '2', account_id: 'a1', category_id: 'c2', amount: -1000, date: '2025-01-10', merchant: null, note: null, is_archived: true, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
         ],
       }),
     );
@@ -108,8 +108,8 @@ describe('computeBudgetSummary — expenses', () => {
     const result = computeBudgetSummary(
       makeInput({
         transactions: [
-          { id: '1', account_id: 'a1', category_id: 'c1', amount: 5000, date: '2024-12-31', merchant: null, note: null, is_archived: false },
-          { id: '2', account_id: 'a1', category_id: 'c2', amount: -200, date: '2025-01-15', merchant: null, note: null, is_archived: false },
+          { id: '1', account_id: 'a1', category_id: 'c1', amount: 5000, date: '2024-12-31', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
+          { id: '2', account_id: 'a1', category_id: 'c2', amount: -200, date: '2025-01-15', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
         ],
       }),
     );
@@ -123,9 +123,9 @@ describe('computeBudgetSummary — net cash flow', () => {
     const result = computeBudgetSummary(
       makeInput({
         transactions: [
-          { id: '1', account_id: 'a1', category_id: 'c1', amount: 5000, date: '2025-01-05', merchant: null, note: null, is_archived: false },
-          { id: '2', account_id: 'a1', category_id: 'c2', amount: -2000, date: '2025-01-10', merchant: null, note: null, is_archived: false },
-          { id: '3', account_id: 'a1', category_id: 'c2', amount: -500, date: '2025-01-15', merchant: null, note: null, is_archived: false },
+          { id: '1', account_id: 'a1', category_id: 'c1', amount: 5000, date: '2025-01-05', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
+          { id: '2', account_id: 'a1', category_id: 'c2', amount: -2000, date: '2025-01-10', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
+          { id: '3', account_id: 'a1', category_id: 'c2', amount: -500, date: '2025-01-15', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
         ],
       }),
     );
@@ -136,8 +136,8 @@ describe('computeBudgetSummary — net cash flow', () => {
     const result = computeBudgetSummary(
       makeInput({
         transactions: [
-          { id: '1', account_id: 'a1', category_id: 'c1', amount: 3000, date: '2025-01-05', merchant: null, note: null, is_archived: false },
-          { id: '2', account_id: 'a1', category_id: 'c2', amount: -5000, date: '2025-01-10', merchant: null, note: null, is_archived: false },
+          { id: '1', account_id: 'a1', category_id: 'c1', amount: 3000, date: '2025-01-05', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
+          { id: '2', account_id: 'a1', category_id: 'c2', amount: -5000, date: '2025-01-10', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
         ],
       }),
     );
@@ -151,13 +151,13 @@ describe('computeBudgetSummary — budget analysis', () => {
     const result = computeBudgetSummary(
       makeInput({
         transactions: [
-          { id: '1', account_id: 'a1', category_id: 'cat-food', amount: -600, date: '2025-01-10', merchant: null, note: null, is_archived: false },
+          { id: '1', account_id: 'a1', category_id: 'cat-food', amount: -600, date: '2025-01-10', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
         ],
         categories: [
           { id: 'cat-food', name: 'Food', type: 'expense', is_archived: false },
         ],
         budgets: [
-          { category_id: 'cat-food', year: 2025, month: 1, amount: 500, rollover: false },
+          { category_id: 'cat-food', year: 2025, month: 1, amount: 500, rollover: false, month_key: '2025-01', rollover_enabled: false },
         ],
       }),
     );
@@ -175,13 +175,13 @@ describe('computeBudgetSummary — budget analysis', () => {
     const result = computeBudgetSummary(
       makeInput({
         transactions: [
-          { id: '1', account_id: 'a1', category_id: 'cat-food', amount: -100, date: '2025-01-10', merchant: null, note: null, is_archived: false },
+          { id: '1', account_id: 'a1', category_id: 'cat-food', amount: -100, date: '2025-01-10', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
         ],
         categories: [
           { id: 'cat-food', name: 'Food', type: 'expense', is_archived: false },
         ],
         budgets: [
-          { category_id: 'cat-food', year: 2025, month: 1, amount: 500, rollover: false },
+          { category_id: 'cat-food', year: 2025, month: 1, amount: 500, rollover: false, month_key: '2025-01', rollover_enabled: false },
         ],
       }),
     );
@@ -194,7 +194,7 @@ describe('computeBudgetSummary — budget analysis', () => {
     const result = computeBudgetSummary(
       makeInput({
         transactions: [
-          { id: '1', account_id: 'a1', category_id: 'cat-food', amount: -100, date: '2025-01-10', merchant: null, note: null, is_archived: false },
+          { id: '1', account_id: 'a1', category_id: 'cat-food', amount: -100, date: '2025-01-10', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
         ],
         categories: [
           { id: 'cat-food', name: 'Food', type: 'expense', is_archived: false },
@@ -211,13 +211,13 @@ describe('computeBudgetSummary — budget analysis', () => {
       makeInput({
         dateRange: { start: '2025-01-01', end: '2025-01-31' },
         transactions: [
-          { id: '1', account_id: 'a1', category_id: 'cat-food', amount: -100, date: '2025-01-10', merchant: null, note: null, is_archived: false },
+          { id: '1', account_id: 'a1', category_id: 'cat-food', amount: -100, date: '2025-01-10', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
         ],
         categories: [
           { id: 'cat-food', name: 'Food', type: 'expense', is_archived: false },
         ],
         budgets: [
-          { category_id: 'cat-food', year: 2025, month: 1, amount: 500, rollover: false },
+          { category_id: 'cat-food', year: 2025, month: 1, amount: 500, rollover: false, month_key: '2025-01', rollover_enabled: false },
         ],
       }),
     );
@@ -235,8 +235,8 @@ describe('computeBudgetSummary — savings rate', () => {
     const result = computeBudgetSummary(
       makeInput({
         transactions: [
-          { id: '1', account_id: 'a1', category_id: 'c1', amount: 5000, date: '2025-01-05', merchant: null, note: null, is_archived: false },
-          { id: '2', account_id: 'a1', category_id: 'c2', amount: -2000, date: '2025-01-10', merchant: null, note: null, is_archived: false },
+          { id: '1', account_id: 'a1', category_id: 'c1', amount: 5000, date: '2025-01-05', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
+          { id: '2', account_id: 'a1', category_id: 'c2', amount: -2000, date: '2025-01-10', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
         ],
       }),
     );
@@ -251,8 +251,8 @@ describe('computeBudgetSummary — account metrics', () => {
     const result = computeBudgetSummary(
       makeInput({
         accounts: [
-          { id: 'a1', name: 'Checking', type: 'checking', balance: 5000, is_active: true },
-          { id: 'a2', name: 'Credit Card', type: 'credit', balance: -1500, is_active: true },
+          { id: 'a1', name: 'Checking', type: 'checking', balance: 5000, is_active: true, include_in_net_worth: true, sort_order: 0 },
+          { id: 'a2', name: 'Credit Card', type: 'credit', balance: -1500, is_active: true, include_in_net_worth: true, sort_order: 0 },
         ],
       }),
     );
@@ -267,8 +267,8 @@ describe('computeBudgetSummary — account metrics', () => {
     const result = computeBudgetSummary(
       makeInput({
         accounts: [
-          { id: 'a1', name: 'Checking', type: 'checking', balance: 5000, is_active: true },
-          { id: 'a2', name: 'Closed Card', type: 'credit', balance: -1000, is_active: false },
+          { id: 'a1', name: 'Checking', type: 'checking', balance: 5000, is_active: true, include_in_net_worth: true, sort_order: 0 },
+          { id: 'a2', name: 'Closed Card', type: 'credit', balance: -1000, is_active: false, include_in_net_worth: true, sort_order: 0 },
         ],
       }),
     );
@@ -281,8 +281,8 @@ describe('computeBudgetSummary — account metrics', () => {
     const result = computeBudgetSummary(
       makeInput({
         accounts: [
-          { id: 'a1', name: 'Loan', type: 'loan', balance: -10000, is_active: true },
-          { id: 'a2', name: 'Checking', type: 'checking', balance: 8000, is_active: true },
+          { id: 'a1', name: 'Loan', type: 'loan', balance: -10000, is_active: true, include_in_net_worth: true, sort_order: 0 },
+          { id: 'a2', name: 'Checking', type: 'checking', balance: 8000, is_active: true, include_in_net_worth: true, sort_order: 0 },
         ],
       }),
     );
@@ -296,13 +296,13 @@ describe('computeBudgetSummary — alerts', () => {
     const result = computeBudgetSummary(
       makeInput({
         transactions: [
-          { id: '1', account_id: 'a1', category_id: 'cat-food', amount: -600, date: '2025-01-10', merchant: null, note: null, is_archived: false },
+          { id: '1', account_id: 'a1', category_id: 'cat-food', amount: -600, date: '2025-01-10', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
         ],
         categories: [
           { id: 'cat-food', name: 'Food', type: 'expense', is_archived: false },
         ],
         budgets: [
-          { category_id: 'cat-food', year: 2025, month: 1, amount: 500, rollover: false },
+          { category_id: 'cat-food', year: 2025, month: 1, amount: 500, rollover: false, month_key: '2025-01', rollover_enabled: false },
         ],
       }),
     );
@@ -315,7 +315,7 @@ describe('computeBudgetSummary — alerts', () => {
     const result = computeBudgetSummary(
       makeInput({
         accounts: [
-          { id: 'a1', name: 'Checking', type: 'checking', balance: -500, is_active: true },
+          { id: 'a1', name: 'Checking', type: 'checking', balance: -500, is_active: true, include_in_net_worth: true, sort_order: 0 },
         ],
       }),
     );
@@ -350,8 +350,8 @@ describe('computeBudgetSummary — date range edge cases', () => {
       makeInput({
         dateRange: { start: '2025-06-15', end: '2025-06-15' },
         transactions: [
-          { id: '1', account_id: 'a1', category_id: 'c1', amount: 1000, date: '2025-06-15', merchant: null, note: null, is_archived: false },
-          { id: '2', account_id: 'a1', category_id: 'c2', amount: -400, date: '2025-06-15', merchant: null, note: null, is_archived: false },
+          { id: '1', account_id: 'a1', category_id: 'c1', amount: 1000, date: '2025-06-15', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
+          { id: '2', account_id: 'a1', category_id: 'c2', amount: -400, date: '2025-06-15', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
         ],
       }),
     );
@@ -375,12 +375,12 @@ describe('computeCashFlowSummary', () => {
     const result = computeCashFlowSummary(
       makeCashFlowInput({
         accounts: [
-          { id: 'a1', name: 'Checking', type: 'checking', balance: 1000, is_active: true },
+          { id: 'a1', name: 'Checking', type: 'checking', balance: 1000, is_active: true, include_in_net_worth: true, sort_order: 0 },
         ],
         transactions: [
-          { id: '1', account_id: 'a1', category_id: 'c1', amount: 500, date: '2025-01-01', merchant: null, note: null, is_archived: false },
-          { id: '2', account_id: 'a1', category_id: 'c2', amount: -200, date: '2025-01-02', merchant: null, note: null, is_archived: false },
-          { id: '3', account_id: 'a1', category_id: 'c1', amount: 300, date: '2025-01-03', merchant: null, note: null, is_archived: false },
+          { id: '1', account_id: 'a1', category_id: 'c1', amount: 500, date: '2025-01-01', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
+          { id: '2', account_id: 'a1', category_id: 'c2', amount: -200, date: '2025-01-02', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
+          { id: '3', account_id: 'a1', category_id: 'c1', amount: 300, date: '2025-01-03', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
         ],
       }),
     );
@@ -406,11 +406,18 @@ describe('computeCashFlowSummary', () => {
       merchant: null,
       note: null,
       is_archived: false,
+      is_recurring: false,
+      is_pending: false,
+      recurring_id: null,
+      currency: null,
+      description: null,
+      notes: null,
+      tags: null,
     }));
 
     const result = computeCashFlowSummary(
       makeCashFlowInput({
-        accounts: [{ id: 'a1', name: 'Checking', type: 'checking', balance: 500, is_active: true }],
+        accounts: [{ id: 'a1', name: 'Checking', type: 'checking', balance: 500, is_active: true, include_in_net_worth: true, sort_order: 0 }],
         transactions: txns,
       }),
     );
@@ -423,8 +430,8 @@ describe('computeCashFlowSummary', () => {
     const result = computeCashFlowSummary(
       makeCashFlowInput({
         transactions: [
-          { id: '1', account_id: 'a1', category_id: 'c1', amount: 1000, date: '2025-01-01', merchant: null, note: null, is_archived: false },
-          { id: '2', account_id: 'a1', category_id: 'c2', amount: -250, date: '2025-01-02', merchant: null, note: null, is_archived: false },
+          { id: '1', account_id: 'a1', category_id: 'c1', amount: 1000, date: '2025-01-01', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
+          { id: '2', account_id: 'a1', category_id: 'c2', amount: -250, date: '2025-01-02', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
         ],
       }),
     );
@@ -435,8 +442,8 @@ describe('computeCashFlowSummary', () => {
     const result = computeCashFlowSummary(
       makeCashFlowInput({
         transactions: [
-          { id: '1', account_id: 'a1', category_id: 'c1', amount: 1000, date: '2025-01-01', merchant: null, note: null, is_archived: false },
-          { id: '2', account_id: 'a1', category_id: 'c2', amount: -500, date: '2025-01-02', merchant: null, note: null, is_archived: true },
+          { id: '1', account_id: 'a1', category_id: 'c1', amount: 1000, date: '2025-01-01', merchant: null, note: null, is_archived: false, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
+          { id: '2', account_id: 'a1', category_id: 'c2', amount: -500, date: '2025-01-02', merchant: null, note: null, is_archived: true, is_recurring: false, is_pending: false, recurring_id: null, currency: null, description: null, notes: null, tags: null },
         ],
       }),
     );

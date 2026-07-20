@@ -13,12 +13,14 @@ export type SavingsGoalInsert = {
   current_amount?: number;
   monthly_contribution?: number;
   target_date?: string | null;
-  notes?: string | null;
-  icon?: string | null;
-  color?: string | null;
+  category_id?: string | null;
+  is_completed?: boolean;
+  sort_order?: number;
+  priority?: number;
+  status?: string;
 };
 
-export type SavingsGoalUpdate = Partial<SavingsGoalInsert> & { archived?: boolean };
+export type SavingsGoalUpdate = Partial<SavingsGoalInsert>;
 
 export interface SavingsContribution {
   id: string;
@@ -72,14 +74,14 @@ export const savingsApi = {
 
   async archive(id: string): Promise<SavingsGoal> {
     debug('archive', id);
-    return savingsApi.update(id, { archived: true as any });
+    return savingsApi.update(id, { is_completed: true });
   },
 
   // Contributions
   async listContributions(goalId: string): Promise<SavingsContribution[]> {
     debug('listContributions', goalId);
     const { data, error } = await supabase
-      .from('savings_contributions')
+      .from('contributions')
       .select('*')
       .eq('goal_id', goalId)
       .order('date', { ascending: false });
@@ -90,7 +92,7 @@ export const savingsApi = {
   async addContribution(goalId: string, data: { amount: number; date: string; notes?: string }): Promise<SavingsContribution> {
     debug('addContribution', goalId, data);
     const { data: result, error } = await supabase
-      .from('savings_contributions')
+      .from('contributions')
       .insert({ goal_id: goalId, ...data })
       .select('*')
       .single();
@@ -101,7 +103,7 @@ export const savingsApi = {
   async updateContribution(id: string, data: { amount?: number; date?: string; notes?: string }): Promise<SavingsContribution> {
     debug('updateContribution', id, data);
     const { data: result, error } = await supabase
-      .from('savings_contributions')
+      .from('contributions')
       .update(data)
       .eq('id', id)
       .select('*')
@@ -112,7 +114,7 @@ export const savingsApi = {
 
   async removeContribution(id: string): Promise<void> {
     debug('removeContribution', id);
-    const { error } = await supabase.from('savings_contributions').delete().eq('id', id);
+    const { error } = await supabase.from('contributions').delete().eq('id', id);
     if (error) { debug('removeContribution error', error); throw error; }
   },
 };

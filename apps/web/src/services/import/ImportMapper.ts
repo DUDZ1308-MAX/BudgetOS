@@ -15,7 +15,6 @@ export const defaultMappings: Record<string, ColumnMapping[]> = {
   transaction: [
     { sourceColumn: 'date', targetField: 'date', required: true },
     { sourceColumn: 'amount', targetField: 'amount', required: true },
-    { sourceColumn: 'type', targetField: 'type', required: true },
     { sourceColumn: 'category', targetField: 'category_id', required: false },
     { sourceColumn: 'account', targetField: 'account_id', required: false },
     { sourceColumn: 'merchant', targetField: 'merchant', required: false },
@@ -120,6 +119,14 @@ export class ImportMapper {
               skipped++;
               continue;
             }
+          }
+        }
+
+        if (table === 'budgets') {
+          const year = payload.year as number;
+          const month = payload.month as number;
+          if (year && month) {
+            payload.month_key = `${year}-${String(month).padStart(2, '0')}`;
           }
         }
 

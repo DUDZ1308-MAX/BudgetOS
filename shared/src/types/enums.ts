@@ -1,8 +1,8 @@
-export type AccountType = 'checking' | 'savings' | 'credit' | 'loan' | 'investment' | 'cash';
+export type AccountType = 'checking' | 'savings' | 'credit' | 'credit_card' | 'loan' | 'investment' | 'cash' | 'other';
 
-export type CategoryType = 'income' | 'expense';
+export type CategoryType = 'income' | 'expense' | 'transfer' | 'saving';
 
-export type TransactionFrequency = 'monthly' | 'weekly' | 'biweekly' | 'yearly';
+export type TransactionFrequency = 'one_time' | 'daily' | 'monthly' | 'weekly' | 'biweekly' | 'semimonthly' | 'yearly' | 'quarterly' | 'semi_annual';
 
 export type BudgetStatus = 'under' | 'on_track' | 'at_limit' | 'over';
 

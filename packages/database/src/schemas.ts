@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-const accountTypeEnum = z.enum(['checking', 'savings', 'credit', 'loan', 'investment', 'cash']);
-const categoryTypeEnum = z.enum(['income', 'expense']);
+const accountTypeEnum = z.enum(['checking', 'savings', 'credit', 'credit_card', 'loan', 'investment', 'cash', 'other']);
+const categoryTypeEnum = z.enum(['income', 'expense', 'transfer', 'saving']);
 
 export const accountInsertSchema = z.object({
   name: z.string().min(1).max(255),
@@ -35,10 +35,10 @@ export const categoryUpdateSchema = z.object({
 });
 
 export const transactionInsertSchema = z.object({
-  account_id: z.string().uuid(),
+  account_id: z.string().uuid().nullable().optional(),
   category_id: z.string().uuid().nullable().optional(),
   amount: z.number().finite(),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD'),
+  date: z.string().min(1),
   merchant: z.string().max(255).nullable().optional(),
   note: z.string().max(2000).nullable().optional(),
 });

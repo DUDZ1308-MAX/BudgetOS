@@ -7,6 +7,13 @@ export interface EngineTransaction {
   merchant: string | null;
   note: string | null;
   is_archived: boolean;
+  is_recurring: boolean;
+  is_pending: boolean;
+  recurring_id: string | null;
+  currency: string | null;
+  description: string | null;
+  notes: string | null;
+  tags: string[] | null;
 }
 
 export interface EngineAccount {
@@ -15,12 +22,14 @@ export interface EngineAccount {
   type: string;
   balance: number;
   is_active: boolean;
+  include_in_net_worth: boolean;
+  sort_order: number;
 }
 
 export interface EngineCategory {
   id: string;
   name: string;
-  type: 'income' | 'expense';
+  type: 'income' | 'expense' | 'transfer' | 'saving';
   is_archived: boolean;
 }
 
@@ -31,6 +40,8 @@ export interface EngineBudget {
   month: number;
   amount: number;
   rollover: boolean;
+  month_key: string;
+  rollover_enabled: boolean;
 }
 
 export interface BudgetSummary {

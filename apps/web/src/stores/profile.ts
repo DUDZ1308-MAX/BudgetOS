@@ -7,12 +7,16 @@ import { useThemeStore } from '@/stores/theme';
 export interface Profile {
   id: string;
   full_name: string | null;
+  display_name: string | null;
   avatar_url: string | null;
   currency: string;
   timezone: string;
   locale: string;
   onboarding_complete: boolean;
+  onboarding_completed: boolean;
   theme_preference: Theme | null;
+  created_at: string;
+  updated_at: string;
 }
 
 interface ProfileState {

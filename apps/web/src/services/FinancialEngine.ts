@@ -214,7 +214,7 @@ export const FinancialEngine = {
   // -------------------------------------------------------------------------
   getNetWorth(accounts: Account[]): NetWorthResult {
     const activeAccounts = accounts.filter(
-      (a) => a.is_active && (a as any).include_in_net_worth !== false,
+      (a) => a.is_active && a.include_in_net_worth !== false,
     );
 
     // Net Worth = sum of all active account balances
@@ -303,7 +303,7 @@ export const FinancialEngine = {
       categoryId: b.category_id ?? '',
       amount: Number(b.amount ?? 0),
       percentage: null,
-      rolloverEnabled: (b as any).rollover_enabled ?? (b as any).rollover ?? false,
+      rolloverEnabled: b.rollover_enabled ?? b.rollover ?? false,
     }));
 
     const engineTransactions: TransactionSummary[] = Array.from(categorySpending.entries()).map(
@@ -392,7 +392,7 @@ export const FinancialEngine = {
         currentAmount: Number(goal.current_amount ?? 0),
         targetAmount: Number(goal.target_amount ?? 0),
         targetDate: goal.target_date ?? '',
-        monthlyContribution: Number((goal as any).monthly_contribution ?? 0),
+        monthlyContribution: Number(goal.monthly_contribution ?? 0),
       });
 
       return {
@@ -435,10 +435,10 @@ export const FinancialEngine = {
           principal: Number(m.principal ?? 0),
           annualRate: Number(m.annual_rate ?? 0),
           termYears: Number(m.term_years ?? 0),
-          amortizationYears: Number((m as any).amortization_years ?? m.term_years),
+          amortizationYears: Number(m.amortization_years ?? m.term_years),
           startDate: m.start_date ?? new Date().toISOString().slice(0, 10),
-          paymentFrequency: ((m as any).payment_frequency ?? 'monthly') as string,
-          compoundSemiAnnual: (m as any).compound_semi_annual ?? true,
+          paymentFrequency: (m.payment_frequency ?? 'monthly') as string,
+          compoundSemiAnnual: m.compound_semi_annual ?? true,
           extraPayments,
         });
 
@@ -485,10 +485,10 @@ export const FinancialEngine = {
       principal: Number(m.principal ?? 0),
       annualRate: Number(m.annual_rate ?? 0),
       termYears: Number(m.term_years ?? 0),
-      amortizationYears: Number((m as any).amortization_years ?? m.term_years),
+      amortizationYears: Number(m.amortization_years ?? m.term_years),
       startDate: m.start_date ?? new Date().toISOString().slice(0, 10),
-      paymentFrequency: ((m as any).payment_frequency ?? 'monthly') as string,
-      compoundSemiAnnual: (m as any).compound_semi_annual ?? true,
+      paymentFrequency: (m.payment_frequency ?? 'monthly') as string,
+      compoundSemiAnnual: m.compound_semi_annual ?? true,
       extraPayments: [],
     });
     if (!calcResult) return [];

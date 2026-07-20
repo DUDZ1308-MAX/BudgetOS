@@ -78,7 +78,7 @@ describe('ImportMapper', () => {
       const required = defaultMappings['transaction']!.filter((m) => m.required);
       expect(required.map((r) => r.sourceColumn)).toContain('date');
       expect(required.map((r) => r.sourceColumn)).toContain('amount');
-      expect(required.map((r) => r.sourceColumn)).toContain('type');
+      expect(required.map((r) => r.sourceColumn)).not.toContain('type');
     });
 
     it('strips sensitive fields from mortgage mapping', () => {

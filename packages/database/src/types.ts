@@ -75,34 +75,52 @@ export interface Transaction {
   account_id: string | null;
   category_id: string | null;
   amount: number;
-  date: string;
-  merchant: string | null;
+  currency: string | null;
+  description: string | null;
   note: string | null;
+  merchant: string | null;
+  date: string;
   is_archived: boolean;
+  is_recurring: boolean;
+  is_pending: boolean;
   recurring_id: string | null;
+  notes: string | null;
+  tags: string[] | null;
   created_at: string;
-  updated_at?: string;
+  updated_at: string;
 }
 
 export interface TransactionInsert {
-  account_id: string;
+  account_id?: string | null;
   category_id?: string | null;
   amount: number;
-  date: string;
-  merchant?: string | null;
+  currency?: string;
+  description?: string | null;
   note?: string | null;
+  merchant?: string | null;
+  date: string;
+  is_archived?: boolean;
+  is_recurring?: boolean;
+  is_pending?: boolean;
   recurring_id?: string | null;
+  notes?: string | null;
+  tags?: string[] | null;
 }
 
 export interface TransactionUpdate {
-  account_id?: string;
+  account_id?: string | null;
   category_id?: string | null;
   amount?: number;
-  date?: string;
-  merchant?: string | null;
+  currency?: string;
+  description?: string | null;
   note?: string | null;
+  merchant?: string | null;
+  date?: string;
   is_archived?: boolean;
+  is_pending?: boolean;
   recurring_id?: string | null;
+  notes?: string | null;
+  tags?: string[] | null;
 }
 
 export interface TransactionFilters {
@@ -116,7 +134,7 @@ export interface TransactionFilters {
 export interface Budget {
   id: string;
   user_id: string;
-  category_id: string | null;
+  category_id: string;
   year: number;
   month: number;
   amount: number;
@@ -124,7 +142,7 @@ export interface Budget {
   month_key: string;
   rollover_enabled: boolean;
   created_at: string;
-  updated_at?: string;
+  updated_at: string;
 }
 
 export interface BudgetInsert {
@@ -171,13 +189,13 @@ export interface Mortgage {
   extra_payment: number;
   is_active: boolean;
   created_at: string;
-  updated_at?: string;
-  amortization_years?: number;
-  payment_frequency?: string;
-  compound_semi_annual?: boolean;
-  down_payment?: number;
-  purchase_price?: number | null;
-  extra_payments?: { type: string; amount: number; month?: number }[];
+  amortization_years: number;
+  payment_frequency: 'monthly' | 'semi_monthly' | 'bi_weekly' | 'accelerated_bi_weekly' | 'weekly' | 'accelerated_weekly';
+  compound_semi_annual: boolean;
+  down_payment: number;
+  purchase_price: number | null;
+  extra_payments: { type: string; amount: number; month?: number }[];
+  updated_at: string;
 }
 
 export interface CoachMessage {
@@ -244,7 +262,7 @@ export interface RecurringTransactionUpdate {
   name?: string;
   description?: string | null;
   amount?: number;
-  frequency?: 'one_time' | 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
+  frequency?: 'one_time' | 'daily' | 'weekly' | 'biweekly' | 'semimonthly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
   interval_count?: number;
   day_of_week?: number | null;
   day_of_month?: number | null;

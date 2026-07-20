@@ -27,14 +27,14 @@ interface TableInfo {
 }
 
 const entityTableMap: Record<string, TableInfo> = {
-  account: { table: 'accounts', columns: 'id,user_id,name,type,balance,currency,is_active,created_at,updated_at' },
-  category: { table: 'categories', columns: 'id,user_id,name,type,icon,color,is_archived,created_at,updated_at' },
-  transaction: { table: 'transactions', columns: 'id,user_id,account_id,category_id,amount,date,merchant,note,is_archived,recurring_id,created_at,updated_at' },
-  budget: { table: 'budgets', columns: 'id,user_id,category_id,year,month,amount,rollover,created_at,updated_at' },
-  savings_goal: { table: 'savings_goals', columns: 'id,user_id,name,target_amount,current_amount,target_date,priority,status,created_at,updated_at' },
+  account: { table: 'accounts', columns: 'id,user_id,name,type,balance,currency,institution,is_active,include_in_net_worth,sort_order,created_at,updated_at' },
+  category: { table: 'categories', columns: 'id,user_id,name,type,icon,color,is_system,is_archived,sort_order,created_at,updated_at' },
+  transaction: { table: 'transactions', columns: 'id,user_id,account_id,category_id,amount,currency,description,note,merchant,date,is_archived,is_recurring,is_pending,recurring_id,notes,tags,created_at,updated_at' },
+  budget: { table: 'budgets', columns: 'id,user_id,category_id,year,month,amount,rollover,month_key,rollover_enabled,created_at,updated_at' },
+  savings_goal: { table: 'savings_goals', columns: 'id,user_id,name,target_amount,current_amount,target_date,monthly_contribution,category_id,is_completed,sort_order,priority,status,created_at,updated_at' },
   contribution: { table: 'contributions', columns: 'id,user_id,goal_id,amount,date,notes,created_at,updated_at' },
-  mortgage: { table: 'mortgages', columns: 'id,user_id,name,principal,annual_rate,term_years,start_date,extra_payment,is_active,created_at,updated_at' },
-  extra_payment: { table: 'extra_payments', columns: 'id,user_id,mortgage_id,amount,date,notes,created_at,updated_at' },
+  mortgage: { table: 'mortgages', columns: 'id,user_id,name,principal,annual_rate,term_years,start_date,extra_payment,is_active,payment_frequency,amortization_years,compound_semi_annual,down_payment,purchase_price,extra_payments,created_at,updated_at' },
+  extra_payment: { table: 'mortgage_extra_payments', columns: 'id,mortgage_id,amount,date,type,notes,created_at' },
 };
 
 async function uploadEntry(entry: { entity: SyncEntity; entityId: string; action: string; payload: Record<string, unknown> }): Promise<{ ok: boolean; error?: string }> {
