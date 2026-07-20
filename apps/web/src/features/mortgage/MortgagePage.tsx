@@ -202,7 +202,9 @@ export function MortgagePage() {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [editingMortgage, setEditingMortgage] = useState<any>(null);
 
-  const activeMortgage = activeMortgageId ? mortgages.find((m) => m.id === activeMortgageId) ?? mortgages[0] ?? null : mortgages[0] ?? null;
+  const activeMortgage = activeMortgageId
+    ? mortgages.find((m) => m.id === activeMortgageId) ?? mortgages.find((m) => m.is_active) ?? mortgages[0] ?? null
+    : mortgages.find((m) => m.is_active) ?? mortgages[0] ?? null;
   const selectedId = activeMortgage?.id;
 
   const { data: extraPayments = [] } = useExtraPayments(selectedId);

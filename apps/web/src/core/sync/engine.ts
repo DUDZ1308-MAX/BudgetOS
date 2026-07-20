@@ -51,35 +51,35 @@ async function uploadEntry(entry: { entity: SyncEntity; entityId: string; action
       return { ok: true };
     }
 
+    let payload = { ...entry.payload };
+
     if (entry.action === 'update') {
       const { error } = await supabase
         .from(info.table)
-        .update(entry.payload)
+        .update(payload)
         .eq('id', entry.entityId);
       if (error) return { ok: false, error: error.message };
       return { ok: true };
     }
 
+    if (entry.entity === 'transaction' && payload.account_id) {
+      const { data: acct } = await supabase
+        .from('accounts')
+        .select('id')
+        .eq('id', payload.account_id)
+        .maybeSingle();
+      if (!acct) {
+        payload = { ...payload, account_id: null };
+      }
+    }
+
     const { error } = await supabase
       .from(info.table)
-      .insert(entry.payload)
+      .insert(payload)
       .select('id')
       .single();
     if (error) {
       if (error.code === '23505') return { ok: true };
-      if (error.code === '23503' && entry.entity === 'transaction') {
-        const patched = { ...entry.payload, account_id: null };
-        const { error: retryErr } = await supabase
-          .from(info.table)
-          .insert(patched)
-          .select('id')
-          .single();
-        if (retryErr) {
-          if (retryErr.code === '23505') return { ok: true };
-          return { ok: false, error: retryErr.message };
-        }
-        return { ok: true };
-      }
       return { ok: false, error: error.message };
     }
     return { ok: true };

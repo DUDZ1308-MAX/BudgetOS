@@ -41,7 +41,7 @@ export function computeMortgage(input: {
   startDate: string;
   paymentFrequency?: string;
   compoundSemiAnnual?: boolean;
-  extraPayments?: { amount: number; date?: string; month?: number; type?: string }[];
+  extraPayments?: { amount: number; date?: string; month?: number; startMonth?: number; type?: string }[];
 }): MortgageResult | null {
   const amortizationYears = input.amortizationYears ?? input.termYears;
   const frequency = (input.paymentFrequency ?? 'monthly') as PaymentFrequency;
@@ -49,8 +49,8 @@ export function computeMortgage(input: {
 
   const extraPayments = (input.extraPayments ?? []).map((ep) => {
     const type = ep.type ?? 'one_time';
-    if (type === 'one_time' || ep.month != null) {
-      return { type: 'one_time' as const, amount: ep.amount, startMonth: ep.month ?? 1 };
+    if (type === 'one_time') {
+      return { type: 'one_time' as const, amount: ep.amount, startMonth: (ep as any).startMonth ?? ep.month ?? 1 };
     }
     if (type === 'monthly_fixed') {
       return { type: 'monthly_fixed' as const, amount: ep.amount };
@@ -58,7 +58,7 @@ export function computeMortgage(input: {
     if (type === 'annual_lump') {
       return { type: 'annual_lump' as const, amount: ep.amount };
     }
-    return { type: 'one_time' as const, amount: ep.amount, startMonth: 1 };
+    return { type: 'one_time' as const, amount: ep.amount, startMonth: (ep as any).startMonth ?? 1 };
   });
 
   const result = computeMortgageLib({
@@ -115,8 +115,8 @@ export function computeMortgageDashboard(result: MortgageResult): MortgageDashbo
   let cumulativeInterest = 0;
   for (let i = 0; i < currentPaymentIndex; i++) {
     const row = result.schedule[i]!;
-    cumulativePrincipal += row.principal;
-    cumulativeInterest += row.interest;
+    cumulativePrincipal = Math.round((cumulativePrincipal + row.principal) * 100) / 100;
+    cumulativeInterest = Math.round((cumulativeInterest + row.interest) * 100) / 100;
   }
 
   const remainingBalance = currentPaymentIndex > 0 && currentPaymentIndex <= result.schedule.length

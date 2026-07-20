@@ -4,6 +4,7 @@ import type { UseMutateAsyncFunction } from '@tanstack/react-query';
 import type { Account, Category, Transaction } from '@budgetos/database';
 import { transactionFormSchema, toSignedAmount, getTodayString, formatCurrency } from '@/services/transactionService';
 import type { TransactionFormData } from '@/services/transactionService';
+import { formatError } from '@/lib/formatError';
 import { useToastStore } from '@/stores/toast';
 import { InlineValidation } from '@/components/ui/InlineValidation';
 
@@ -76,8 +77,9 @@ export function TransactionForm({
       addToast('success', 'Transaction saved successfully');
       onSuccess?.();
       navigate('/transactions');
-    } catch {
-      setErrors({ form: 'Failed to save transaction. Please try again.' });
+    } catch (err) {
+      const { message } = formatError(err);
+      setErrors({ form: message });
     }
   }
 

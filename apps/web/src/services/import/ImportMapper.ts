@@ -111,6 +111,8 @@ export class ImportMapper {
               skipped++;
               continue;
             }
+          } else {
+            payload.account_id = null;
           }
           if (payload.category_id && typeof payload.category_id === 'string' && payload.category_id.trim()) {
             if (!validCategoryIds!.has(payload.category_id)) {

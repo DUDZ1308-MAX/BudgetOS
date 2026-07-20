@@ -40,6 +40,20 @@ export const TransactionRepository = {
   },
 
   async create(userId: string, data: TransactionInsert): Promise<Transaction> {
+    if (data.account_id) {
+      const { data: acct } = await supabase
+        .from('accounts')
+        .select('id')
+        .eq('id', data.account_id)
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (!acct) {
+        const err = new Error('The selected account no longer exists. Please select a different account.') as any;
+        err.code = '23503';
+        throw err;
+      }
+    }
+
     const { data: result, error } = await supabase
       .from('transactions')
       .insert({ user_id: userId, ...data })

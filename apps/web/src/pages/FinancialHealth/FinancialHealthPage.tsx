@@ -4,19 +4,12 @@ import { useHealthStore } from '@/stores/intelligence/healthStore';
 import { computeFinancialHealth } from '@/intelligence/FinancialHealthEngine';
 import { analyzeTrends } from '@/intelligence/TrendAnalyzer';
 import { generateIntelligence } from '@/intelligence/RecommendationScheduler';
-import { computeBudgetSummary } from '@/engine';
-import { computeCashFlowSummary } from '@/engine';
+import { FinancialEngine } from '@/services/FinancialEngine';
 import { accountsApi } from '@/lib/api/accounts';
-import { transactionsApi } from '@/lib/api/transactions';
-import { categoriesApi } from '@/lib/api/categories';
-import { budgetsApi } from '@/lib/api/budgets';
 import { savingsApi } from '@/lib/api/savings';
-import { recurringApi } from '@/lib/api/recurring';
 import { useSubscriptionStore } from '@/stores/subscription';
 import { FeatureGate } from '@/billing/billingGuard';
-import { computeMonthlyRunRate } from '@budgetos/engine';
-import type { RecurringFrequency } from '@budgetos/shared';
-import type { IntelligenceInput, HealthFactor } from '@/intelligence/types';
+import type { IntelligenceInput } from '@/intelligence/types';
 import { InfoTooltip } from '@/components/ui/InfoTooltip';
 
 function getHealthColor(score: number): string {
@@ -52,58 +45,64 @@ export function FinancialHealthPage() {
     if (!user) return;
     setLoading(true);
     try {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = now.getMonth() + 1;
-      const lastDay = new Date(year, month, 0).getDate();
-      const range = {
-        start: `${year}-${month}-01`,
-        end: `${year}-${month}-${String(lastDay).padStart(2, '0')}`,
-      };
-
-      const [accounts, categories, budgets, transactions, goals, mortgageData, recurrings] = await Promise.all([
-        accountsApi.list(user.id),
-        categoriesApi.list(user.id),
-        budgetsApi.list(user.id, year, month),
-        transactionsApi.list(user.id, { dateFrom: range.start, dateTo: range.end }),
+      const [savingsGoalsRaw] = await Promise.all([
         savingsApi.list(user.id),
-        Promise.resolve(null),
-        recurringApi.list(user.id).catch(() => []),
       ]);
 
-      const budgetSummary = computeBudgetSummary({
-        transactions: transactions.map((t: any) => ({ ...t, amount: Number(t.amount) })),
-        accounts: accounts.map((a: any) => ({ ...a, balance: Number(a.balance) })),
-        categories: categories.map((c: any) => ({ ...c })),
-        budgets: budgets.map((b: any) => ({ ...b, amount: Number(b.amount) })),
-        dateRange: range,
-      });
-
-      // Patch budget summary with frequency-normalized monthly run rate for health scoring
-      const activeRecurrings = (recurrings ?? []).filter((r: any) => r.status === 'active');
-      const runRate = computeMonthlyRunRate(
-        activeRecurrings.map((r: any) => ({
-          amount: Math.abs(Number(r.amount)),
-          frequency: r.frequency as RecurringFrequency,
-          type: r.type as 'income' | 'expense',
-        })),
-      );
-      budgetSummary.income.total = Math.max(budgetSummary.income.total, runRate.income);
-      budgetSummary.expenses.total = Math.max(budgetSummary.expenses.total, runRate.expenses);
-
-      const cashFlowSummary = computeCashFlowSummary({
-        transactions: transactions.map((t: any) => ({ ...t, amount: Number(t.amount) })),
-        accounts: accounts.map((a: any) => ({ ...a, balance: Number(a.balance) })),
-      });
+      const dashboardData = await FinancialEngine.getDashboardData(user.id);
 
       const input: IntelligenceInput = {
-        budgetSummary,
-        cashFlowSummary,
-        savingsGoals: goals.map((g: any) => ({ ...g, current_amount: Number(g.current_amount), target_amount: Number(g.target_amount) })),
-        mortgageData: mortgageData ?? undefined,
-        transactions: transactions.map((t: any) => ({
-          id: t.id, amount: Number(t.amount), date: t.date,
-          category: categories.find((c: any) => c.id === t.category_id)?.name ?? 'Uncategorized',
+        budgetSummary: {
+          income: { total: dashboardData.cashFlow.monthlyIncome, averageDaily: dashboardData.cashFlow.monthlyIncome / 30 },
+          expenses: { total: dashboardData.cashFlow.monthlyExpenses, byCategory: dashboardData.budgetHealth.categories.map((c) => ({
+            categoryId: c.categoryId, categoryName: c.categoryName, amount: c.spent,
+            percentage: c.percentUsed, transactionCount: 0,
+          }))},
+          cashFlow: { netIncome: dashboardData.cashFlow.cashFlow, dailySpendingAllowance: 0, safeToSpendToday: 0, projectedEndBalance: 0 },
+          budgetStatus: {
+            categories: dashboardData.budgetHealth.categories.map((c) => ({
+              categoryId: c.categoryId, categoryName: c.categoryName, budgeted: c.budgeted,
+              spent: c.spent, remaining: c.remaining, percentUsed: c.percentUsed, status: c.status as any,
+            })),
+            overBudget: dashboardData.budgetHealth.categories.filter((c) => c.percentUsed > 100).map((c) => ({
+              categoryId: c.categoryId, categoryName: c.categoryName, budgeted: c.budgeted,
+              spent: c.spent, remaining: c.remaining, percentUsed: c.percentUsed, status: 'over' as const,
+            })),
+            underBudget: dashboardData.budgetHealth.categories.filter((c) => c.percentUsed <= 100).map((c) => ({
+              categoryId: c.categoryId, categoryName: c.categoryName, budgeted: c.budgeted,
+              spent: c.spent, remaining: c.remaining, percentUsed: c.percentUsed, status: c.status as any,
+            })),
+            totalBudgeted: dashboardData.budgetHealth.totalBudgeted,
+            totalSpent: dashboardData.budgetHealth.totalSpent,
+            totalRemaining: dashboardData.budgetHealth.remaining,
+          },
+          accounts: { netWorth: dashboardData.netWorth.netWorth, remainingCash: 0, totalAssets: dashboardData.netWorth.totalAssets, totalLiabilities: dashboardData.netWorth.totalLiabilities, accountCount: dashboardData.netWorth.accounts.length },
+          savingsCapacity: { recommendedAmount: 0, savingsRate: 0, surplus: dashboardData.cashFlow.cashFlow },
+          alerts: [],
+        },
+        cashFlowSummary: {
+          totalIncome: dashboardData.cashFlow.monthlyIncome,
+          totalExpenses: dashboardData.cashFlow.monthlyExpenses,
+          netFlow: dashboardData.cashFlow.cashFlow,
+          dailyBalances: [],
+          sevenDayTrend: 0,
+          thirtyDayTrend: 0,
+          incomeVsExpenseRatio: dashboardData.cashFlow.monthlyExpenses > 0 ? dashboardData.cashFlow.monthlyIncome / dashboardData.cashFlow.monthlyExpenses : 0,
+        },
+        savingsGoals: savingsGoalsRaw,
+        mortgageData: dashboardData.mortgages[0] ? {
+          remainingBalance: dashboardData.mortgages[0].remainingBalance,
+          monthlyPayment: dashboardData.mortgages[0].monthlyPayment,
+          progressPct: dashboardData.mortgages[0].progressPct,
+          payoffDate: dashboardData.mortgages[0].payoffDate,
+          totalInterest: dashboardData.mortgages[0].totalInterest,
+          principalPaid: dashboardData.mortgages[0].remainingBalance > 0
+            ? dashboardData.mortgages[0].totalCost - dashboardData.mortgages[0].totalInterest - dashboardData.mortgages[0].remainingBalance
+            : dashboardData.mortgages[0].totalCost - dashboardData.mortgages[0].totalInterest,
+        } : undefined,
+        transactions: dashboardData.recentTransactions.map((t) => ({
+          id: t.id, amount: t.amount, date: t.date,
+          category: t.categoryName ?? 'Uncategorized',
           merchant: t.merchant,
         })),
       };
