@@ -697,7 +697,7 @@ function AboutSection() {
         <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-white">Links</h2>
         <div className="space-y-2">
           <a
-            href="https://docs.mybudgetos.app"
+            href="https://github.com/DUDZ1308-MAX/BudgetOS"
             target="_blank"
             rel="noopener noreferrer"
             className="block rounded-lg bg-slate-50 px-3 py-2 text-sm text-brand-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-brand-400 dark:hover:bg-slate-700"
@@ -705,7 +705,7 @@ function AboutSection() {
             Documentation
           </a>
           <a
-            href="https://github.com/mybudgetos/mybudgetos"
+            href="https://github.com/DUDZ1308-MAX/BudgetOS"
             target="_blank"
             rel="noopener noreferrer"
             className="block rounded-lg bg-slate-50 px-3 py-2 text-sm text-brand-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-brand-400 dark:hover:bg-slate-700"
@@ -713,7 +713,9 @@ function AboutSection() {
             GitHub
           </a>
           <a
-            href="mailto:support@mybudgetos.app"
+            href="https://github.com/DUDZ1308-MAX/BudgetOS/issues"
+            target="_blank"
+            rel="noopener noreferrer"
             className="block rounded-lg bg-slate-50 px-3 py-2 text-sm text-brand-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-brand-400 dark:hover:bg-slate-700"
           >
             Support
