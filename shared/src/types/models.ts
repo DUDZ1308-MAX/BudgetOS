@@ -1,4 +1,4 @@
-import type { AccountType, CategoryType, TransactionFrequency, SavingsGoalStatus, CoachMessageType, CoachCategory, RecurringType, RecurringFrequency, RecurringStatus, ReminderType } from './enums';
+import type { AccountType, CategoryType, CoachMessageType, CoachCategory, RecurringType, RecurringFrequency, RecurringStatus, ReminderType } from './enums';
 
 export interface Profile {
   id: string;

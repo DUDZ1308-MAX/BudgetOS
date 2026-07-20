@@ -22,52 +22,6 @@
       ]
     }
   ],
-  "redirects": [
-    {
-      "source": "/",
-      "has": [
-        {
-          "type": "host",
-          "value": "budget-os-web.vercel.app"
-        }
-      ],
-      "destination": "https://budgetos-rust.vercel.app/",
-      "permanent": true
-    },
-    {
-      "source": "/:path+",
-      "has": [
-        {
-          "type": "host",
-          "value": "budget-os-web.vercel.app"
-        }
-      ],
-      "destination": "https://budgetos-rust.vercel.app/:path+",
-      "permanent": true
-    },
-    {
-      "source": "/",
-      "has": [
-        {
-          "type": "host",
-          "value": "budgetos.vercel.app"
-        }
-      ],
-      "destination": "https://budgetos-rust.vercel.app/",
-      "permanent": true
-    },
-    {
-      "source": "/:path+",
-      "has": [
-        {
-          "type": "host",
-          "value": "budgetos.vercel.app"
-        }
-      ],
-      "destination": "https://budgetos-rust.vercel.app/:path+",
-      "permanent": true
-    }
-  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
