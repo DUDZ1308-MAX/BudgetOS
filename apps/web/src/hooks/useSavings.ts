@@ -83,10 +83,11 @@ export function useContributions(goalId: string | undefined) {
 
 export function useAddContribution() {
   const qc = useQueryClient();
+  const user = useAuthStore((s) => s.user);
   const toast = useToastStore((s) => s.addToast);
   return useMutation({
     mutationFn: ({ goalId, amount, date, notes }: { goalId: string; amount: number; date: string; notes?: string }) =>
-      savingsApi.addContribution(goalId, { amount, date, notes }),
+      savingsApi.addContribution(user!.id, goalId, { amount, date, notes }),
     onSuccess: (created, vars) => {
       qc.invalidateQueries({ queryKey: ['savings-contributions', vars.goalId] });
       qc.invalidateQueries({ queryKey: ['savings-goals'] });

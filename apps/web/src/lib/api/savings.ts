@@ -24,6 +24,7 @@ export type SavingsGoalUpdate = Partial<SavingsGoalInsert>;
 
 export interface SavingsContribution {
   id: string;
+  user_id: string;
   goal_id: string;
   amount: number;
   date: string;
@@ -89,11 +90,11 @@ export const savingsApi = {
     return data ?? [];
   },
 
-  async addContribution(goalId: string, data: { amount: number; date: string; notes?: string }): Promise<SavingsContribution> {
-    debug('addContribution', goalId, data);
+  async addContribution(userId: string, goalId: string, data: { amount: number; date: string; notes?: string }): Promise<SavingsContribution> {
+    debug('addContribution', userId, goalId, data);
     const { data: result, error } = await supabase
       .from('contributions')
-      .insert({ goal_id: goalId, ...data })
+      .insert({ user_id: userId, goal_id: goalId, ...data })
       .select('*')
       .single();
     if (error) { debug('addContribution error', error); throw error; }
