@@ -43,7 +43,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const grouped = groupNavItems(navigation);
 
   const navContent = (
-    <nav role="navigation" aria-label="Main navigation" className="flex-1 space-y-4 overflow-y-auto px-3 py-4">
+    <nav role="navigation" aria-label="Main navigation" className="flex-1 space-y-4 overflow-x-hidden overflow-y-auto px-3 py-4 [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]">
       {grouped.map((group) => (
         <div key={group.label}>
           <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
@@ -125,7 +125,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       </aside>
       {/* Mobile drawer */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 flex-col border-r border-slate-200 bg-white shadow-2xl transition-transform duration-300 ease-out dark:border-slate-800 dark:bg-slate-900 md:hidden ${
+        className={`fixed inset-y-0 left-0 z-40 flex h-full w-64 flex-col overflow-hidden border-r border-slate-200 bg-white shadow-2xl transition-transform duration-300 ease-out dark:border-slate-800 dark:bg-slate-900 md:hidden ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
