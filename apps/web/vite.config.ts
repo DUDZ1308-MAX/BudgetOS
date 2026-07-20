@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['favicon.svg', 'favicon.png', 'apple-touch-icon.png'],
       manifest: {
         name: 'MyBudgetOS — Plan. Track. Grow.',
         short_name: 'MyBudgetOS',

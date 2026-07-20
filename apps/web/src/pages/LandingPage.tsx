@@ -454,7 +454,7 @@ export function LandingPage() {
           <div className="grid gap-8 md:grid-cols-4">
             <div>
               <div className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
-                <IconCrown className="h-5 w-5 text-brand-600" />
+                <img src="/BodgetOS_logo.png" alt="MyBudgetOS" className="h-6 w-6 rounded-md object-contain" />
                 MyBudgetOS
               </div>
               <p className="mt-2 text-xs text-slate-500">Plan. Track. Grow.</p>

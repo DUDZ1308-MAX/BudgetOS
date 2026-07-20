@@ -81,9 +81,7 @@ export function WelcomeFlow({ onComplete }: WelcomeFlowProps) {
         <div className="min-h-[320px]">
           {currentStep === 'welcome' && (
             <div className="text-center">
-              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 shadow-lg">
-                <span className="text-3xl font-bold text-white">B</span>
-              </div>
+              <img src="/BodgetOS_logo.png" alt="MyBudgetOS" className="mx-auto mb-6 h-20 w-20 rounded-2xl object-contain shadow-lg" />
               <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
                 Welcome to MyBudgetOS
               </h1>
