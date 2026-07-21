@@ -1,17 +1,6 @@
 import { FinancialEngine } from '@/services/FinancialEngine';
 import type { DashboardSummaryData, CategoryBudgetStatus } from './types';
 
-// ============================================================================
-// computeDashboard — DELEGATES to FinancialEngine (Single Source of Truth)
-// ============================================================================
-//
-// RULE: This function performs NO calculations. It calls
-// FinancialEngine.getDashboardData() and maps the result to the
-// DashboardSummaryData format expected by the UI.
-//
-// All financial calculations MUST go through FinancialEngine → @budgetos/engine.
-// ============================================================================
-
 function debug(method: string, ...args: unknown[]) {
   if (import.meta.env.DEV) console.debug(`[dashboard] ${method}`, ...args);
 }
@@ -26,7 +15,6 @@ export async function computeDashboard(userId: string): Promise<DashboardResult>
 
   const dashboardData = await FinancialEngine.getDashboardData(userId);
 
-  // Map FinancialEngine results to DashboardSummaryData format
   const budgetUtilization: CategoryBudgetStatus[] = dashboardData.budgetHealth.categories.map((c) => ({
     categoryId: c.categoryId,
     categoryName: c.categoryName,
@@ -43,6 +31,8 @@ export async function computeDashboard(userId: string): Promise<DashboardResult>
     monthlyIncome: dashboardData.cashFlow.monthlyIncome,
     monthlyExpenses: dashboardData.cashFlow.monthlyExpenses,
     cashFlow: dashboardData.cashFlow.cashFlow,
+    savingsRate: dashboardData.savingsRate,
+    availableCash: dashboardData.availableCash,
     financialHealth: {
       overallScore: dashboardData.financialHealth.overallScore,
       tier: dashboardData.financialHealth.tier,
@@ -50,10 +40,15 @@ export async function computeDashboard(userId: string): Promise<DashboardResult>
       recommendations: dashboardData.financialHealth.recommendations,
     },
     mortgages: dashboardData.mortgages,
+    savingsSnapshot: dashboardData.savingsSnapshot,
+    budgetSnapshot: dashboardData.budgetSnapshot,
+    accountSummary: dashboardData.accountSummary,
     topSpendingCategories: dashboardData.topSpendingCategories,
     budgetUtilization,
     upcomingActivity: dashboardData.upcomingActivity,
+    upcoming: dashboardData.upcoming,
     recentTransactions: dashboardData.recentTransactions,
+    insights: dashboardData.insights,
   };
 
   debug('result', result);

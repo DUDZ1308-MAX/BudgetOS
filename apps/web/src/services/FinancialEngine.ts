@@ -17,6 +17,7 @@ import {
 } from '@/engine/MortgageEngine';
 import type { RecurringFrequency, FHSRequest, CategoryBudget, TransactionSummary } from '@budgetos/shared';
 import type { Account, Category, Budget, Transaction, SavingsGoal, Mortgage } from '@budgetos/database';
+import type { DashboardInsight, DashboardUpcomingItem } from '@/lib/dashboard/types';
 
 // ============================================================================
 // FinancialEngine — Single Source of Truth for ALL Financial Calculations
@@ -38,6 +39,10 @@ import type { Account, Category, Budget, Transaction, SavingsGoal, Mortgage } fr
 
 function debug(method: string, ...args: unknown[]) {
   if (import.meta.env.DEV) console.debug(`[FinancialEngine] ${method}`, ...args);
+}
+
+function formatCurrencyFn(amount: number): string {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
 }
 
 // ============================================================================
@@ -112,6 +117,9 @@ export interface MortgageResult {
   payoffMonths: number;
   progressPct: number;
   principalPaidPct: number;
+  paymentFrequency: string;
+  yearsRemaining: number;
+  originalPrincipal: number;
 }
 
 export interface UpcomingActivityResult {
@@ -140,6 +148,35 @@ export interface DashboardData {
     categoryName: string | null;
     accountName: string | null;
   }>;
+  availableCash: number;
+  savingsSnapshot: {
+    totalSaved: number;
+    activeGoals: number;
+    goalCompletionPct: number;
+    nearestGoal: string | null;
+    nearestGoalProgress: number;
+    nextMilestone: string | null;
+    nextMilestoneAmount: number;
+  };
+  budgetSnapshot: {
+    onTrack: number;
+    over: number;
+    monthlyUsagePct: number;
+    topCategory: string | null;
+    topCategoryAmount: number;
+    remainingBudget: number;
+  };
+  accountSummary: {
+    totalCash: number;
+    chequing: number;
+    savings: number;
+    creditCards: number;
+    investments: number;
+    netLiquidAssets: number;
+  };
+  savingsRate: number;
+  upcoming: DashboardUpcomingItem[];
+  insights: DashboardInsight[];
   errors: string[];
 }
 
@@ -456,6 +493,9 @@ export const FinancialEngine = {
             payoffMonths: Number(m.term_years ?? 0) * 12,
             progressPct: 0,
             principalPaidPct: 0,
+            paymentFrequency: m.payment_frequency ?? 'monthly',
+            yearsRemaining: Number(m.term_years ?? 0),
+            originalPrincipal: Number(m.principal ?? 0),
           };
         }
 
@@ -463,6 +503,8 @@ export const FinancialEngine = {
         const principalPaidPct = calcResult.totalPrincipal > 0
           ? Math.min(100, (dashboard.principalPaid / calcResult.totalPrincipal) * 100)
           : 0;
+
+        const yearsRemaining = calcResult.payoffMonths > 0 ? Math.round((calcResult.payoffMonths / 12) * 10) / 10 : 0;
 
         return {
           id: m.id,
@@ -476,6 +518,9 @@ export const FinancialEngine = {
           payoffMonths: calcResult.payoffMonths,
           progressPct: dashboard.progressPct,
           principalPaidPct,
+          paymentFrequency: m.payment_frequency ?? 'monthly',
+          yearsRemaining,
+          originalPrincipal: Number(m.principal ?? 0),
         };
       });
   },
@@ -521,6 +566,277 @@ export const FinancialEngine = {
         type: r.type as 'income' | 'expense',
         frequency: r.frequency,
       }));
+  },
+
+  // -------------------------------------------------------------------------
+  // Upcoming Items — next 30 days (including mortgage and contributions)
+  // -------------------------------------------------------------------------
+  getUpcomingItems(
+    recurrings: Array<{ id: string; name: string; amount: number; type: string; frequency: string; next_run: string; status: string }>,
+    mortgages: MortgageResult[],
+    savingsGoals: Array<{ id: string; name: string; monthlyContribution: number }>,
+  ): DashboardUpcomingItem[] {
+    const items: DashboardUpcomingItem[] = [];
+    const now = new Date();
+    const thirtyDays = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 30);
+
+    // Recurring transactions due within 30 days
+    for (const r of recurrings) {
+      if (r.status !== 'active') continue;
+      const nextDate = new Date(r.next_run);
+      if (nextDate >= now && nextDate <= thirtyDays) {
+        items.push({
+          id: r.id,
+          name: r.name,
+          amount: Math.abs(Number(r.amount)),
+          date: r.next_run,
+          type: r.type === 'income' ? 'income' : 'expense',
+          category: 'recurring',
+        });
+      }
+    }
+
+    // Mortgage payments due within 30 days
+    for (const m of mortgages) {
+      const payoffDate = m.payoffDate ? new Date(m.payoffDate) : null;
+      if (payoffDate && payoffDate < now) continue;
+      // Estimate next payment: assume monthly on the 1st
+      const nextMortgage = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      if (nextMortgage <= thirtyDays) {
+        items.push({
+          id: `mortgage-${m.id}`,
+          name: `${m.name} Payment`,
+          amount: m.monthlyPayment,
+          date: nextMortgage.toISOString().slice(0, 10),
+          type: 'mortgage',
+          category: 'mortgage',
+        });
+      }
+    }
+
+    // Savings contributions (assume monthly)
+    for (const g of savingsGoals) {
+      if (g.monthlyContribution <= 0) continue;
+      const nextContribution = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      if (nextContribution <= thirtyDays) {
+        items.push({
+          id: `contribution-${g.id}`,
+          name: `${g.name} Contribution`,
+          amount: g.monthlyContribution,
+          date: nextContribution.toISOString().slice(0, 10),
+          type: 'contribution',
+          category: 'savings',
+        });
+      }
+    }
+
+    items.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    return items.slice(0, 20);
+  },
+
+  // -------------------------------------------------------------------------
+  // Account Summary — breakdown by type
+  // -------------------------------------------------------------------------
+  getAccountSummary(accounts: Account[]): {
+    totalCash: number;
+    chequing: number;
+    savings: number;
+    creditCards: number;
+    investments: number;
+    netLiquidAssets: number;
+  } {
+    let chequing = 0;
+    let savings = 0;
+    let creditCards = 0;
+    let investments = 0;
+
+    for (const a of accounts) {
+      if (!a.is_active) continue;
+      const balance = Number(a.balance ?? 0);
+      switch (a.type) {
+        case 'checking':
+          chequing += balance;
+          break;
+        case 'savings':
+          savings += balance;
+          break;
+        case 'credit':
+        case 'credit_card':
+          creditCards += Math.abs(balance);
+          break;
+        case 'investment':
+          investments += balance;
+          break;
+      }
+    }
+
+    const totalCash = chequing + savings;
+    const netLiquidAssets = totalCash + investments - creditCards;
+
+    return { totalCash, chequing, savings, creditCards, investments, netLiquidAssets };
+  },
+
+  // -------------------------------------------------------------------------
+  // Savings Snapshot
+  // -------------------------------------------------------------------------
+  getSavingsSnapshot(goals: SavingsGoal[]): {
+    totalSaved: number;
+    activeGoals: number;
+    goalCompletionPct: number;
+    nearestGoal: string | null;
+    nearestGoalProgress: number;
+    nextMilestone: string | null;
+    nextMilestoneAmount: number;
+  } {
+    const active = goals.filter((g) => g.status !== 'completed' && g.status !== 'cancelled');
+    const totalSaved = goals.reduce((s, g) => s + Number(g.current_amount ?? 0), 0);
+    const totalTarget = goals.reduce((s, g) => s + Number(g.target_amount ?? 0), 0);
+    const goalCompletionPct = totalTarget > 0 ? Math.min(100, (totalSaved / totalTarget) * 100) : 0;
+
+    // Nearest goal (highest progress toward target)
+    let nearestGoal: string | null = null;
+    let nearestGoalProgress = 0;
+    let nextMilestone: string | null = null;
+    let nextMilestoneAmount = 0;
+
+    if (active.length > 0) {
+      let maxProgress = -1;
+      for (const g of active) {
+        const target = Number(g.target_amount ?? 0);
+        const current = Number(g.current_amount ?? 0);
+        const pct = target > 0 ? (current / target) * 100 : 0;
+        if (pct > maxProgress) {
+          maxProgress = pct;
+          nearestGoal = g.name;
+          nearestGoalProgress = pct;
+          nextMilestone = g.name;
+          nextMilestoneAmount = target - current;
+        }
+      }
+    }
+
+    return { totalSaved, activeGoals: active.length, goalCompletionPct, nearestGoal, nearestGoalProgress, nextMilestone, nextMilestoneAmount };
+  },
+
+  // -------------------------------------------------------------------------
+  // Budget Snapshot
+  // -------------------------------------------------------------------------
+  getBudgetSnapshot(budgetHealth: BudgetHealthResult, totalBudgeted: number, totalSpent: number): {
+    onTrack: number;
+    over: number;
+    monthlyUsagePct: number;
+    topCategory: string | null;
+    topCategoryAmount: number;
+    remainingBudget: number;
+  } {
+    const onTrack = budgetHealth.categories.filter((c) => c.status === 'under' || c.status === 'on_track').length;
+    const over = budgetHealth.categories.filter((c) => c.status === 'over').length;
+    const monthlyUsagePct = totalBudgeted > 0 ? (totalSpent / totalBudgeted) * 100 : 0;
+
+    let topCategory: string | null = null;
+    let topCategoryAmount = 0;
+    for (const c of budgetHealth.categories) {
+      if (c.spent > topCategoryAmount) {
+        topCategoryAmount = c.spent;
+        topCategory = c.categoryName;
+      }
+    }
+
+    const remainingBudget = Math.max(0, totalBudgeted - totalSpent);
+
+    return { onTrack, over, monthlyUsagePct, topCategory, topCategoryAmount, remainingBudget };
+  },
+
+  // -------------------------------------------------------------------------
+  // Financial Insights — deterministic, engine-based (no LLM)
+  // -------------------------------------------------------------------------
+  getInsights(
+    cashFlow: CashFlowResult,
+    budgetHealth: BudgetHealthResult,
+    savingsRate: number,
+    mortgages: MortgageResult[],
+    netWorth: NetWorthResult,
+    savingsGoals: SavingsGoalResult[],
+    financialHealth: FinancialHealthResult,
+  ): DashboardInsight[] {
+    const insights: DashboardInsight[] = [];
+
+    // Savings rate insight
+    if (savingsRate >= 20) {
+      insights.push({ type: 'positive', icon: '📈', title: 'Strong Savings Rate', description: `Your savings rate of ${savingsRate.toFixed(0)}% is excellent. You're building a solid financial foundation.` });
+    } else if (savingsRate >= 10) {
+      insights.push({ type: 'positive', icon: '📊', title: 'Healthy Savings Rate', description: `Your savings rate of ${savingsRate.toFixed(0)}% is healthy. Aim for 20% to accelerate your goals.` });
+    } else if (savingsRate > 0) {
+      insights.push({ type: 'neutral', icon: '💡', title: 'Room to Save More', description: `Your savings rate is ${savingsRate.toFixed(0)}%. Consider cutting discretionary spending to reach 20%.` });
+    } else {
+      insights.push({ type: 'warning', icon: '⚠️', title: 'Negative Cash Flow', description: `Your expenses exceed your income by ${formatCurrencyFn(Math.abs(cashFlow.cashFlow))}. Review your budget to find savings.` });
+    }
+
+    // Cash flow insight
+    if (cashFlow.cashFlow > 0) {
+      insights.push({ type: 'positive', icon: '💰', title: 'Positive Cash Flow', description: `You have ${formatCurrencyFn(cashFlow.cashFlow)} surplus this month. Consider putting it toward savings or extra debt payments.` });
+    } else if (cashFlow.cashFlow < 0) {
+      insights.push({ type: 'warning', icon: '🔴', title: 'Cash Flow Deficit', description: `You're spending ${formatCurrencyFn(Math.abs(cashFlow.cashFlow))} more than you earn. Review your expenses.` });
+    }
+
+    // Budget performance
+    const overBudgetCount = budgetHealth.categories.filter((c) => c.status === 'over').length;
+    if (overBudgetCount === 0 && budgetHealth.categories.length > 0) {
+      insights.push({ type: 'positive', icon: '✅', title: 'All Budgets On Track', description: `All ${budgetHealth.categories.length} budget categories are within budget this month. Great job!` });
+    } else if (overBudgetCount > 0) {
+      const overNames = budgetHealth.categories.filter((c) => c.status === 'over').map((c) => c.categoryName).join(', ');
+      insights.push({ type: 'warning', icon: '📋', title: `${overBudgetCount} ${overBudgetCount === 1 ? 'Category' : 'Categories'} Over Budget`, description: `${overNames} ${overBudgetCount === 1 ? 'is' : 'are'} over budget. Adjust spending or increase the budget.` });
+    }
+
+    // Mortgage insights
+    for (const m of mortgages) {
+      if (m.interestSaved > 0) {
+        insights.push({ type: 'positive', icon: '🏠', title: `Mortgage Interest Saved`, description: `Your extra payments on ${m.name} have saved ${formatCurrencyFn(m.interestSaved)} in interest so far.` });
+      }
+      if (m.progressPct > 50) {
+        insights.push({ type: 'positive', icon: '🎯', title: `More Than Halfway There`, description: `You've paid ${m.progressPct.toFixed(0)}% of your ${m.name} mortgage. Payoff is in sight.` });
+      }
+    }
+
+    // Savings insights
+    for (const g of savingsGoals) {
+      if (g.percentComplete >= 100) {
+        insights.push({ type: 'positive', icon: '🏆', title: `${g.name} Completed`, description: `Congratulations! You've fully funded your ${g.name} savings goal.` });
+      } else if (g.percentComplete > 50) {
+        insights.push({ type: 'positive', icon: '🎯', title: `${g.name} Over Halfway`, description: `You're ${g.percentComplete.toFixed(0)}% toward your ${g.name} goal of ${formatCurrencyFn(g.targetAmount)}.` });
+      }
+    }
+
+    // Net worth trend insight
+    if (netWorth.netWorth > 0) {
+      insights.push({ type: 'positive', icon: '📈', title: 'Positive Net Worth', description: `Your net worth is ${formatCurrencyFn(netWorth.netWorth)}. You have more assets than liabilities.` });
+    } else if (netWorth.netWorth < 0) {
+      insights.push({ type: 'warning', icon: '📉', title: 'Negative Net Worth', description: `Your net worth is ${formatCurrencyFn(Math.abs(netWorth.netWorth))} in the red. Focus on paying down debt.` });
+    }
+
+    // Financial health
+    if (financialHealth.overallScore >= 80) {
+      insights.push({ type: 'positive', icon: '🌟', title: 'Excellent Financial Health', description: `Your financial health score of ${financialHealth.overallScore} puts you in excellent shape. Keep it up!` });
+    } else if (financialHealth.overallScore < 40 && financialHealth.overallScore > 0) {
+      insights.push({ type: 'warning', icon: '🔧', title: 'Financial Health Needs Attention', description: `Your score of ${financialHealth.overallScore} indicates room for improvement. Follow the recommendations below.` });
+    }
+
+    // Limit to top 6 insights
+    return insights.slice(0, 6);
+  },
+
+  // ============================================================================
+  // Available Cash
+  // ============================================================================
+  getAvailableCash(accounts: Account[]): number {
+    let cash = 0;
+    for (const a of accounts) {
+      if (!a.is_active) continue;
+      if (a.type === 'checking' || a.type === 'savings') {
+        cash += Math.max(0, Number(a.balance ?? 0));
+      }
+    }
+    return cash;
   },
 
   // -------------------------------------------------------------------------
@@ -587,10 +903,13 @@ export const FinancialEngine = {
     // 1. Net Worth
     const netWorth = FinancialEngine.getNetWorth(accounts);
 
-    // 2. Cash Flow
+    // 2. Available Cash
+    const availableCash = FinancialEngine.getAvailableCash(accounts);
+
+    // 3. Cash Flow
     const cashFlow = FinancialEngine.getCashFlow(transactions, recurrings, range);
 
-    // 3. Budget Health
+    // 4. Budget Health
     const budgetHealth = FinancialEngine.getBudgetHealth(
       budgets,
       transactions,
@@ -598,7 +917,7 @@ export const FinancialEngine = {
       cashFlow.monthlyIncome,
     );
 
-    // 4. Financial Health Score
+    // 5. Financial Health Score
     const savingsRate = cashFlow.monthlyIncome > 0
       ? ((cashFlow.monthlyIncome - cashFlow.monthlyExpenses) / cashFlow.monthlyIncome) * 100
       : 0;
@@ -610,10 +929,13 @@ export const FinancialEngine = {
       cashFlow.monthlyExpenses,
     );
 
-    // 5. Savings Goals
+    // 6. Savings Goals
     const savingsGoals = FinancialEngine.getSavingsGoals(savings);
 
-    // 6. Mortgages — fetch extra payments for accurate calculations
+    // 7. Savings Snapshot
+    const savingsSnapshot = FinancialEngine.getSavingsSnapshot(savings);
+
+    // 8. Mortgages — fetch extra payments for accurate calculations
     const activeMortgages = mortgages.filter((m) => m.is_active);
     const extraPaymentsMap = new Map<string, Array<{ amount: number; date: string; type?: string }>>();
     if (activeMortgages.length > 0) {
@@ -629,10 +951,27 @@ export const FinancialEngine = {
     }
     const mortgageResults = FinancialEngine.getMortgages(mortgages, extraPaymentsMap);
 
-    // 7. Upcoming Activity
+    // 9. Account Summary
+    const accountSummary = FinancialEngine.getAccountSummary(accounts);
+
+    // 10. Budget Snapshot
+    const budgetSnapshot = FinancialEngine.getBudgetSnapshot(budgetHealth, budgetHealth.totalBudgeted, budgetHealth.totalSpent);
+
+    // 11. Upcoming Activity
     const upcomingActivity = FinancialEngine.getUpcomingActivity(recurrings);
 
-    // 8. Top Spending Categories (computed from transaction data)
+    // 12. Upcoming Items (30 days)
+    const savingsGoalMonthly = savings.map((g) => ({
+      id: g.id,
+      name: g.name,
+      monthlyContribution: Number(g.monthly_contribution ?? 0),
+    }));
+    const upcoming = FinancialEngine.getUpcomingItems(recurrings, mortgageResults, savingsGoalMonthly);
+
+    // 13. Insights
+    const insights = FinancialEngine.getInsights(cashFlow, budgetHealth, savingsRate, mortgageResults, netWorth, savingsGoals, financialHealth);
+
+    // 14. Top Spending Categories (computed from transaction data)
     const categorySpending = new Map<string, { name: string; amount: number }>();
     for (const txn of transactions) {
       if (!txn.category_id) continue;
@@ -652,7 +991,7 @@ export const FinancialEngine = {
       .slice(0, 5)
       .map((c) => ({ categoryName: c.name, amount: c.amount }));
 
-    // 9. Recent Transactions (last 5)
+    // 15. Recent Transactions (last 5)
     const recentTransactions = transactions.slice(0, 5).map((txn) => {
       const cat = txn.category_id ? categoryMap.get(txn.category_id) : null;
       return {
@@ -675,6 +1014,13 @@ export const FinancialEngine = {
       upcomingActivity,
       topSpendingCategories,
       recentTransactions,
+      availableCash,
+      savingsSnapshot,
+      budgetSnapshot,
+      accountSummary,
+      savingsRate,
+      upcoming,
+      insights,
       errors,
     };
   },

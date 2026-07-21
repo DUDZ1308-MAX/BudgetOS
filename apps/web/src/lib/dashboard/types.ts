@@ -26,6 +26,52 @@ export interface DashboardMortgage {
   payoffMonths: number;
   progressPct: number;
   principalPaidPct: number;
+  paymentFrequency: string;
+  yearsRemaining: number;
+}
+
+export interface DashboardSavingsSnapshot {
+  totalSaved: number;
+  activeGoals: number;
+  goalCompletionPct: number;
+  nearestGoal: string | null;
+  nearestGoalProgress: number;
+  nextMilestone: string | null;
+  nextMilestoneAmount: number;
+}
+
+export interface DashboardBudgetSnapshot {
+  onTrack: number;
+  over: number;
+  monthlyUsagePct: number;
+  topCategory: string | null;
+  topCategoryAmount: number;
+  remainingBudget: number;
+}
+
+export interface DashboardAccountSummary {
+  totalCash: number;
+  chequing: number;
+  savings: number;
+  creditCards: number;
+  investments: number;
+  netLiquidAssets: number;
+}
+
+export interface DashboardInsight {
+  type: 'positive' | 'neutral' | 'warning';
+  icon: string;
+  title: string;
+  description: string;
+}
+
+export interface DashboardUpcomingItem {
+  id: string;
+  name: string;
+  amount: number;
+  date: string;
+  type: 'income' | 'expense' | 'mortgage' | 'contribution';
+  category: string;
 }
 
 export interface DashboardSummaryData {
@@ -35,8 +81,13 @@ export interface DashboardSummaryData {
   monthlyIncome: number;
   monthlyExpenses: number;
   cashFlow: number;
+  savingsRate: number;
+  availableCash: number;
   financialHealth: DashboardFinancialHealth | null;
   mortgages: DashboardMortgage[];
+  savingsSnapshot: DashboardSavingsSnapshot;
+  budgetSnapshot: DashboardBudgetSnapshot;
+  accountSummary: DashboardAccountSummary;
   topSpendingCategories: { categoryName: string; amount: number }[];
   budgetUtilization: CategoryBudgetStatus[];
   upcomingActivity: {
@@ -47,6 +98,7 @@ export interface DashboardSummaryData {
     type: 'income' | 'expense';
     frequency: string;
   }[];
+  upcoming: DashboardUpcomingItem[];
   recentTransactions: {
     id: string;
     amount: number;
@@ -55,4 +107,5 @@ export interface DashboardSummaryData {
     categoryName: string | null;
     accountName: string | null;
   }[];
+  insights: DashboardInsight[];
 }
