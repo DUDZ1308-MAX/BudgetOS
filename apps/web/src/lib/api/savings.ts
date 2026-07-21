@@ -79,11 +79,12 @@ export const savingsApi = {
   },
 
   // Contributions
-  async listContributions(goalId: string): Promise<SavingsContribution[]> {
-    debug('listContributions', goalId);
+  async listContributions(userId: string, goalId: string): Promise<SavingsContribution[]> {
+    debug('listContributions', userId, goalId);
     const { data, error } = await supabase
       .from('contributions')
       .select('*')
+      .eq('user_id', userId)
       .eq('goal_id', goalId)
       .order('date', { ascending: false });
     if (error) { debug('listContributions error', error); throw error; }
@@ -101,21 +102,22 @@ export const savingsApi = {
     return result;
   },
 
-  async updateContribution(id: string, data: { amount?: number; date?: string; notes?: string }): Promise<SavingsContribution> {
+  async updateContribution(id: string, userId: string, data: { amount?: number; date?: string; notes?: string }): Promise<SavingsContribution> {
     debug('updateContribution', id, data);
     const { data: result, error } = await supabase
       .from('contributions')
       .update(data)
       .eq('id', id)
+      .eq('user_id', userId)
       .select('*')
       .single();
     if (error) { debug('updateContribution error', error); throw error; }
     return result;
   },
 
-  async removeContribution(id: string): Promise<void> {
+  async removeContribution(id: string, userId: string): Promise<void> {
     debug('removeContribution', id);
-    const { error } = await supabase.from('contributions').delete().eq('id', id);
+    const { error } = await supabase.from('contributions').delete().eq('id', id).eq('user_id', userId);
     if (error) { debug('removeContribution error', error); throw error; }
   },
 };

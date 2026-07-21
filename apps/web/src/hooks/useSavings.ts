@@ -74,10 +74,11 @@ export function useDupeSavingsGoal() {
 }
 
 export function useContributions(goalId: string | undefined) {
+  const user = useAuthStore((s) => s.user);
   return useQuery({
     queryKey: ['savings-contributions', goalId],
-    queryFn: () => savingsApi.listContributions(goalId!),
-    enabled: !!goalId,
+    queryFn: () => savingsApi.listContributions(user!.id, goalId!),
+    enabled: !!goalId && !!user,
   });
 }
 
@@ -93,18 +94,19 @@ export function useAddContribution() {
       qc.invalidateQueries({ queryKey: ['savings-goals'] });
       toast('success', 'Contribution added');
       if (created) {
-        useAuditStore.getState().addEntry({ action: 'create', entity: 'contribution', entityId: created.id, before: null, after: created as any, userId: null, description: `Added $${vars.amount.toFixed(2)} contribution to goal` });
-        emitEntityEvent('contribution', created.id, 'created', null, created as any, null);
+        useAuditStore.getState().addEntry({ action: 'create', entity: 'contribution', entityId: created.id, before: null, after: created as any, userId: user?.id ?? null, description: `Added $${vars.amount.toFixed(2)} contribution to goal` });
+        emitEntityEvent('contribution', created.id, 'created', null, created as any, user?.id ?? null);
       }
     },
-    onError: (err: Error) => { logger.error('Contribution add failed', 'useSavings', err); },
+    onError: (err: Error) => { logger.error('Contribution add failed', 'useSavings', err); toast('error', err.message); },
   });
 }
 
 export function useDeleteContribution() {
   const qc = useQueryClient();
+  const user = useAuthStore((s) => s.user);
   return useMutation({
-    mutationFn: ({ id, goalId }: { id: string; goalId: string }) => savingsApi.removeContribution(id),
+    mutationFn: ({ id, goalId }: { id: string; goalId: string }) => savingsApi.removeContribution(id, user!.id),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['savings-contributions', vars.goalId] });
       qc.invalidateQueries({ queryKey: ['savings-goals'] });
