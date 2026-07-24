@@ -18,6 +18,8 @@ export { computeGoalProgress } from './savings/goals';
 export { computeAllocation } from './savings/allocator';
 
 export { computeScore as computeHealthScore } from './health-score/calculator';
-export { getTopRecommendation } from './health-score/recommendations';
+export { formatRecommendations, getTopRecommendation } from './health-score/recommendations';
+
+export * from './health-score-v2';
 
 export { evaluateCoachRules } from './coach/engine';

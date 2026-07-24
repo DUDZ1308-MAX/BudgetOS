@@ -12,6 +12,32 @@ export interface DashboardFinancialHealth {
   tier: string;
   components: Record<string, { maxPoints: number; earnedPoints: number; percentage: number; details: string }>;
   recommendations: string[];
+  recommendationsList?: DashboardRecommendation[];
+  letterGrade?: string;
+  subscores?: Record<string, { score: number; grade: string; trend: string; explanation: string }>;
+  trends?: {
+    healthScore: { direction: string; change: number; changePercent: number };
+    spending: { direction: string; change: number; changePercent: number };
+    savings: { direction: string; change: number; changePercent: number };
+    netWorth: { direction: string; change: number; changePercent: number };
+  };
+  insights?: Array<{
+    id: string;
+    category: string;
+    title: string;
+    message: string;
+    type: string;
+    date: string;
+  }>;
+  projections?: Array<{
+    label: string;
+    months: number;
+    netWorth: number;
+    savings: number;
+    debt: number;
+    cashFlow: number;
+    emergencyFundMonths: number;
+  }>;
 }
 
 export interface DashboardMortgage {
@@ -63,6 +89,27 @@ export interface DashboardInsight {
   icon: string;
   title: string;
   description: string;
+}
+
+export interface DashboardRecommendation {
+  id: string;
+  priority: string;
+  category: string;
+  title: string;
+  description: string;
+  expectedImpact: string;
+  estimatedSavings: number;
+  estimatedTimeline: string;
+}
+
+export interface DashboardProjection {
+  label: string;
+  months: number;
+  netWorth: number;
+  savings: number;
+  debt: number;
+  cashFlow: number;
+  emergencyFundMonths: number;
 }
 
 export interface DashboardUpcomingItem {

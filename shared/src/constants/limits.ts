@@ -31,6 +31,28 @@ export const FHS_WEIGHTS = {
   NET_WORTH_TREND_MAX: 10,
 } as const;
 
+export const HEALTH_SCORE_WEIGHTS = {
+  SPENDING_MAX: 15,
+  SAVINGS_MAX: 15,
+  DEBT_MAX: 15,
+  CASH_FLOW_MAX: 15,
+  EMERGENCY_FUND_MAX: 15,
+  BUDGET_ADHERENCE_MAX: 15,
+  NET_WORTH_GROWTH_MAX: 10,
+} as const;
+
+export const LETTER_GRADE_THRESHOLDS = {
+  A_MIN: 90,
+  B_MIN: 75,
+  C_MIN: 60,
+  D_MIN: 40,
+} as const;
+
+export const TREND_THRESHOLDS = {
+  IMPROVING_PCT: 5,
+  DECLINING_PCT: -5,
+} as const;
+
 export const DEFAULT_CURRENCY = 'USD';
 export const DEFAULT_LOCALE = 'en-US';
 export const JWT_EXPIRY_DAYS = 7;

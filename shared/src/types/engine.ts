@@ -1,4 +1,14 @@
-import type { CoachMessageType, CoachCategory, FHSTier } from './enums';
+import type {
+  CoachMessageType,
+  CoachCategory,
+  FHSTier,
+  LetterGrade,
+  TrendDirection,
+  RecurringFrequency,
+  RecommendationPriority,
+  RecommendationCategory,
+  InsightCategory,
+} from './enums';
 
 export interface MortgageCalculationRequest {
   principal: number;
@@ -177,6 +187,153 @@ export interface FHSComponentScore {
   earnedPoints: number;
   percentage: number;
   details: string;
+}
+
+// ============================================================================
+// Health Score 2.0 Types
+// ============================================================================
+
+export interface HealthScoreRequest {
+  totalIncomeMonthly: number;
+  totalSavingsMonthly: number;
+  totalDebtPaymentsMonthly: number;
+  emergencyFundBalance: number;
+  monthlyExpenses: number;
+  budgets: FHSCategoryBudget[];
+  actualSpending: FHSCategoryActual[];
+  currentNetWorth: number;
+  netWorthThreeMonthsAgo: number;
+  totalCashAndInvestments: number;
+  creditCardBalances: number;
+  mortgageBalance: number;
+  mortgageProgressPct: number;
+  totalAssets: number;
+  totalLiabilities: number;
+  cashFlow: number;
+  spendingHistory: number[];
+  savingsHistory: number[];
+  cashFlowHistory: number[];
+  netWorthHistory: number[];
+}
+
+export interface HealthScoreResult {
+  overall: SubscoreResult;
+  components: HealthScoreComponents;
+}
+
+export interface HealthScoreComponents {
+  spending: SubscoreResult;
+  savings: SubscoreResult;
+  debt: SubscoreResult;
+  cashFlow: SubscoreResult;
+  emergencyFund: SubscoreResult;
+  budgetAdherence: SubscoreResult;
+  netWorthGrowth: SubscoreResult;
+}
+
+export interface SubscoreResult {
+  score: number;
+  grade: LetterGrade;
+  trend: TrendDirection;
+  explanation: string;
+  details?: string;
+}
+
+export interface TrendAnalysisRequest {
+  transactions: Array<{ date: string; amount: number; categoryId: string; type: string }>;
+  recurrings: Array<{ amount: number; type: string; frequency: RecurringFrequency; next_run: string }>;
+  netWorthHistory: Array<{ date: string; netWorth: number }>;
+  savingsHistory: Array<{ date: string; amount: number }>;
+  currentHealthScore: number;
+  healthScoreHistory: Array<{ date: string; score: number }>;
+}
+
+export interface TrendAnalysisResult {
+  healthScore: TrendItem;
+  spending: TrendItem;
+  savings: TrendItem;
+  netWorth: TrendItem;
+  debt: TrendItem;
+  cashFlow: TrendItem;
+}
+
+export interface TrendItem {
+  direction: TrendDirection;
+  change: number;
+  changePercent: number;
+  periods: TrendPeriod[];
+}
+
+export interface TrendPeriod {
+  label: string;
+  value: number;
+  startDate: string;
+  endDate: string;
+}
+
+export interface RecommendationRequest {
+  healthScore: HealthScoreResult;
+  trends: TrendAnalysisResult;
+  monthlyIncome: number;
+  monthlyExpenses: number;
+  savingsRate: number;
+  emergencyFundMonths: number;
+  debtToIncomeRatio: number;
+  mortgageBalance: number;
+  mortgageRate: number;
+  hasHighInterestDebt: boolean;
+  creditCardUtilization: number;
+  budgetAdherence: number;
+  hasEmployerMatch: boolean;
+  retirementContributions: number;
+}
+
+export interface RecommendationResult {
+  id: string;
+  priority: RecommendationPriority;
+  category: RecommendationCategory;
+  title: string;
+  description: string;
+  expectedImpact: string;
+  estimatedSavings: number;
+  estimatedTimeline: string;
+  reasoning: string;
+}
+
+export interface InsightResult {
+  id: string;
+  category: InsightCategory;
+  title: string;
+  message: string;
+  type: 'positive' | 'neutral' | 'warning';
+  date: string;
+}
+
+export interface ProjectionRequest {
+  currentNetWorth: number;
+  currentSavings: number;
+  currentDebt: number;
+  monthlyIncome: number;
+  monthlyExpenses: number;
+  savingsRate: number;
+  emergencyFundBalance: number;
+  debtPaymentMonthly: number;
+  expectedReturnRate: number;
+  savingsGoals: Array<{ monthlyContribution: number; targetAmount: number }>;
+}
+
+export interface ProjectionResult {
+  projections: ProjectionPeriod[];
+}
+
+export interface ProjectionPeriod {
+  label: string;
+  months: number;
+  netWorth: number;
+  savings: number;
+  debt: number;
+  cashFlow: number;
+  emergencyFundMonths: number;
 }
 
 export interface CoachContext {

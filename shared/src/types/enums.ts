@@ -18,6 +18,27 @@ export type FHSTier = 'excellent' | 'good' | 'fair' | 'concerning' | 'critical';
 
 export type FHSComponentName = 'savingsRate' | 'debtToIncome' | 'emergencyFund' | 'budgetAdherence' | 'netWorthTrend';
 
+export type HealthScoreComponentName =
+  | 'spending'
+  | 'savings'
+  | 'debt'
+  | 'cashFlow'
+  | 'emergencyFund'
+  | 'budgetAdherence'
+  | 'netWorthGrowth';
+
+export type LetterGrade = 'A' | 'B' | 'C' | 'D' | 'F';
+
+export type TrendDirection = 'improving' | 'stable' | 'declining';
+
+export type RecommendationPriority = 'critical' | 'high' | 'medium' | 'low';
+
+export type RecommendationCategory = 'spending' | 'savings' | 'debt' | 'emergency_fund' | 'budget' | 'income' | 'mortgage' | 'retirement' | 'general';
+
+export type InsightCategory = 'spending' | 'savings' | 'debt' | 'cash_flow' | 'budget' | 'mortgage' | 'net_worth' | 'general';
+
+export type ProjectionType = 'net_worth' | 'savings' | 'debt' | 'cash_flow' | 'emergency_fund';
+
 export type RecurringType = 'income' | 'expense' | 'transfer';
 
 export type RecurringFrequency = 'one_time' | 'daily' | 'weekly' | 'biweekly' | 'semimonthly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';

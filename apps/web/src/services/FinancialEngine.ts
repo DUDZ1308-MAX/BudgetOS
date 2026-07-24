@@ -10,12 +10,17 @@ import {
   computeBudgetSummary,
   computeHealthScore,
   computeGoalProgress,
+  computeHealthScoreV2,
+  analyzeTrends,
+  generateRecommendations,
+  generateInsights,
+  computeProjections,
 } from '@budgetos/engine';
 import {
   computeMortgage as computeMortgageEngine,
   computeMortgageDashboard as computeMortgageDashboardEngine,
 } from '@/engine/MortgageEngine';
-import type { RecurringFrequency, FHSRequest, CategoryBudget, TransactionSummary } from '@budgetos/shared';
+import type { RecurringFrequency, FHSRequest, CategoryBudget, TransactionSummary, HealthScoreResult, TrendAnalysisResult, RecommendationResult, InsightResult, ProjectionResult } from '@budgetos/shared';
 import type { Account, Category, Budget, Transaction, SavingsGoal, Mortgage } from '@budgetos/database';
 import type { DashboardInsight, DashboardUpcomingItem, CalendarEvent, DailyForecast, MonthlyForecast } from '@/lib/dashboard/types';
 
@@ -377,7 +382,7 @@ export const FinancialEngine = {
   },
 
   // -------------------------------------------------------------------------
-  // Financial Health Score — uses engine's computeHealthScore
+  // Financial Health Score 2.0 — uses engine's computeHealthScoreV2
   // -------------------------------------------------------------------------
   getFinancialHealthScore(
     cashFlow: CashFlowResult,
@@ -386,7 +391,7 @@ export const FinancialEngine = {
     savingsRate: number,
     monthlyExpenses: number,
   ): FinancialHealthResult {
-    // Calculate debt payments (monthly minimums from liability accounts)
+    // Calculate debt payments from account data (liability payments)
     const totalDebtPaymentsMonthly = 0; // TODO: Track actual minimum payments
 
     // Calculate net worth 3 months ago (placeholder — needs historical data)
@@ -418,6 +423,176 @@ export const FinancialEngine = {
       components: result.components,
       recommendations: result.recommendations,
     };
+  },
+
+  // -------------------------------------------------------------------------
+  // Health Score 2.0 — new weighted model with 7 subscores
+  // -------------------------------------------------------------------------
+  getHealthScoreV2(
+    cashFlow: CashFlowResult,
+    netWorth: NetWorthResult,
+    budgetHealth: BudgetHealthResult,
+    savingsRate: number,
+    monthlyExpenses: number,
+    savings: SavingsGoal[],
+  ): HealthScoreResult {
+    const totalDebtPaymentsMonthly = 0; // TODO: Track actual minimum payments from credit/loan accounts
+
+    const creditCardBalances = netWorth.accounts
+      .filter((a) => a.type === 'credit' || a.type === 'credit_card')
+      .reduce((s, a) => s + Math.abs(Number(a.balance ?? 0)), 0);
+
+    const mortgageBalance = netWorth.accounts
+      .filter((a) => a.type === 'loan')
+      .reduce((s, a) => s + Math.abs(Number(a.balance ?? 0)), 0);
+
+    const totalCashAndInvestments = netWorth.accounts
+      .filter((a) => a.type === 'checking' || a.type === 'savings' || a.type === 'investment')
+      .reduce((s, a) => s + Number(a.balance ?? 0), 0);
+
+    const totalSavingsAmount = savings.reduce((s, g) => s + Number(g.current_amount ?? 0), 0);
+
+    const request: import('@budgetos/shared').HealthScoreRequest = {
+      totalIncomeMonthly: cashFlow.monthlyIncome,
+      totalSavingsMonthly: totalSavingsAmount,
+      totalDebtPaymentsMonthly,
+      emergencyFundBalance: totalCashAndInvestments,
+      monthlyExpenses,
+      budgets: budgetHealth.categories.map((c) => ({
+        categoryId: c.categoryId,
+        budgeted: c.budgeted,
+      })),
+      actualSpending: budgetHealth.categories.map((c) => ({
+        categoryId: c.categoryId,
+        spent: c.spent,
+      })),
+      currentNetWorth: netWorth.netWorth,
+      netWorthThreeMonthsAgo: netWorth.netWorth, // TODO: historical data
+      totalCashAndInvestments,
+      creditCardBalances,
+      mortgageBalance,
+      mortgageProgressPct: 0,
+      totalAssets: netWorth.totalAssets,
+      totalLiabilities: netWorth.totalLiabilities,
+      cashFlow: cashFlow.cashFlow,
+      spendingHistory: [],
+      savingsHistory: [],
+      cashFlowHistory: [],
+      netWorthHistory: [],
+    };
+
+    return computeHealthScoreV2(request);
+  },
+
+  // -------------------------------------------------------------------------
+  // Trend Analysis — computes 30/90/180/365 day trends
+  // -------------------------------------------------------------------------
+  getTrends(
+    transactions: Array<{ date: string; amount: number; categoryId: string; type: string }>,
+    recurrings: Array<{ amount: number; type: string; frequency: string; next_run: string }>,
+    netWorthHistory: Array<{ date: string; netWorth: number }>,
+    savingsHistory: Array<{ date: string; amount: number }>,
+    currentHealthScore: number,
+    healthScoreHistory: Array<{ date: string; score: number }>,
+  ): TrendAnalysisResult {
+    return analyzeTrends({
+      transactions,
+      recurrings: recurrings as Array<{ amount: number; type: string; frequency: RecurringFrequency; next_run: string }>,
+      netWorthHistory,
+      savingsHistory,
+      currentHealthScore,
+      healthScoreHistory,
+    });
+  },
+
+  // -------------------------------------------------------------------------
+  // Recommendations Engine — personalized financial recommendations
+  // -------------------------------------------------------------------------
+  getRecommendations(
+    healthScore: HealthScoreResult,
+    trends: TrendAnalysisResult,
+    monthlyIncome: number,
+    monthlyExpenses: number,
+    savingsRate: number,
+    emergencyFundMonths: number,
+    debtToIncomeRatio: number,
+    mortgageBalance: number,
+    mortgageRate: number,
+    budgetAdherence: number,
+    creditCardUtilization: number,
+  ): RecommendationResult[] {
+    return generateRecommendations({
+      healthScore,
+      trends,
+      monthlyIncome,
+      monthlyExpenses,
+      savingsRate,
+      emergencyFundMonths,
+      debtToIncomeRatio,
+      mortgageBalance,
+      mortgageRate,
+      hasHighInterestDebt: creditCardUtilization > 0.15 || debtToIncomeRatio > 0.43,
+      creditCardUtilization,
+      budgetAdherence,
+      hasEmployerMatch: false,
+      retirementContributions: 0,
+    });
+  },
+
+  // -------------------------------------------------------------------------
+  // Insights Engine — intelligent generated insights
+  // -------------------------------------------------------------------------
+  getFinancialInsights(
+    healthScore: HealthScoreResult,
+    trends: TrendAnalysisResult,
+    monthlyIncome: number,
+    monthlyExpenses: number,
+    prevMonthExpenses: number,
+    savingsRate: number,
+    mortgageProgressPct: number,
+    budgetAdherence: number,
+    consecutiveOnBudget: number,
+  ): InsightResult[] {
+    return generateInsights(
+      healthScore,
+      trends,
+      monthlyIncome,
+      monthlyExpenses,
+      prevMonthExpenses,
+      savingsRate,
+      mortgageProgressPct,
+      budgetAdherence,
+      consecutiveOnBudget,
+    );
+  },
+
+  // -------------------------------------------------------------------------
+  // Projections — 3/6/12 month forecasts
+  // -------------------------------------------------------------------------
+  getProjections(
+    currentNetWorth: number,
+    currentSavings: number,
+    currentDebt: number,
+    monthlyIncome: number,
+    monthlyExpenses: number,
+    savingsRate: number,
+    emergencyFundBalance: number,
+    debtPaymentMonthly: number,
+    expectedReturnRate: number,
+    savingsGoals: Array<{ monthlyContribution: number; targetAmount: number }>,
+  ): ProjectionResult {
+    return computeProjections({
+      currentNetWorth,
+      currentSavings,
+      currentDebt,
+      monthlyIncome,
+      monthlyExpenses,
+      savingsRate,
+      emergencyFundBalance,
+      debtPaymentMonthly,
+      expectedReturnRate,
+      savingsGoals,
+    });
   },
 
   // -------------------------------------------------------------------------

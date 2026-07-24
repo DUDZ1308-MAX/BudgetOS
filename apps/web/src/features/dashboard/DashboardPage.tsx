@@ -16,6 +16,11 @@ import { QuickActionsPanel } from './components/QuickActionsPanel';
 import { InsightsCards } from './components/InsightsCards';
 import { RecurringWidgets } from './components/RecurringWidgets';
 import { SetupChecklist } from '@/components/ui/SetupChecklist';
+import { PremiumHealthScoreCard } from './components/PremiumHealthScoreCard';
+import { PremiumTrendCard } from './components/PremiumTrendCard';
+import { PremiumRecommendationsCard } from './components/PremiumRecommendationsCard';
+import { PremiumProjectionsCard } from './components/PremiumProjectionsCard';
+import { PremiumInsightsCard } from './components/PremiumInsightsCard';
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -69,7 +74,18 @@ export function DashboardPage() {
     cashFlow: 0,
     savingsRate: 0,
     availableCash: 0,
-    financialHealth: null,
+    financialHealth: {
+      overallScore: 0,
+      tier: 'fair',
+      components: {},
+      recommendations: [],
+      letterGrade: 'F',
+      subscores: {},
+      trends: { healthScore: { direction: 'stable', change: 0, changePercent: 0 }, spending: { direction: 'stable', change: 0, changePercent: 0 }, savings: { direction: 'stable', change: 0, changePercent: 0 }, netWorth: { direction: 'stable', change: 0, changePercent: 0 } },
+      insights: [],
+      projections: [],
+      recommendationsList: [],
+    },
     mortgages: [],
     savingsSnapshot: { totalSaved: 0, activeGoals: 0, goalCompletionPct: 0, nearestGoal: null, nearestGoalProgress: 0, nextMilestone: null, nextMilestoneAmount: 0 },
     budgetSnapshot: { onTrack: 0, over: 0, monthlyUsagePct: 0, topCategory: null, topCategoryAmount: 0, remainingBudget: 0 },
@@ -145,6 +161,44 @@ export function DashboardPage() {
           isLoading={isLoading}
         />
       </motion.div>
+
+      {/* Section 1b: Premium Health Score Grid */}
+      <motion.div
+        variants={section}
+        className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4"
+        aria-label="Premium financial health"
+      >
+        <PremiumHealthScoreCard
+          overallScore={d.financialHealth?.overallScore ?? 0}
+          letterGrade={d.financialHealth?.letterGrade}
+          tier={d.financialHealth?.tier}
+          subscores={d.financialHealth?.subscores}
+          isLoading={isLoading}
+        />
+        {d.financialHealth?.trends?.healthScore && (
+          <PremiumTrendCard
+            title="Health Score Trend"
+            trend={d.financialHealth.trends.healthScore}
+            format="percent"
+            isLoading={isLoading}
+          />
+        )}
+        <PremiumRecommendationsCard
+          recommendations={d.financialHealth?.recommendationsList ?? []}
+          isLoading={isLoading}
+        />
+        <PremiumProjectionsCard
+          projections={d.financialHealth?.projections ?? []}
+          isLoading={isLoading}
+        />
+      </motion.div>
+
+      {/* Section 1c: Insights */}
+      {d.financialHealth?.insights && d.financialHealth.insights.length > 0 && (
+        <motion.div variants={section} aria-label="Financial health insights">
+          <PremiumInsightsCard insights={d.financialHealth.insights} isLoading={isLoading} />
+        </motion.div>
+      )}
 
       {/* Setup Checklist for new users */}
       <motion.div variants={section}>
