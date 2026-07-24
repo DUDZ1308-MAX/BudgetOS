@@ -1,5 +1,5 @@
 import { FinancialEngine } from '@/services/FinancialEngine';
-import type { DashboardSummaryData, CategoryBudgetStatus, DashboardRecommendation, DashboardProjection } from './types';
+import type { DashboardSummaryData, CategoryBudgetStatus, DashboardRecommendation, DashboardProjection, DashboardForecast } from './types';
 
 function debug(method: string, ...args: unknown[]) {
   if (import.meta.env.DEV) console.debug(`[dashboard] ${method}`, ...args);
@@ -168,6 +168,51 @@ export async function computeDashboard(userId: string): Promise<DashboardResult>
     debug('Projections failed', e);
   }
 
+  let forecast: DashboardForecast | undefined;
+  try {
+    const cashFlowForecast = FinancialEngine.getCashFlowForecastV2(
+      dashboardData.availableCash,
+      dashboardData.cashFlow.monthlyIncome,
+      dashboardData.cashFlow.monthlyExpenses,
+      0,
+      dashboardData.mortgages.reduce((s, m) => s + m.monthlyPayment, 0),
+      dashboardData.savingsSnapshot.activeGoals > 0 ? dashboardData.savingsSnapshot.totalSaved * 0.1 : 0,
+      [],
+    );
+
+    const netWorthForecast = FinancialEngine.getNetWorthForecast(
+      dashboardData.netWorth.netWorth,
+      dashboardData.netWorth.totalAssets,
+      dashboardData.netWorth.totalLiabilities,
+      dashboardData.cashFlow.monthlyIncome,
+      dashboardData.cashFlow.monthlyExpenses,
+      dashboardData.savingsRate / 100,
+      0.07,
+      0,
+      dashboardData.cashFlow.monthlyIncome * (dashboardData.savingsRate / 10000),
+    );
+
+    const debtFreeDate = netWorthForecast.milestones.find((m) => m.type === 'debt_free');
+    const mortgagePayoff = dashboardData.mortgages.length > 0
+      ? dashboardData.mortgages.reduce((earliest, m) => !earliest || m.payoffDate < earliest.payoffDate ? m : earliest)
+      : null;
+
+    forecast = {
+      cashFlowProjection: cashFlowForecast.periods.map((p) => ({ label: `${p.date.slice(0, 7)}`, balance: p.balance })),
+      netWorthProjection: netWorthForecast.points.map((p) => ({ label: p.date.slice(0, 7), netWorth: p.netWorth })),
+      debtFreeDate: debtFreeDate?.projectedDate ?? null,
+      debtFreeMonths: null,
+      mortgagePayoffDate: mortgagePayoff?.payoffDate ?? null,
+      mortgagePayoffMonths: mortgagePayoff?.payoffMonths ?? null,
+      savingsGoalProjections: [],
+      projectedEmergencyFundMonths: dashboardData.cashFlow.monthlyExpenses > 0
+        ? Math.round((dashboardData.netWorth.totalAssets / dashboardData.cashFlow.monthlyExpenses) * 10) / 10
+        : 0,
+    };
+  } catch (e) {
+    debug('Forecast computation failed', e);
+  }
+
   const result: DashboardSummaryData = {
     netWorth: dashboardData.netWorth.netWorth,
     totalAssets: dashboardData.netWorth.totalAssets,
@@ -199,6 +244,7 @@ export async function computeDashboard(userId: string): Promise<DashboardResult>
     upcoming: dashboardData.upcoming,
     recentTransactions: dashboardData.recentTransactions,
     insights: dashboardData.insights,
+    forecast,
   };
 
   debug('result', result);

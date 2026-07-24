@@ -96,6 +96,7 @@ export function DashboardPage() {
     upcoming: [],
     recentTransactions: [],
     insights: [],
+    forecast: undefined,
   };
   const queryErrors = result?.errors ?? [];
 

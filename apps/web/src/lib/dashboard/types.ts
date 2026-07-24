@@ -162,6 +162,17 @@ export interface MonthlyForecast {
   netCashFlow: number;
 }
 
+export interface DashboardForecast {
+  cashFlowProjection: Array<{ label: string; balance: number }>;
+  netWorthProjection: Array<{ label: string; netWorth: number }>;
+  debtFreeDate: string | null;
+  debtFreeMonths: number | null;
+  mortgagePayoffDate: string | null;
+  mortgagePayoffMonths: number | null;
+  savingsGoalProjections: Array<{ name: string; projectedDate: string | null; onTrack: boolean }>;
+  projectedEmergencyFundMonths: number;
+}
+
 export interface DashboardSummaryData {
   netWorth: number;
   totalAssets: number;
@@ -196,4 +207,5 @@ export interface DashboardSummaryData {
     accountName: string | null;
   }[];
   insights: DashboardInsight[];
+  forecast?: DashboardForecast;
 }

@@ -15,12 +15,18 @@ import {
   generateRecommendations,
   generateInsights,
   computeProjections,
+  computeCashFlowForecast,
+  computeNetWorthForecast,
+  computeDebtForecast,
+  computeSavingsForecast,
+  computeMortgageForecast,
+  computeScenarioComparison,
 } from '@budgetos/engine';
 import {
   computeMortgage as computeMortgageEngine,
   computeMortgageDashboard as computeMortgageDashboardEngine,
 } from '@/engine/MortgageEngine';
-import type { RecurringFrequency, FHSRequest, CategoryBudget, TransactionSummary, HealthScoreResult, TrendAnalysisResult, RecommendationResult, InsightResult, ProjectionResult } from '@budgetos/shared';
+import type { RecurringFrequency, FHSRequest, CategoryBudget, TransactionSummary, HealthScoreResult, TrendAnalysisResult, RecommendationResult, InsightResult, ProjectionResult, CashFlowForecastResult, NetWorthForecastResult, DebtForecastResult, DebtForecastInput, SavingsForecastResult, MortgageForecastResult, ScenarioComparisonResult, ScenarioAdjustment, ForecastDashboardData, ForecastMilestone } from '@budgetos/shared';
 import type { Account, Category, Budget, Transaction, SavingsGoal, Mortgage } from '@budgetos/database';
 import type { DashboardInsight, DashboardUpcomingItem, CalendarEvent, DailyForecast, MonthlyForecast } from '@/lib/dashboard/types';
 
@@ -1400,6 +1406,137 @@ export const FinancialEngine = {
     }
 
     return results;
+  },
+
+  // -------------------------------------------------------------------------
+  // Cash Flow Forecast — enhanced with all periods (30d/90d/6mo/1yr/2yr/5yr/10yr)
+  // -------------------------------------------------------------------------
+  getCashFlowForecastV2(
+    currentBalance: number,
+    monthlyIncome: number,
+    monthlyExpenses: number,
+    monthlyDebtPayments: number,
+    monthlyMortgagePayment: number,
+    monthlySavingsContributions: number,
+    recurrings: Array<{ amount: number; frequency: RecurringFrequency; type: string }>,
+  ): CashFlowForecastResult {
+    return computeCashFlowForecast({
+      currentBalance,
+      monthlyIncome,
+      monthlyExpenses,
+      monthlyDebtPayments,
+      monthlyMortgagePayment,
+      monthlySavingsContributions,
+      recurrings,
+    });
+  },
+
+  // -------------------------------------------------------------------------
+  // Net Worth Forecast — all periods with milestones
+  // -------------------------------------------------------------------------
+  getNetWorthForecast(
+    currentNetWorth: number,
+    currentAssets: number,
+    currentLiabilities: number,
+    monthlyIncome: number,
+    monthlyExpenses: number,
+    savingsRate: number,
+    expectedReturnRate: number,
+    debtPaymentMonthly: number,
+    monthlySavingsAmount: number,
+  ): NetWorthForecastResult {
+    return computeNetWorthForecast({
+      currentNetWorth,
+      currentAssets,
+      currentLiabilities,
+      monthlyIncome,
+      monthlyExpenses,
+      savingsRate,
+      expectedReturnRate,
+      debtPaymentMonthly,
+      monthlySavingsAmount,
+    });
+  },
+
+  // -------------------------------------------------------------------------
+  // Debt Forecast — minimum vs accelerated payoff scenarios
+  // -------------------------------------------------------------------------
+  getDebtForecast(
+    debts: DebtForecastInput[],
+    maxMonths?: number,
+    acceleratedMultiplier?: number,
+  ): DebtForecastResult {
+    return computeDebtForecast(debts, maxMonths, acceleratedMultiplier);
+  },
+
+  // -------------------------------------------------------------------------
+  // Savings Forecast — multi-goal projection with milestones
+  // -------------------------------------------------------------------------
+  getSavingsForecast(
+    goals: Array<{ id: string; name: string; currentAmount: number; targetAmount: number; monthlyContribution: number; targetDate: string | null }>,
+    expectedReturnRate: number,
+  ): SavingsForecastResult {
+    return computeSavingsForecast({ goals, expectedReturnRate });
+  },
+
+  // -------------------------------------------------------------------------
+  // Mortgage Forecast — amortization projection with baseline comparison
+  // -------------------------------------------------------------------------
+  getMortgageForecast(
+    id: string,
+    name: string,
+    principal: number,
+    annualRate: number,
+    termYears: number,
+    startDate: string,
+    extraPayments?: Array<{ amount: number; type: string; startMonth?: number; endMonth?: number }>,
+    monthsElapsed?: number,
+    amortizationYears?: number,
+  ): MortgageForecastResult | null {
+    return computeMortgageForecast({
+      id,
+      name,
+      principal,
+      annualRate,
+      termYears,
+      amortizationYears,
+      startDate,
+      extraPayments: extraPayments as any ?? [],
+      monthsElapsed,
+    });
+  },
+
+  // -------------------------------------------------------------------------
+  // Scenario Comparison — what-if simulations
+  // -------------------------------------------------------------------------
+  runScenario(
+    currentNetWorth: number,
+    currentSavings: number,
+    currentDebt: number,
+    monthlyIncome: number,
+    monthlyExpenses: number,
+    savingsRate: number,
+    emergencyFundBalance: number,
+    debtPaymentMonthly: number,
+    mortgagePaymentMonthly: number,
+    expectedReturnRate: number,
+    scenarioAdjustment: ScenarioAdjustment,
+  ): ScenarioComparisonResult {
+    return computeScenarioComparison(
+      {
+        currentNetWorth,
+        currentSavings,
+        currentDebt,
+        monthlyIncome,
+        monthlyExpenses,
+        savingsRate,
+        emergencyFundBalance,
+        debtPaymentMonthly,
+        mortgagePaymentMonthly,
+        expectedReturnRate,
+      },
+      scenarioAdjustment,
+    );
   },
 
   // -------------------------------------------------------------------------

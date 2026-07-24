@@ -336,6 +336,211 @@ export interface ProjectionPeriod {
   emergencyFundMonths: number;
 }
 
+// ============================================================================
+// Forecast Engine Types (Phase 3C)
+// ============================================================================
+
+export type ForecastPeriodLabel = '30d' | '90d' | '6mo' | '1yr' | '2yr' | '5yr' | '10yr';
+
+export interface ForecastTimePeriod {
+  label: ForecastPeriodLabel;
+  months: number;
+  days: number;
+}
+
+export interface CashFlowForecastPoint {
+  date: string;
+  balance: number;
+  netChange: number;
+  income: number;
+  expenses: number;
+  debtPayments: number;
+  mortgagePayment: number;
+  savingsContribution: number;
+}
+
+export interface CashFlowForecastResult {
+  periods: CashFlowForecastPoint[];
+  projectedMinimumBalance: number;
+  projectedMaximumBalance: number;
+  startingBalance: number;
+  endingBalance: number;
+}
+
+export interface NetWorthForecastPoint {
+  date: string;
+  netWorth: number;
+  assets: number;
+  liabilities: number;
+  monthlyGrowth: number;
+  annualizedGrowthRate: number;
+}
+
+export interface NetWorthForecastResult {
+  points: NetWorthForecastPoint[];
+  totalGrowth: number;
+  totalGrowthPercent: number;
+  monthlyAverageGrowth: number;
+  annualizedGrowthRate: number;
+  milestones: ForecastMilestone[];
+}
+
+export interface DebtForecastInput {
+  id: string;
+  name: string;
+  type: 'credit_card' | 'loan' | 'line_of_credit';
+  balance: number;
+  apr: number;
+  minimumPayment: number;
+  actualPayment: number;
+}
+
+export interface DebtPayoffPoint {
+  date: string;
+  totalBalance: number;
+  totalInterestPaid: number;
+  totalPrincipalPaid: number;
+}
+
+export interface DebtScenarioResult {
+  label: string;
+  points: DebtPayoffPoint[];
+  payoffDate: string | null;
+  totalInterest: number;
+  totalPayments: number;
+  monthsToPayoff: number;
+}
+
+export interface DebtForecastResult {
+  inputs: DebtForecastInput[];
+  scenarios: {
+    minimum: DebtScenarioResult;
+    accelerated: DebtScenarioResult;
+  };
+  debtFreeDate: string | null;
+  interestSaved: number;
+  usingAccelerated: boolean;
+}
+
+export interface SavingsMilestone {
+  date: string;
+  projectedBalance: number;
+  targetAmount: number;
+  progressPercent: number;
+  label: string;
+}
+
+export interface SavingsGoalForecast {
+  goalId: string;
+  goalName: string;
+  currentAmount: number;
+  targetAmount: number;
+  monthlyContribution: number;
+  targetDate: string | null;
+  projectedCompletionDate: string | null;
+  onTrack: boolean;
+  projectedBalance: number;
+  milestones: SavingsMilestone[];
+}
+
+export interface SavingsForecastResult {
+  goals: SavingsGoalForecast[];
+  totalCurrentSaved: number;
+  totalTargetSaved: number;
+  totalProjectedSaved: number;
+  overallCompletionPercent: number;
+  projectedCompletionDate: string | null;
+}
+
+export interface MortgageForecastPoint {
+  date: string;
+  remainingBalance: number;
+  principalPaid: number;
+  interestPaid: number;
+  cumulativeInterest: number;
+  equity: number;
+}
+
+export interface MortgageForecastResult {
+  id: string;
+  name: string;
+  monthlyPayment: number;
+  originalPrincipal: number;
+  currentBalance: number;
+  annualRate: number;
+  points: MortgageForecastPoint[];
+  baselineInterest: number;
+  projectedInterest: number;
+  interestSaved: number;
+  payoffDate: string | null;
+  payoffMonths: number;
+  yearsRemaining: number;
+}
+
+export interface ScenarioAdjustment {
+  label: string;
+  incomeMultiplier?: number;
+  expenseMultiplier?: number;
+  savingsRateOverride?: number;
+  extraMortgagePayment?: number;
+  extraDebtPaymentAmount?: number;
+  unexpectedExpenseOnce?: number;
+  unexpectedExpenseMonthly?: number;
+  missedPaycheckMonths?: number;
+  interestRateChangeBps?: number; // basis points
+}
+
+export interface BaselineProjectionPoint {
+  date: string;
+  netWorth: number;
+  savings: number;
+  debt: number;
+  cashFlow: number;
+}
+
+export interface ScenarioComparisonResult {
+  baseline: {
+    label: string;
+    projections: BaselineProjectionPoint[];
+    finalNetWorth: number;
+    finalDebt: number;
+    finalSavings: number;
+  };
+  scenario: {
+    label: string;
+    projections: BaselineProjectionPoint[];
+    finalNetWorth: number;
+    finalDebt: number;
+    finalSavings: number;
+  };
+  delta: {
+    netWorth: number;
+    debt: number;
+    savings: number;
+    cashFlowPerMonth: number;
+  };
+  recommendation: string;
+}
+
+export interface ForecastMilestone {
+  date: string;
+  type: 'net_worth' | 'debt_free' | 'savings_goal' | 'mortgage_payoff' | 'emergency_fund';
+  label: string;
+  value: number;
+  projectedDate: string | null;
+}
+
+export interface ForecastDashboardData {
+  cashFlow: CashFlowForecastResult | null;
+  netWorth: NetWorthForecastResult | null;
+  debt: DebtForecastResult | null;
+  savings: SavingsForecastResult | null;
+  mortgage: MortgageForecastResult | null;
+  milestones: ForecastMilestone[];
+  scenarios: ScenarioComparisonResult[];
+  lastUpdated: string;
+}
+
 export interface CoachContext {
   eventType: CoachEventType;
   eventPayload: Record<string, unknown>;
