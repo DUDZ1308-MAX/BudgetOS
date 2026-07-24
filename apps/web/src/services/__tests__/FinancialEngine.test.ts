@@ -650,3 +650,213 @@ describe('Scenario F: Budget Utilization', () => {
     expect(dining!.status).toBe('over');
   });
 });
+
+describe('Recurring Engine Methods', () => {
+  describe('getMissedOccurrences', () => {
+    it('returns empty when no recurrings', () => {
+      const result = FinancialEngine.getMissedOccurrences([], []);
+      expect(result).toEqual([]);
+    });
+
+    it('identifies missed occurrence with past next_run', () => {
+      const pastDate = new Date(Date.now() - 86400000 * 3).toISOString().slice(0, 10);
+      const recurrings = [
+        { id: 'r1', name: 'Rent', amount: 1000, type: 'expense', frequency: 'monthly', next_run: pastDate, status: 'active', last_run: null },
+      ];
+      const result = FinancialEngine.getMissedOccurrences(recurrings, []);
+      expect(result).toHaveLength(1);
+      expect(result[0]!.name).toBe('Rent');
+      expect(result[0]!.daysOverdue).toBeGreaterThan(0);
+    });
+
+    it('ignores active with future next_run', () => {
+      const futureDate = new Date(Date.now() + 86400000 * 5).toISOString().slice(0, 10);
+      const recurrings = [
+        { id: 'r1', name: 'Rent', amount: 1000, type: 'expense', frequency: 'monthly', next_run: futureDate, status: 'active', last_run: null },
+      ];
+      const result = FinancialEngine.getMissedOccurrences(recurrings, []);
+      expect(result).toEqual([]);
+    });
+
+    it('ignores already posted occurrences', () => {
+      const pastDate = new Date(Date.now() - 86400000 * 3).toISOString().slice(0, 10);
+      const recurrings = [
+        { id: 'r1', name: 'Rent', amount: 1000, type: 'expense', frequency: 'monthly', next_run: pastDate, status: 'active', last_run: null },
+      ];
+      const transactions = [
+        { id: 't1', recurring_id: 'r1', date: pastDate },
+      ];
+      const result = FinancialEngine.getMissedOccurrences(recurrings, transactions);
+      expect(result).toEqual([]);
+    });
+
+    it('ignores inactive recurrings', () => {
+      const pastDate = new Date(Date.now() - 86400000 * 3).toISOString().slice(0, 10);
+      const recurrings = [
+        { id: 'r1', name: 'Rent', amount: 1000, type: 'expense', frequency: 'monthly', next_run: pastDate, status: 'paused', last_run: null },
+      ];
+      const result = FinancialEngine.getMissedOccurrences(recurrings, []);
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('getBillsDueToday', () => {
+    it('returns bills with next_run matching today', () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const recurrings = [
+        { id: 'r1', name: 'Rent', amount: 1000, type: 'expense', next_run: today, status: 'active' },
+        { id: 'r2', name: 'Paycheck', amount: 5000, type: 'income', next_run: today, status: 'active' },
+        { id: 'r3', name: 'Future Bill', amount: 100, type: 'expense', next_run: '2099-01-01', status: 'active' },
+      ];
+      const result = FinancialEngine.getBillsDueToday(recurrings, []);
+      expect(result).toHaveLength(1);
+      expect(result[0]!.name).toBe('Rent');
+    });
+
+    it('filters out income type', () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const recurrings = [
+        { id: 'r1', name: 'Paycheck', amount: 5000, type: 'income', next_run: today, status: 'active' },
+      ];
+      const result = FinancialEngine.getBillsDueToday(recurrings, []);
+      expect(result).toEqual([]);
+    });
+
+    it('includes mortgage payment due today', () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const mortgages = [
+        { id: 'm1', name: 'Home', monthlyPayment: 2000, remainingBalance: 250000, totalInterest: 150000, totalCost: 450000, interestSaved: 0, payoffDate: '2054-01-01', payoffMonths: 360, progressPct: 0, principalPaidPct: 0, paymentFrequency: 'monthly', yearsRemaining: 30, originalPrincipal: 300000, extraPayment: 0, currentRate: 6.5 },
+      ];
+      const result = FinancialEngine.getBillsDueToday([], mortgages);
+      const todayFirst = today.slice(0, 7) + '-01';
+      if (todayFirst === today) {
+        expect(result).toHaveLength(1);
+        expect(result[0]!.name).toBe('Home Payment');
+      } else {
+        expect(result).toEqual([]);
+      }
+    });
+  });
+
+  describe('getUpcomingBills', () => {
+    it('returns upcoming bills within range', () => {
+      const recurrings = [
+        { id: 'r1', name: 'Rent', amount: 1000, type: 'expense', next_run: new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 10), status: 'active' },
+      ];
+      const result = FinancialEngine.getUpcomingBills(recurrings, 30);
+      expect(result).toHaveLength(1);
+      expect(result[0]!.name).toBe('Rent');
+    });
+
+    it('excludes income type', () => {
+      const recurrings = [
+        { id: 'r1', name: 'Paycheck', amount: 5000, type: 'income', next_run: new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 10), status: 'active' },
+      ];
+      const result = FinancialEngine.getUpcomingBills(recurrings, 30);
+      expect(result).toEqual([]);
+    });
+
+    it('returns empty when no bills due within range', () => {
+      const recurrings = [
+        { id: 'r1', name: 'Rent', amount: 1000, type: 'expense', next_run: new Date(Date.now() + 86400000 * 60).toISOString().slice(0, 10), status: 'active' },
+      ];
+      const result = FinancialEngine.getUpcomingBills(recurrings, 30);
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('getUpcomingIncome', () => {
+    it('returns upcoming income within range', () => {
+      const recurrings = [
+        { id: 'r1', name: 'Paycheck', amount: 5000, type: 'income', next_run: new Date(Date.now() + 86400000 * 3).toISOString().slice(0, 10), status: 'active' },
+      ];
+      const result = FinancialEngine.getUpcomingIncome(recurrings, 30);
+      expect(result).toHaveLength(1);
+      expect(result[0]!.name).toBe('Paycheck');
+    });
+
+    it('excludes expense type', () => {
+      const recurrings = [
+        { id: 'r1', name: 'Rent', amount: 1000, type: 'expense', next_run: new Date(Date.now() + 86400000 * 3).toISOString().slice(0, 10), status: 'active' },
+      ];
+      const result = FinancialEngine.getUpcomingIncome(recurrings, 30);
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('getNextPaycheck', () => {
+    it('returns nearest income run', () => {
+      const today = new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 10);
+      const recurrings = [
+        { id: 'r1', name: 'Paycheck', amount: 5000, type: 'income', frequency: 'biweekly', next_run: today, status: 'active' },
+        { id: 'r2', name: 'Freelance', amount: 1000, type: 'income', frequency: 'monthly', next_run: new Date(Date.now() + 86400000 * 10).toISOString().slice(0, 10), status: 'active' },
+      ];
+      const result = FinancialEngine.getNextPaycheck(recurrings);
+      expect(result).not.toBeNull();
+      expect(result!.name).toBe('Paycheck');
+    });
+
+    it('returns null when no income', () => {
+      const recurrings = [
+        { id: 'r1', name: 'Rent', amount: 1000, type: 'expense', frequency: 'monthly', next_run: new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 10), status: 'active' },
+      ];
+      const result = FinancialEngine.getNextPaycheck(recurrings);
+      expect(result).toBeNull();
+    });
+
+    it('returns null when empty', () => {
+      expect(FinancialEngine.getNextPaycheck([])).toBeNull();
+    });
+  });
+
+  describe('getUpcomingSavingsTransfers', () => {
+    it('returns transfers for goals with monthly contribution', () => {
+      const goals = [
+        { id: 'g1', name: 'Emergency Fund', monthlyContribution: 500 },
+        { id: 'g2', name: 'Vacation', monthlyContribution: 0 },
+      ];
+      const result = FinancialEngine.getUpcomingSavingsTransfers(goals);
+      expect(result).toHaveLength(1);
+      expect(result[0]!.name).toBe('Emergency Fund');
+      expect(result[0]!.amount).toBe(500);
+    });
+
+    it('returns empty when no contributions', () => {
+      const goals = [
+        { id: 'g1', name: 'Vacation', monthlyContribution: 0 },
+      ];
+      expect(FinancialEngine.getUpcomingSavingsTransfers(goals)).toEqual([]);
+    });
+  });
+
+  describe('getCashFlowForecast', () => {
+    it('returns daily forecast entries', () => {
+      const events: Array<{ id: string; title: string; date: string; amount: number; type: string; category: string; source: string }> = [];
+      const result = FinancialEngine.getCashFlowForecast(events as any, 1000, 7);
+      expect(result).toHaveLength(7);
+      expect(result[0]!.balance).toBe(1000);
+    });
+
+    it('accounts for income events', () => {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().slice(0, 10);
+      const events = [
+        { id: 'e1', title: 'Paycheck', date: today, amount: 5000, type: 'income' as const, category: 'Salary', source: 'recurring' as const },
+      ];
+      const result = FinancialEngine.getCashFlowForecast(events as any, 1000, 3);
+      expect(result[0]!.balance).toBe(6000);
+      expect(result[0]!.netChange).toBe(5000);
+    });
+
+    it('accounts for expense events', () => {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().slice(0, 10);
+      const events = [
+        { id: 'e1', title: 'Rent', date: today, amount: 1000, type: 'expense' as const, category: 'Housing', source: 'recurring' as const },
+      ];
+      const result = FinancialEngine.getCashFlowForecast(events as any, 2000, 3);
+      expect(result[0]!.balance).toBe(1000);
+      expect(result[0]!.netChange).toBe(-1000);
+    });
+  });
+});

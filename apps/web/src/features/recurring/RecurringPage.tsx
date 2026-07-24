@@ -1,17 +1,21 @@
 import { useState } from 'react';
 import { useRecurringTransactions, useCreateRecurringTransaction, useUpdateRecurringTransaction, useDeleteRecurringTransaction } from '@/hooks/useRecurringTransactions';
+import { useAuthStore } from '@/stores/auth';
 import { useAccounts } from '@/hooks/useAccounts';
 import { useCategories } from '@/hooks/useCategories';
 import { useCreateTransaction } from '@/hooks/useTransactions';
 import { useToastStore } from '@/stores/toast';
 import { RecurringRow } from './components/RecurringRow';
 import { RecurringForm } from './components/RecurringForm';
+import { BatchPostingPanel } from './components/BatchPostingPanel';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { calculateNextRun } from '@/engine/RecurringEngine';
+import { calculateNextRun, checkDuplicateOccurrence } from '@/engine/RecurringEngine';
+import { supabase } from '@/lib/supabase';
 import type { RecurringTransaction, RecurringTransactionInsert, RecurringTransactionUpdate } from '@budgetos/database';
 
 export function RecurringPage() {
-  const { data: recurrings, isLoading } = useRecurringTransactions();
+  const { data: recurrings, isLoading, refetch } = useRecurringTransactions();
+  const user = useAuthStore((s) => s.user);
   const { data: accounts } = useAccounts();
   const { data: categories } = useCategories();
   const createMutation = useCreateRecurringTransaction();
@@ -67,6 +71,12 @@ export function RecurringPage() {
       return;
     }
 
+    const alreadyPosted = await checkDuplicateOccurrence(supabase, rt.id, today);
+    if (alreadyPosted) {
+      addToast('info', `Transaction for "${rt.name}" was already posted today`);
+      return;
+    }
+
     try {
       await createTransaction.mutateAsync({
         account_id: rt.account_id,
@@ -114,7 +124,7 @@ export function RecurringPage() {
 
   const frequencyLabels: Record<string, string> = {
     one_time: 'One Time', daily: 'Daily', weekly: 'Weekly',
-    biweekly: 'Biweekly', monthly: 'Monthly', quarterly: 'Quarterly',
+    biweekly: 'Biweekly', semimonthly: 'Semi-Monthly', monthly: 'Monthly', quarterly: 'Quarterly',
     semi_annual: 'Semi-Annual', yearly: 'Yearly',
   };
 
@@ -138,12 +148,15 @@ export function RecurringPage() {
             Manage bills, subscriptions, and recurring income
           </p>
         </div>
-        <button
-          onClick={handleCreate}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
-        >
-          + New Recurring
-        </button>
+        <div className="flex items-center gap-2">
+          <BatchPostingPanel userId={user?.id ?? ''} onComplete={refetch} />
+          <button
+            onClick={handleCreate}
+            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+          >
+            + New Recurring
+          </button>
+        </div>
       </div>
 
       {(!recurrings || recurrings.length === 0) ? (

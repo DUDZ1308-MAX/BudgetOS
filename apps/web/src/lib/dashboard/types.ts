@@ -74,6 +74,47 @@ export interface DashboardUpcomingItem {
   category: string;
 }
 
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  date: string;
+  amount: number;
+  type: 'income' | 'expense' | 'mortgage' | 'contribution' | 'transfer' | 'bill' | 'payment';
+  category: string;
+  source: 'recurring' | 'mortgage' | 'savings' | 'transaction' | 'manual';
+  frequency?: string;
+  notes?: string;
+  accountName?: string;
+  accountId?: string;
+  categoryId?: string;
+  goalId?: string;
+  mortgageId?: string;
+}
+
+export interface DailyForecast {
+  date: string;
+  openingBalance: number;
+  moneyIn: number;
+  moneyOut: number;
+  endingBalance: number;
+  events: CalendarEvent[];
+}
+
+export interface MonthlyForecast {
+  year: number;
+  month: number;
+  income: number;
+  expenses: number;
+  savings: number;
+  debtPayments: number;
+  mortgage: number;
+  budgetRemaining: number;
+  projectedNetWorthChange: number;
+  lowestBalance: number;
+  highestBalance: number;
+  netCashFlow: number;
+}
+
 export interface DashboardSummaryData {
   netWorth: number;
   totalAssets: number;

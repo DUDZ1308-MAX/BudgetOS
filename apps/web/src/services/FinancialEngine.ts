@@ -17,7 +17,7 @@ import {
 } from '@/engine/MortgageEngine';
 import type { RecurringFrequency, FHSRequest, CategoryBudget, TransactionSummary } from '@budgetos/shared';
 import type { Account, Category, Budget, Transaction, SavingsGoal, Mortgage } from '@budgetos/database';
-import type { DashboardInsight, DashboardUpcomingItem } from '@/lib/dashboard/types';
+import type { DashboardInsight, DashboardUpcomingItem, CalendarEvent, DailyForecast, MonthlyForecast } from '@/lib/dashboard/types';
 
 // ============================================================================
 // FinancialEngine — Single Source of Truth for ALL Financial Calculations
@@ -570,68 +570,42 @@ export const FinancialEngine = {
 
   // -------------------------------------------------------------------------
   // Upcoming Items — next 30 days (including mortgage and contributions)
+  // Delegates to getCalendarEvents to avoid duplication
   // -------------------------------------------------------------------------
   getUpcomingItems(
     recurrings: Array<{ id: string; name: string; amount: number; type: string; frequency: string; next_run: string; status: string }>,
-    mortgages: MortgageResult[],
+    mortgages: Array<{ id: string; name: string; monthlyPayment: number; paymentFrequency: string }>,
     savingsGoals: Array<{ id: string; name: string; monthlyContribution: number }>,
+    transactions: Array<{ id: string; amount: number; date: string; merchant: string | null; category_id: string | null; account_id: string | null; recurring_id: string | null; is_archived: boolean }>,
+    accounts: Array<{ id: string; name: string }>,
+    categories: Array<{ id: string; name: string }>,
   ): DashboardUpcomingItem[] {
-    const items: DashboardUpcomingItem[] = [];
     const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+
+    // Get all calendar events for current month + next month
+    const events = FinancialEngine.getCalendarEvents(recurrings, mortgages, savingsGoals, transactions, year, month, accounts, categories, false);
+    const nextMonthEvents = FinancialEngine.getCalendarEvents(recurrings, mortgages, savingsGoals, transactions, year, month + 1, accounts, categories, false);
+
+    const allEvents = [...events, ...nextMonthEvents];
     const thirtyDays = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 30);
 
-    // Recurring transactions due within 30 days
-    for (const r of recurrings) {
-      if (r.status !== 'active') continue;
-      const nextDate = new Date(r.next_run);
-      if (nextDate >= now && nextDate <= thirtyDays) {
-        items.push({
-          id: r.id,
-          name: r.name,
-          amount: Math.abs(Number(r.amount)),
-          date: r.next_run,
-          type: r.type === 'income' ? 'income' : 'expense',
-          category: 'recurring',
-        });
-      }
-    }
-
-    // Mortgage payments due within 30 days
-    for (const m of mortgages) {
-      const payoffDate = m.payoffDate ? new Date(m.payoffDate) : null;
-      if (payoffDate && payoffDate < now) continue;
-      // Estimate next payment: assume monthly on the 1st
-      const nextMortgage = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-      if (nextMortgage <= thirtyDays) {
-        items.push({
-          id: `mortgage-${m.id}`,
-          name: `${m.name} Payment`,
-          amount: m.monthlyPayment,
-          date: nextMortgage.toISOString().slice(0, 10),
-          type: 'mortgage',
-          category: 'mortgage',
-        });
-      }
-    }
-
-    // Savings contributions (assume monthly)
-    for (const g of savingsGoals) {
-      if (g.monthlyContribution <= 0) continue;
-      const nextContribution = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-      if (nextContribution <= thirtyDays) {
-        items.push({
-          id: `contribution-${g.id}`,
-          name: `${g.name} Contribution`,
-          amount: g.monthlyContribution,
-          date: nextContribution.toISOString().slice(0, 10),
-          type: 'contribution',
-          category: 'savings',
-        });
-      }
-    }
-
-    items.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    return items.slice(0, 20);
+    return allEvents
+      .filter((e) => {
+        const d = new Date(e.date);
+        return d >= now && d <= thirtyDays;
+      })
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .slice(0, 20)
+      .map((e) => ({
+        id: e.id,
+        name: e.title,
+        amount: e.amount,
+        date: e.date,
+        type: e.type === 'income' ? 'income' : (e.type === 'mortgage' ? 'mortgage' : (e.type === 'contribution' ? 'contribution' : 'expense')) as 'income' | 'expense' | 'mortgage' | 'contribution',
+        category: e.category,
+      }));
   },
 
   // -------------------------------------------------------------------------
@@ -840,6 +814,380 @@ export const FinancialEngine = {
   },
 
   // -------------------------------------------------------------------------
+  // Calendar Events — generates projected events for a given month
+  // Used by both the Calendar page and Upcoming Activity
+  // -------------------------------------------------------------------------
+  getCalendarEvents(
+    recurrings: Array<{ id: string; name: string; amount: number; type: string; frequency: string; next_run: string; status: string }>,
+    mortgages: Array<{ id: string; name: string; monthlyPayment: number; paymentFrequency: string }>,
+    savingsGoals: Array<{ id: string; name: string; monthlyContribution: number }>,
+    transactions: Array<{ id: string; amount: number; date: string; merchant: string | null; category_id: string | null; account_id: string | null; recurring_id: string | null; is_archived: boolean }>,
+    year: number,
+    month: number,
+    accounts: Array<{ id: string; name: string }>,
+    categories: Array<{ id: string; name: string }>,
+    includeTransactions?: boolean,
+  ): CalendarEvent[] {
+    const events: CalendarEvent[] = [];
+    const monthStart = new Date(year, month, 1);
+    const monthEnd = new Date(year, month + 1, 0, 23, 59, 59);
+    const accountMap = new Map(accounts.map((a) => [a.id, a.name]));
+    const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
+
+    // Recurring transactions scheduled within this month
+    for (const r of recurrings) {
+      if (r.status !== 'active') continue;
+      const nextDate = new Date(r.next_run);
+      if (nextDate >= monthStart && nextDate <= monthEnd) {
+        events.push({
+          id: `rec-${r.id}`,
+          title: r.name,
+          date: r.next_run,
+          amount: Math.abs(Number(r.amount)),
+          type: r.type === 'income' ? 'income' : 'expense',
+          category: 'recurring',
+          source: 'recurring',
+          frequency: r.frequency,
+        });
+      }
+    }
+
+    // Mortgage payments
+    for (const m of mortgages) {
+      const paymentDay = 1; // Assume 1st of month
+      for (let d = 1; d <= 31; d++) {
+        const date = new Date(year, month, d);
+        if (date > monthEnd) break;
+        events.push({
+          id: `mort-${m.id}-${year}-${month}`,
+          title: `${m.name} Payment`,
+          date: date.toISOString().slice(0, 10),
+          amount: m.monthlyPayment,
+          type: 'mortgage' as const,
+          category: 'mortgage',
+          source: 'mortgage',
+          frequency: m.paymentFrequency,
+          mortgageId: m.id,
+        });
+        break; // One payment per month
+      }
+    }
+
+    // Savings contributions
+    for (const g of savingsGoals) {
+      if (g.monthlyContribution <= 0) continue;
+      const contributionDate = new Date(year, month, 1);
+      if (contributionDate >= monthStart && contributionDate <= monthEnd) {
+        events.push({
+          id: `sav-${g.id}-${year}-${month}`,
+          title: `${g.name} Contribution`,
+          date: contributionDate.toISOString().slice(0, 10),
+          amount: g.monthlyContribution,
+          type: 'contribution' as const,
+          category: 'savings',
+          source: 'savings',
+          goalId: g.id,
+        });
+      }
+    }
+
+    // Existing transactions
+    if (includeTransactions) {
+      for (const t of transactions) {
+        if (t.is_archived) continue;
+        const txnDate = new Date(t.date);
+        if (txnDate >= monthStart && txnDate <= monthEnd) {
+          events.push({
+            id: `txn-${t.id}`,
+            title: t.merchant ?? 'Transaction',
+            date: t.date,
+            amount: Math.abs(Number(t.amount)),
+            type: Number(t.amount) >= 0 ? 'income' : 'expense',
+            category: categoryMap.get(t.category_id ?? '') ?? 'Uncategorized',
+            source: t.recurring_id ? 'recurring' : 'transaction',
+            accountName: accountMap.get(t.account_id ?? '') ?? undefined,
+            categoryId: t.category_id ?? undefined,
+          });
+        }
+      }
+    }
+
+    events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    return events;
+  },
+
+  // -------------------------------------------------------------------------
+  // Daily Forecast — generates daily cash flow projection for N days
+  // -------------------------------------------------------------------------
+  getDailyForecast(
+    events: CalendarEvent[],
+    currentBalance: number,
+    days: number,
+  ): DailyForecast[] {
+    const forecast: DailyForecast[] = [];
+    let runningBalance = currentBalance;
+
+    const now = new Date();
+    for (let i = 0; i < days; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+      const dateStr = date.toISOString().slice(0, 10);
+
+      const dayEvents = events.filter((e) => e.date === dateStr);
+      let moneyIn = 0;
+      let moneyOut = 0;
+
+      for (const e of dayEvents) {
+        if (e.type === 'income') {
+          moneyIn += e.amount;
+        } else {
+          moneyOut += e.amount;
+        }
+      }
+
+      const openingBalance = runningBalance;
+      runningBalance = openingBalance + moneyIn - moneyOut;
+
+      forecast.push({
+        date: dateStr,
+        openingBalance,
+        moneyIn,
+        moneyOut,
+        endingBalance: runningBalance,
+        events: dayEvents,
+      });
+    }
+
+    return forecast;
+  },
+
+  // -------------------------------------------------------------------------
+  // Monthly Forecast — summary for a specific month
+  // -------------------------------------------------------------------------
+  getMonthlyForecast(
+    events: CalendarEvent[],
+    currentNetWorth: number,
+    currentBalance: number,
+    year: number,
+    month: number,
+  ): MonthlyForecast {
+    const monthStart = new Date(year, month, 1).toISOString().slice(0, 10);
+    const monthEnd = new Date(year, month + 1, 0).toISOString().slice(0, 10);
+
+    const monthEvents = events.filter((e) => e.date >= monthStart && e.date <= monthEnd);
+
+    let income = 0;
+    let expenses = 0;
+    let savings = 0;
+    let debtPayments = 0;
+    let mortgage = 0;
+    let lowestBalance = currentBalance;
+    let highestBalance = currentBalance;
+    let runningBalance = currentBalance;
+
+    // Calculate daily forecast for the month
+    const sortedDates = [...new Set(monthEvents.map((e) => e.date))].sort();
+    for (const dateStr of sortedDates) {
+      const dayEvents = monthEvents.filter((e) => e.date === dateStr);
+      let dayIn = 0;
+      let dayOut = 0;
+
+      for (const e of dayEvents) {
+        const amt = e.amount;
+        if (e.type === 'income') {
+          income += amt;
+          dayIn += amt;
+        } else {
+          expenses += amt;
+          dayOut += amt;
+          if (e.type === 'mortgage') mortgage += amt;
+          if (e.category === 'credit' || e.category === 'loan') debtPayments += amt;
+        }
+        if (e.type === 'contribution') savings += amt;
+      }
+
+      runningBalance = runningBalance + dayIn - dayOut;
+      if (runningBalance < lowestBalance) lowestBalance = runningBalance;
+      if (runningBalance > highestBalance) highestBalance = runningBalance;
+    }
+
+    return {
+      year,
+      month,
+      income,
+      expenses,
+      savings,
+      debtPayments,
+      mortgage,
+      budgetRemaining: income - expenses,
+      projectedNetWorthChange: income - expenses,
+      lowestBalance,
+      highestBalance,
+      netCashFlow: income - expenses,
+    };
+  },
+
+  // -------------------------------------------------------------------------
+  // Dashboard Widget Helpers
+  // -------------------------------------------------------------------------
+
+  getMissedOccurrences(
+    recurrings: Array<{ id: string; name: string; amount: number; type: string; frequency: string; next_run: string; status: string; last_run: string | null }>,
+    transactions: Array<{ id: string; recurring_id: string | null; date: string }>,
+  ): Array<{ id: string; name: string; amount: number; type: string; scheduledDate: string; daysOverdue: number }> {
+    const now = new Date();
+    const postedMap = new Map<string, Set<string>>();
+    for (const t of transactions) {
+      if (t.recurring_id) {
+        if (!postedMap.has(t.recurring_id)) postedMap.set(t.recurring_id, new Set());
+        postedMap.get(t.recurring_id)!.add(t.date);
+      }
+    }
+
+    const missed: Array<{ id: string; name: string; amount: number; type: string; scheduledDate: string; daysOverdue: number }> = [];
+    for (const r of recurrings) {
+      if (r.status !== 'active') continue;
+      const nextDate = new Date(r.next_run);
+      if (nextDate >= now) continue;
+
+      const postedDates = postedMap.get(r.id);
+      if (postedDates && postedDates.has(r.next_run)) continue;
+
+      const diff = Math.floor((now.getTime() - nextDate.getTime()) / 86400000);
+      if (diff > 0) {
+        missed.push({
+          id: r.id,
+          name: r.name,
+          amount: Math.abs(Number(r.amount)),
+          type: r.type,
+          scheduledDate: r.next_run,
+          daysOverdue: diff,
+        });
+      }
+    }
+    return missed.sort((a, b) => b.daysOverdue - a.daysOverdue);
+  },
+
+  getBillsDueToday(
+    recurrings: Array<{ id: string; name: string; amount: number; type: string; next_run: string; status: string }>,
+    mortgages: MortgageResult[],
+  ): Array<{ id: string; name: string; amount: number; type: string }> {
+    const today = new Date().toISOString().slice(0, 10);
+    const bills: Array<{ id: string; name: string; amount: number; type: string }> = [];
+
+    for (const r of recurrings) {
+      if (r.status !== 'active' || r.type === 'income') continue;
+      if (r.next_run === today) {
+        bills.push({ id: r.id, name: r.name, amount: Math.abs(Number(r.amount)), type: r.type });
+      }
+    }
+
+    for (const m of mortgages) {
+      const expectedPayment = new Date().toISOString().slice(0, 7) + '-01';
+      if (expectedPayment === today) {
+        bills.push({ id: `mortgage-${m.id}`, name: `${m.name} Payment`, amount: m.monthlyPayment, type: 'mortgage' });
+      }
+    }
+
+    return bills;
+  },
+
+  getUpcomingBills(
+    recurrings: Array<{ id: string; name: string; amount: number; type: string; next_run: string; status: string }>,
+    days: number = 30,
+  ): Array<{ id: string; name: string; amount: number; date: string; daysUntil: number }> {
+    const now = new Date();
+    const cutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate() + days);
+    const bills: Array<{ id: string; name: string; amount: number; date: string; daysUntil: number }> = [];
+
+    for (const r of recurrings) {
+      if (r.status !== 'active' || r.type === 'income') continue;
+      const nextDate = new Date(r.next_run);
+      if (nextDate >= now && nextDate <= cutoff) {
+        bills.push({
+          id: r.id, name: r.name, amount: Math.abs(Number(r.amount)),
+          date: r.next_run, daysUntil: Math.ceil((nextDate.getTime() - now.getTime()) / 86400000),
+        });
+      }
+    }
+    return bills.sort((a, b) => a.daysUntil - b.daysUntil);
+  },
+
+  getUpcomingIncome(
+    recurrings: Array<{ id: string; name: string; amount: number; type: string; next_run: string; status: string }>,
+    days: number = 30,
+  ): Array<{ id: string; name: string; amount: number; date: string; daysUntil: number }> {
+    const now = new Date();
+    const cutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate() + days);
+    const items: Array<{ id: string; name: string; amount: number; date: string; daysUntil: number }> = [];
+
+    for (const r of recurrings) {
+      if (r.status !== 'active' || r.type !== 'income') continue;
+      const nextDate = new Date(r.next_run);
+      if (nextDate >= now && nextDate <= cutoff) {
+        items.push({
+          id: r.id, name: r.name, amount: Math.abs(Number(r.amount)),
+          date: r.next_run, daysUntil: Math.ceil((nextDate.getTime() - now.getTime()) / 86400000),
+        });
+      }
+    }
+    return items.sort((a, b) => a.daysUntil - b.daysUntil);
+  },
+
+  getNextPaycheck(
+    recurrings: Array<{ id: string; name: string; amount: number; type: string; frequency: string; next_run: string; status: string }>,
+  ): { name: string; amount: number; date: string; daysUntil: number } | null {
+    const now = new Date();
+    const incomes = recurrings
+      .filter((r) => r.status === 'active' && r.type === 'income')
+      .sort((a, b) => new Date(a.next_run).getTime() - new Date(b.next_run).getTime());
+
+    if (incomes.length === 0) return null;
+    const next = incomes[0]!;
+    const nextDate = new Date(next.next_run);
+    return {
+      name: next.name, amount: Math.abs(Number(next.amount)),
+      date: next.next_run, daysUntil: Math.max(0, Math.ceil((nextDate.getTime() - now.getTime()) / 86400000)),
+    };
+  },
+
+  getUpcomingSavingsTransfers(
+    savingsGoals: Array<{ id: string; name: string; monthlyContribution: number }>,
+  ): Array<{ id: string; name: string; amount: number; date: string }> {
+    const now = new Date();
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const dateStr = nextMonth.toISOString().slice(0, 10);
+
+    return savingsGoals
+      .filter((g) => g.monthlyContribution > 0)
+      .map((g) => ({
+        id: g.id, name: g.name, amount: g.monthlyContribution, date: dateStr,
+      }));
+  },
+
+  getCashFlowForecast(
+    events: CalendarEvent[],
+    currentBalance: number,
+    days: number = 30,
+  ): { date: string; balance: number; netChange: number }[] {
+    const forecast: { date: string; balance: number; netChange: number }[] = [];
+    let runningBalance = currentBalance;
+    const now = new Date();
+
+    for (let i = 0; i < days; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+      const dateStr = date.toISOString().slice(0, 10);
+      const dayEvents = events.filter((e) => e.date === dateStr);
+      let netChange = 0;
+      for (const e of dayEvents) {
+        netChange += e.type === 'income' ? e.amount : -e.amount;
+      }
+      runningBalance += netChange;
+      forecast.push({ date: dateStr, balance: runningBalance, netChange });
+    }
+    return forecast;
+  },
+
+  // -------------------------------------------------------------------------
   // Historical Cash Flow — last N months for trend chart
   // -------------------------------------------------------------------------
   async getHistoricalCashFlow(
@@ -966,7 +1314,13 @@ export const FinancialEngine = {
       name: g.name,
       monthlyContribution: Number(g.monthly_contribution ?? 0),
     }));
-    const upcoming = FinancialEngine.getUpcomingItems(recurrings, mortgageResults, savingsGoalMonthly);
+    const mortgageData = mortgageResults.map((m) => ({
+      id: m.id,
+      name: m.name,
+      monthlyPayment: m.monthlyPayment,
+      paymentFrequency: m.paymentFrequency,
+    }));
+    const upcoming = FinancialEngine.getUpcomingItems(recurrings, mortgageData, savingsGoalMonthly, transactions, accounts, categories);
 
     // 13. Insights
     const insights = FinancialEngine.getInsights(cashFlow, budgetHealth, savingsRate, mortgageResults, netWorth, savingsGoals, financialHealth);

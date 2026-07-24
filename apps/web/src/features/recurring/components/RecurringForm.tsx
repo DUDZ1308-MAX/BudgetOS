@@ -15,6 +15,7 @@ const frequencies = [
   { value: 'daily', label: 'Daily' },
   { value: 'weekly', label: 'Weekly' },
   { value: 'biweekly', label: 'Biweekly' },
+  { value: 'semimonthly', label: 'Semi-Monthly' },
   { value: 'monthly', label: 'Monthly' },
   { value: 'quarterly', label: 'Quarterly' },
   { value: 'semi_annual', label: 'Semi-Annual' },
@@ -98,7 +99,7 @@ export function RecurringForm({ recurring, accounts, categories, onSave, onCance
       category_id: categoryId || null,
       frequency: frequency as any,
       interval_count: 1,
-      day_of_month: frequency === 'monthly' || frequency === 'yearly' ? (dayOfMonth as number) : null,
+      day_of_month: frequency === 'monthly' || frequency === 'yearly' || frequency === 'semimonthly' ? (dayOfMonth as number) : null,
       month_of_year: frequency === 'yearly' ? 1 : null,
       start_date: startDate,
       end_date: endDate || null,
@@ -114,7 +115,7 @@ export function RecurringForm({ recurring, accounts, categories, onSave, onCance
       frequency: frequency as any,
       intervalCount: 1,
       dayOfWeek: null,
-      dayOfMonth: (frequency === 'monthly' || frequency === 'yearly') ? (dayOfMonth as number) : null,
+      dayOfMonth: (frequency === 'monthly' || frequency === 'yearly' || frequency === 'semimonthly') ? (dayOfMonth as number) : null,
       monthOfYear: frequency === 'yearly' ? 1 : null,
       lastRun: null,
     });
@@ -180,7 +181,7 @@ export function RecurringForm({ recurring, accounts, categories, onSave, onCance
             </select>
           </div>
 
-          {(frequency === 'monthly' || frequency === 'yearly') && (
+          {(frequency === 'monthly' || frequency === 'yearly' || frequency === 'semimonthly') && (
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Day of month</label>
               <input type="number" min={1} max={31} value={dayOfMonth ?? ''} onChange={(e) => setDayOfMonth(Number(e.target.value))} className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-white" />

@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { useAuthStore } from '@/stores/auth';
 import { computeDashboard } from '@/lib/dashboard/computeDashboard';
 import { FinancialEngine } from '@/services/FinancialEngine';
+import { useRecurringWidgetData } from './useRecurringWidgetData';
+import { generateRecurringNotifications } from '@/services/notifications/recurringNotificationGenerator';
 import { HeroSummary } from './components/HeroSummary';
 import { MortgageSummary } from './components/MortgageSummary';
 import { SavingsSnapshotCard } from './components/SavingsSnapshotCard';
@@ -12,6 +14,7 @@ import { ChartsGrid } from './components/ChartsGrid';
 import { UpcomingSection } from './components/UpcomingSection';
 import { QuickActionsPanel } from './components/QuickActionsPanel';
 import { InsightsCards } from './components/InsightsCards';
+import { RecurringWidgets } from './components/RecurringWidgets';
 import { SetupChecklist } from '@/components/ui/SetupChecklist';
 
 function getGreeting(): string {
@@ -54,6 +57,8 @@ export function DashboardPage() {
     queryFn: () => FinancialEngine.getHistoricalCashFlow(user!.id, 6),
     enabled: !!user,
   });
+
+  const { data: recurringWidgetData } = useRecurringWidgetData(user?.id);
 
   const d = result?.data ?? {
     netWorth: 0,
@@ -182,7 +187,19 @@ export function DashboardPage() {
         <QuickActionsPanel />
       </motion.div>
 
-      {/* Section 5: Financial Insights */}
+      {/* Section 5: Recurring Widgets */}
+      <motion.div variants={section} aria-label="Recurring transactions overview">
+        <RecurringWidgets
+          billsDueToday={recurringWidgetData?.billsDueToday ?? []}
+          upcomingBills={recurringWidgetData?.upcomingBills ?? []}
+          upcomingIncome={recurringWidgetData?.upcomingIncome ?? []}
+          nextPaycheck={recurringWidgetData?.nextPaycheck ?? null}
+          upcomingSavingsTransfers={recurringWidgetData?.upcomingSavingsTransfers ?? []}
+          cashFlowForecast={recurringWidgetData?.cashFlowForecast ?? []}
+        />
+      </motion.div>
+
+      {/* Section 6: Financial Insights */}
       <motion.div variants={section} aria-label="Financial insights">
         <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>Financial Insights</h2>
         <InsightsCards insights={d.insights} isLoading={isLoading} />

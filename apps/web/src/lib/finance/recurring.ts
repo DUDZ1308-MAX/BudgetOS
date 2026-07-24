@@ -1,5 +1,7 @@
 export type ScheduleFrequency = 'one_time' | 'daily' | 'weekly' | 'biweekly' | 'semimonthly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
 
+export type BusinessDayAdjustment = 'none' | 'previous' | 'next' | 'nearest';
+
 export interface ScheduleInput {
   startDate: string;
   endDate: string | null;
@@ -9,6 +11,9 @@ export interface ScheduleInput {
   dayOfMonth: number | null;
   monthOfYear: number | null;
   lastRun: string | null;
+  skipWeekends?: boolean;
+  businessDayAdjustment?: BusinessDayAdjustment;
+  timezone?: string;
 }
 
 function addDays(date: Date, days: number): Date {
@@ -25,8 +30,42 @@ function normalizeDate(year: number, month: number, day: number): Date {
   return d;
 }
 
+function isBusinessDay(date: Date): boolean {
+  const day = date.getDay();
+  return day !== 0 && day !== 6;
+}
+
+function toBusinessDay(date: Date, adjustment: BusinessDayAdjustment): Date {
+  if (!isBusinessDay(date)) {
+    switch (adjustment) {
+      case 'previous': {
+        let d = new Date(date);
+        while (!isBusinessDay(d)) d.setDate(d.getDate() - 1);
+        return d;
+      }
+      case 'next': {
+        let d = new Date(date);
+        while (!isBusinessDay(d)) d.setDate(d.getDate() + 1);
+        return d;
+      }
+      case 'nearest': {
+        const next = new Date(date);
+        while (!isBusinessDay(next)) next.setDate(next.getDate() + 1);
+        const prev = new Date(date);
+        while (!isBusinessDay(prev)) prev.setDate(prev.getDate() - 1);
+        const diffNext = Math.abs(next.getTime() - date.getTime());
+        const diffPrev = Math.abs(prev.getTime() - date.getTime());
+        return diffNext < diffPrev ? next : prev;
+      }
+      default:
+        return date;
+    }
+  }
+  return date;
+}
+
 export function calculateNextRun(input: ScheduleInput): string {
-  const { startDate, endDate, frequency, intervalCount, dayOfWeek, dayOfMonth, monthOfYear, lastRun } = input;
+  const { startDate, endDate, frequency, intervalCount, dayOfWeek, dayOfMonth, monthOfYear, lastRun, skipWeekends, businessDayAdjustment } = input;
 
   if (!lastRun) {
     return startDate;
@@ -63,6 +102,18 @@ export function calculateNextRun(input: ScheduleInput): string {
     case 'semi_annual':
       next = normalizeDate(base.getFullYear(), base.getMonth() + 6 * intervalCount, base.getDate());
       break;
+    case 'semimonthly': {
+      const firstDate = dayOfMonth ?? 1;
+      const dim = new Date(base.getFullYear(), base.getMonth() + 1, 0).getDate();
+      const secondDate = Math.min(firstDate + 14, dim);
+      const lastDay = base.getDate();
+      if (lastDay < secondDate) {
+        next = normalizeDate(base.getFullYear(), base.getMonth(), secondDate);
+      } else {
+        next = normalizeDate(base.getFullYear(), base.getMonth() + intervalCount, firstDate);
+      }
+      break;
+    }
     case 'yearly':
       if (dayOfMonth !== null && monthOfYear !== null) {
         next = normalizeDate(base.getFullYear() + intervalCount, monthOfYear - 1, dayOfMonth);
@@ -72,6 +123,13 @@ export function calculateNextRun(input: ScheduleInput): string {
       break;
     default:
       next = new Date(startDate + 'T00:00:00');
+  }
+
+  // Apply business day adjustment if requested
+  if (businessDayAdjustment && businessDayAdjustment !== 'none') {
+    next = toBusinessDay(next, businessDayAdjustment);
+  } else if (skipWeekends) {
+    next = toBusinessDay(next, 'next');
   }
 
   if (end && next > end) {
@@ -120,4 +178,26 @@ export function daysUntilNextRun(nextRun: string): number {
 
 export function isRecurringDueToday(nextRun: string): boolean {
   return nextRun === todayISO();
+}
+
+// ---------------------------------------------------------------------------
+// Deterministic Occurrence ID — used for duplicate prevention
+// Format: "<recurring_id>|<date>" — each recurring+date pair is unique
+// ---------------------------------------------------------------------------
+export function getOccurrenceId(recurringId: string, date: string): string {
+  return `${recurringId}|${date}`;
+}
+
+export async function checkDuplicateOccurrence(
+  supabaseClient: any,
+  recurringId: string,
+  date: string,
+): Promise<boolean> {
+  const { data } = await supabaseClient
+    .from('transactions')
+    .select('id')
+    .eq('recurring_id', recurringId)
+    .eq('date', date)
+    .maybeSingle();
+  return !!data;
 }
