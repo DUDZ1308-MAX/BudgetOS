@@ -34,6 +34,7 @@ export const AccountSummaryCard = memo(function AccountSummaryCard({ summary, is
       title="Account Summary"
       subtitle="All accounts"
       accent="left"
+      href="/accounts"
       action={
         <a href="/accounts" className="text-xs font-medium hover:underline" style={{ color: 'var(--accent-text)' }}>
           All Accounts →

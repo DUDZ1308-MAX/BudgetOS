@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth';
 import { computeDashboard } from '@/lib/dashboard/computeDashboard';
 import { FinancialEngine } from '@/services/FinancialEngine';
@@ -21,6 +22,8 @@ import { PremiumTrendCard } from './components/PremiumTrendCard';
 import { PremiumRecommendationsCard } from './components/PremiumRecommendationsCard';
 import { PremiumProjectionsCard } from './components/PremiumProjectionsCard';
 import { PremiumInsightsCard } from './components/PremiumInsightsCard';
+import { RecentTransactionsCard } from './components/RecentTransactionsCard';
+import type { DashboardInsight, DashboardUpcomingItem } from '@/lib/dashboard/types';
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -49,7 +52,15 @@ const section = {
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as const } },
 };
 
+const upcomingTypeRoute: Record<string, string> = {
+  income: '/transactions',
+  expense: '/transactions',
+  mortgage: '/mortgage',
+  contribution: '/savings',
+};
+
 export function DashboardPage() {
+  const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const { data: result, isLoading, isError } = useQuery({
     queryKey: ['dashboard-summary', user?.id],
@@ -101,6 +112,25 @@ export function DashboardPage() {
   const queryErrors = result?.errors ?? [];
 
   const displayName = (user as any)?.user_metadata?.full_name ?? (user as any)?.email?.split('@')[0] ?? 'there';
+
+  const metricNavigation = {
+    netWorth: () => navigate('/accounts'),
+    availableCash: () => navigate('/accounts'),
+    monthlyIncome: () => navigate('/transactions'),
+    monthlyExpenses: () => navigate('/transactions'),
+    cashFlow: () => navigate('/reports'),
+    savingsRate: () => navigate('/savings'),
+    healthScore: () => navigate('/health'),
+  };
+
+  const handleInsightClick = (_insight: DashboardInsight) => {
+    navigate('/reports');
+  };
+
+  const handleUpcomingItemClick = (item: DashboardUpcomingItem) => {
+    const route = upcomingTypeRoute[item.type] ?? '/calendar';
+    navigate(route);
+  };
 
   return (
     <motion.div
@@ -160,6 +190,7 @@ export function DashboardPage() {
           savingsRate={d.savingsRate}
           healthScore={d.financialHealth?.overallScore ?? null}
           isLoading={isLoading}
+          onMetricClick={metricNavigation}
         />
       </motion.div>
 
@@ -175,6 +206,7 @@ export function DashboardPage() {
           tier={d.financialHealth?.tier}
           subscores={d.financialHealth?.subscores}
           isLoading={isLoading}
+          href="/health"
         />
         {d.financialHealth?.trends?.healthScore && (
           <PremiumTrendCard
@@ -182,22 +214,25 @@ export function DashboardPage() {
             trend={d.financialHealth.trends.healthScore}
             format="percent"
             isLoading={isLoading}
+            href="/reports"
           />
         )}
         <PremiumRecommendationsCard
           recommendations={d.financialHealth?.recommendationsList ?? []}
           isLoading={isLoading}
+          href="/health"
         />
         <PremiumProjectionsCard
           projections={d.financialHealth?.projections ?? []}
           isLoading={isLoading}
+          href="/reports"
         />
       </motion.div>
 
       {/* Section 1c: Insights */}
       {d.financialHealth?.insights && d.financialHealth.insights.length > 0 && (
         <motion.div variants={section} aria-label="Financial health insights">
-          <PremiumInsightsCard insights={d.financialHealth.insights} isLoading={isLoading} />
+          <PremiumInsightsCard insights={d.financialHealth.insights} isLoading={isLoading} href="/health" />
         </motion.div>
       )}
 
@@ -230,17 +265,24 @@ export function DashboardPage() {
         />
       </motion.div>
 
-      {/* Section 4: Upcoming Activity + Quick Actions */}
+      {/* Section 4: Upcoming Activity + Quick Actions + Recent Transactions */}
       <motion.div
         variants={section}
         className="grid gap-6 lg:grid-cols-3"
         aria-label="Planning section"
       >
         <div className="lg:col-span-2">
-          <UpcomingSection items={d.upcoming} isLoading={isLoading} />
+          <UpcomingSection items={d.upcoming} isLoading={isLoading} onItemClick={handleUpcomingItemClick} />
         </div>
         <QuickActionsPanel />
       </motion.div>
+
+      {/* Section 4b: Recent Transactions */}
+      {d.recentTransactions.length > 0 && (
+        <motion.div variants={section} aria-label="Recent transactions">
+          <RecentTransactionsCard transactions={d.recentTransactions} isLoading={isLoading} />
+        </motion.div>
+      )}
 
       {/* Section 5: Recurring Widgets */}
       <motion.div variants={section} aria-label="Recurring transactions overview">
@@ -257,7 +299,7 @@ export function DashboardPage() {
       {/* Section 6: Financial Insights */}
       <motion.div variants={section} aria-label="Financial insights">
         <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>Financial Insights</h2>
-        <InsightsCards insights={d.insights} isLoading={isLoading} />
+        <InsightsCards insights={d.insights} isLoading={isLoading} onInsightClick={handleInsightClick} />
       </motion.div>
     </motion.div>
   );

@@ -1,10 +1,12 @@
 import { memo } from 'react';
 import { motion } from 'framer-motion';
+import { ClickableCard } from '@/components/dashboard/ClickableCard';
 import type { DashboardInsight } from '@/lib/dashboard/types';
 
 interface Props {
   insights: DashboardInsight[];
   isLoading?: boolean;
+  onInsightClick?: (insight: DashboardInsight, index: number) => void;
 }
 
 const TYPE_STYLES: Record<DashboardInsight['type'], { border: string; bg: string; iconBg: string }> = {
@@ -25,7 +27,7 @@ const TYPE_STYLES: Record<DashboardInsight['type'], { border: string; bg: string
   },
 };
 
-export const InsightsCards = memo(function InsightsCards({ insights, isLoading }: Props) {
+export const InsightsCards = memo(function InsightsCards({ insights, isLoading, onInsightClick }: Props) {
   if (isLoading) {
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -49,23 +51,24 @@ export const InsightsCards = memo(function InsightsCards({ insights, isLoading }
       {insights.map((insight, i) => {
         const styles = TYPE_STYLES[insight.type] ?? TYPE_STYLES.neutral;
         return (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: i * 0.08, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className={`rounded-xl border p-4 ${styles.border} ${styles.bg}`}
-          >
-            <div className="flex items-start gap-3">
-              <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm ${styles.iconBg}`}>
-                {insight.icon}
+          <ClickableCard key={i} onClick={() => onInsightClick?.(insight, i)} ariaLabel={`View insight: ${insight.title}`}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: i * 0.08, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className={`rounded-xl border p-4 ${styles.border} ${styles.bg}`}
+            >
+              <div className="flex items-start gap-3">
+                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm ${styles.iconBg}`}>
+                  {insight.icon}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>{insight.title}</p>
+                  <p className="mt-0.5 text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{insight.description}</p>
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>{insight.title}</p>
-                <p className="mt-0.5 text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{insight.description}</p>
-              </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </ClickableCard>
         );
       })}
     </div>

@@ -1,5 +1,6 @@
 import { memo, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { ClickableCard } from '@/components/dashboard/ClickableCard';
 import { formatCurrency } from '@/services/transactionService';
 
 interface HeroMetricProps {
@@ -9,6 +10,8 @@ interface HeroMetricProps {
   isPercent?: boolean;
   isPositive?: boolean;
   delay?: number;
+  onClick?: () => void;
+  ariaLabel?: string;
 }
 
 function AnimatedCount({ target, isCurrency, isPercent, isPositive }: { target: number; isCurrency?: boolean; isPercent?: boolean; isPositive?: boolean }) {
@@ -44,20 +47,22 @@ function AnimatedCount({ target, isCurrency, isPercent, isPositive }: { target: 
   return <span className="text-2xl font-bold tabular-nums" style={{ color }}>{formatted}</span>;
 }
 
-const HeroMetric = memo(function HeroMetric({ label, value, isCurrency, isPercent, isPositive, delay = 0 }: HeroMetricProps) {
+const HeroMetric = memo(function HeroMetric({ label, value, isCurrency, isPercent, isPositive, delay = 0, onClick, ariaLabel }: HeroMetricProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
-      className="rounded-xl border p-4"
-      style={{ borderColor: 'var(--border-default)', background: 'var(--bg-elevated)' }}
-    >
-      <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>{label}</p>
-      <div className="mt-1">
-        <AnimatedCount target={value} isCurrency={isCurrency} isPercent={isPercent} isPositive={isPositive} />
-      </div>
-    </motion.div>
+    <ClickableCard onClick={onClick} ariaLabel={ariaLabel}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
+        className="rounded-xl border p-4"
+        style={{ borderColor: 'var(--border-default)', background: 'var(--bg-elevated)' }}
+      >
+        <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>{label}</p>
+        <div className="mt-1">
+          <AnimatedCount target={value} isCurrency={isCurrency} isPercent={isPercent} isPositive={isPositive} />
+        </div>
+      </motion.div>
+    </ClickableCard>
   );
 });
 
@@ -70,9 +75,10 @@ interface HeroSummaryProps {
   savingsRate: number;
   healthScore: number | null;
   isLoading?: boolean;
+  onMetricClick?: Record<string, () => void>;
 }
 
-export const HeroSummary = memo(function HeroSummary({ netWorth, availableCash, monthlyIncome, monthlyExpenses, cashFlow, savingsRate, healthScore, isLoading }: HeroSummaryProps) {
+export const HeroSummary = memo(function HeroSummary({ netWorth, availableCash, monthlyIncome, monthlyExpenses, cashFlow, savingsRate, healthScore, isLoading, onMetricClick = {} }: HeroSummaryProps) {
   if (isLoading) {
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
@@ -85,17 +91,19 @@ export const HeroSummary = memo(function HeroSummary({ netWorth, availableCash, 
 
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
-      <HeroMetric label="Net Worth" value={netWorth} isCurrency isPositive={netWorth >= 0} delay={0.05} />
-      <HeroMetric label="Available Cash" value={availableCash} isCurrency isPositive delay={0.1} />
-      <HeroMetric label="Monthly Income" value={monthlyIncome} isCurrency isPositive delay={0.15} />
-      <HeroMetric label="Monthly Expenses" value={monthlyExpenses} isCurrency isPositive={false} delay={0.2} />
-      <HeroMetric label="Cash Flow" value={cashFlow} isCurrency isPositive={cashFlow >= 0} delay={0.25} />
-      <HeroMetric label="Savings Rate" value={savingsRate} isPercent isPositive={savingsRate >= 20} delay={0.3} />
+      <HeroMetric label="Net Worth" value={netWorth} isCurrency isPositive={netWorth >= 0} delay={0.05} onClick={onMetricClick.netWorth} ariaLabel="View net worth details" />
+      <HeroMetric label="Available Cash" value={availableCash} isCurrency isPositive delay={0.1} onClick={onMetricClick.availableCash} ariaLabel="View available cash" />
+      <HeroMetric label="Monthly Income" value={monthlyIncome} isCurrency isPositive delay={0.15} onClick={onMetricClick.monthlyIncome} ariaLabel="View income transactions" />
+      <HeroMetric label="Monthly Expenses" value={monthlyExpenses} isCurrency isPositive={false} delay={0.2} onClick={onMetricClick.monthlyExpenses} ariaLabel="View expense transactions" />
+      <HeroMetric label="Cash Flow" value={cashFlow} isCurrency isPositive={cashFlow >= 0} delay={0.25} onClick={onMetricClick.cashFlow} ariaLabel="View cash flow report" />
+      <HeroMetric label="Savings Rate" value={savingsRate} isPercent isPositive={savingsRate >= 20} delay={0.3} onClick={onMetricClick.savingsRate} ariaLabel="View savings goals" />
       <HeroMetric
         label="Health Score"
         value={healthScore ?? 0}
         isPositive={(healthScore ?? 0) >= 60}
         delay={0.35}
+        onClick={onMetricClick.healthScore}
+        ariaLabel="View financial health score"
       />
     </div>
   );

@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { ClickableCard } from '@/components/dashboard/ClickableCard';
 
 interface TrendItem {
   direction: string;
@@ -11,6 +12,7 @@ interface Props {
   trend: TrendItem;
   format?: 'currency' | 'percent' | 'number';
   isLoading?: boolean;
+  href?: string;
 }
 
 function TrendArrow({ direction }: { direction: string }) {
@@ -25,7 +27,7 @@ function TrendColor({ direction }: { direction: string }) {
   return 'var(--text-muted)';
 }
 
-export function PremiumTrendCard({ title, trend, format = 'currency', isLoading }: Props) {
+export function PremiumTrendCard({ title, trend, format = 'currency', isLoading, href }: Props) {
   if (isLoading) {
     return (
       <div className="premium-card p-5 animate-pulse">
@@ -43,34 +45,36 @@ export function PremiumTrendCard({ title, trend, format = 'currency', isLoading 
   };
 
   return (
-    <div className="premium-card p-5">
-      <div className="flex items-center justify-between mb-2">
-        <h4 className="text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-          {title}
-        </h4>
-        <motion.span
-          className="text-lg font-bold"
-          style={{ color: TrendColor({ direction: trend.direction }) }}
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-        >
-          <TrendArrow direction={trend.direction as string} />
-        </motion.span>
+    <ClickableCard href={href} ariaLabel={`View ${title} trend details`}>
+      <div className="premium-card p-5">
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+            {title}
+          </h4>
+          <motion.span
+            className="text-lg font-bold"
+            style={{ color: TrendColor({ direction: trend.direction }) }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            <TrendArrow direction={trend.direction as string} />
+          </motion.span>
+        </div>
+        <div className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
+          {formatValue(trend.change)}
+        </div>
+        <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-muted)' }}>
+          <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
+            trend.direction === 'improving' ? 'bg-emerald-500/10 text-emerald-500' :
+            trend.direction === 'declining' ? 'bg-red-500/10 text-red-500' :
+            'bg-gray-500/10 text-gray-400'
+          }`}>
+            {trend.direction === 'improving' ? 'Improving' : trend.direction === 'declining' ? 'Declining' : 'Stable'}
+          </span>
+          <span>{format === 'percent' ? `${trend.changePercent >= 0 ? '+' : ''}${trend.changePercent.toFixed(1)}%` : ''}</span>
+        </div>
       </div>
-      <div className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
-        {formatValue(trend.change)}
-      </div>
-      <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-muted)' }}>
-        <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
-          trend.direction === 'improving' ? 'bg-emerald-500/10 text-emerald-500' :
-          trend.direction === 'declining' ? 'bg-red-500/10 text-red-500' :
-          'bg-gray-500/10 text-gray-400'
-        }`}>
-          {trend.direction === 'improving' ? 'Improving' : trend.direction === 'declining' ? 'Declining' : 'Stable'}
-        </span>
-        <span>{format === 'percent' ? `${trend.changePercent >= 0 ? '+' : ''}${trend.changePercent.toFixed(1)}%` : ''}</span>
-      </div>
-    </div>
+    </ClickableCard>
   );
 }

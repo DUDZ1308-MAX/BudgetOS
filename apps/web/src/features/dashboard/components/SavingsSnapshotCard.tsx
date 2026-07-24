@@ -30,85 +30,54 @@ function AnimatedValue({ target, isCurrency }: { target: number; isCurrency?: bo
 export const SavingsSnapshotCard = memo(function SavingsSnapshotCard({ snapshot, isLoading }: Props) {
   if (isLoading) {
     return (
-      <DashboardCard title="Savings" subtitle="Goals progress">
+      <DashboardCard title="Savings Goals" subtitle="Goal progress">
         <div className="space-y-3">
-          <div className="h-8 w-36 animate-pulse rounded" style={{ background: 'var(--bg-elevated)' }} />
-          <div className="h-2 animate-pulse rounded-full" style={{ background: 'var(--bg-elevated)' }} />
-          <div className="h-4 w-48 animate-pulse rounded" style={{ background: 'var(--bg-elevated)' }} />
+          <div className="h-8 w-full animate-pulse rounded" style={{ background: 'var(--bg-elevated)' }} />
+          <div className="space-y-2">
+            <div className="h-4 w-3/4 animate-pulse rounded" style={{ background: 'var(--bg-elevated)' }} />
+            <div className="h-4 w-1/2 animate-pulse rounded" style={{ background: 'var(--bg-elevated)' }} />
+          </div>
         </div>
       </DashboardCard>
     );
   }
 
-  const pct = snapshot.goalCompletionPct;
-  const circumference = 2 * Math.PI * 28;
-  const offset = circumference * (1 - Math.min(pct, 100) / 100);
-
   return (
     <DashboardCard
-      title="Savings Snapshot"
-      subtitle={`${snapshot.activeGoals} active ${snapshot.activeGoals === 1 ? 'goal' : 'goals'}`}
+      title="Savings"
+      subtitle={`${snapshot.activeGoals} active goal${snapshot.activeGoals !== 1 ? 's' : ''}`}
       accent="left"
-      action={
-        <a href="/savings" className="text-xs font-medium hover:underline" style={{ color: 'var(--accent-text)' }}>
-          All Goals →
-        </a>
-      }
+      href="/savings"
     >
       <div className="space-y-3">
-        <div className="flex items-center gap-4">
+        <div className="flex items-end justify-between">
+          <AnimatedValue target={snapshot.totalSaved} isCurrency />
+          <span className="text-xs font-medium" style={{ color: 'var(--status-success)' }}>
+            {snapshot.goalCompletionPct.toFixed(0)}%
+          </span>
+        </div>
+        <div className="h-2 w-full rounded-full" style={{ background: 'var(--bg-tertiary)' }}>
           <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="relative h-16 w-16 shrink-0"
-          >
-            <svg className="h-16 w-16 -rotate-90" viewBox="0 0 64 64">
-              <circle cx="32" cy="32" r="28" fill="none" stroke="var(--border-default)" strokeWidth="4" />
-              <circle
-                cx="32" cy="32" r="28" fill="none"
-                stroke={pct >= 80 ? 'var(--status-success)' : pct >= 40 ? 'var(--status-warning)' : 'var(--status-error)'}
-                strokeWidth="4"
-                strokeDasharray={circumference}
-                strokeDashoffset={offset}
-                strokeLinecap="round"
-                className="premium-gauge"
-              />
-            </svg>
-            <span className="absolute inset-0 flex items-center justify-center text-xs font-bold" style={{ color: 'var(--accent-primary)' }}>
-              {Math.round(pct)}%
-            </span>
-          </motion.div>
-
-          <div className="min-w-0 flex-1">
-            <div className="flex items-baseline justify-between">
-              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Total Saved</span>
-              <AnimatedValue target={snapshot.totalSaved} isCurrency />
-            </div>
+            className="h-full rounded-full"
+            style={{ background: 'var(--accent-gradient)', width: `${snapshot.goalCompletionPct}%` }}
+            initial={{ width: 0 }}
+            animate={{ width: `${snapshot.goalCompletionPct}%` }}
+            transition={{ duration: 1, ease: 'easeOut' }}
+          />
+        </div>
+        {snapshot.nearestGoal && (
+          <div className="flex items-center justify-between text-xs" style={{ color: 'var(--text-muted)' }}>
+            <span>Next: {snapshot.nearestGoal}</span>
+            <span>{snapshot.nearestGoalProgress.toFixed(0)}%</span>
           </div>
-        </div>
-
-        <div className="space-y-1 text-xs">
-          {snapshot.nearestGoal && (
-            <div className="flex items-center justify-between">
-              <span style={{ color: 'var(--text-muted)' }}>Nearest Goal</span>
-              <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
-                {snapshot.nearestGoal} ({Math.round(snapshot.nearestGoalProgress)}%)
-              </span>
-            </div>
-          )}
-          {snapshot.nextMilestone && (
-            <div className="flex items-center justify-between">
-              <span style={{ color: 'var(--text-muted)' }}>Next Milestone</span>
-              <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
-                {formatCurrency(snapshot.nextMilestoneAmount)} to go
-              </span>
-            </div>
-          )}
-          {!snapshot.nearestGoal && (
-            <p className="text-xs italic" style={{ color: 'var(--text-muted)' }}>No savings goals yet</p>
-          )}
-        </div>
+        )}
+        {snapshot.nextMilestone && (
+          <div className="rounded-lg p-2 text-xs" style={{ background: 'var(--bg-elevated)' }}>
+            <span style={{ color: 'var(--text-muted)' }}>Next milestone: </span>
+            <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{snapshot.nextMilestone}</span>
+            <span style={{ color: 'var(--text-muted)' }}> — {formatCurrency(snapshot.nextMilestoneAmount)}</span>
+          </div>
+        )}
       </div>
     </DashboardCard>
   );

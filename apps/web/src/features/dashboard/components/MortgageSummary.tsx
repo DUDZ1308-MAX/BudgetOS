@@ -28,106 +28,70 @@ function AnimatedValue({ target, isCurrency }: { target: number; isCurrency?: bo
 }
 
 const FREQ_LABELS: Record<string, string> = {
-  monthly: 'Monthly',
-  semi_monthly: 'Semi-Monthly',
-  bi_weekly: 'Bi-Weekly',
-  accelerated_bi_weekly: 'Accel. Bi-Weekly',
-  weekly: 'Weekly',
-  accelerated_weekly: 'Accel. Weekly',
+  weekly: '/wk',
+  biweekly: '/2wk',
+  semiMonthly: '/mo',
+  monthly: '/mo',
+  accelerated_biweekly: '/2wk',
 };
 
 export const MortgageSummary = memo(function MortgageSummary({ mortgages, isLoading }: Props) {
-  const primary = mortgages[0];
-
   if (isLoading) {
     return (
-      <DashboardCard title="Mortgage Summary" subtitle="Payoff progress">
+      <DashboardCard title="Mortgage" subtitle="Loan overview">
         <div className="space-y-3">
-          <div className="h-8 w-36 animate-pulse rounded" style={{ background: 'var(--bg-elevated)' }} />
-          <div className="h-2 animate-pulse rounded-full" style={{ background: 'var(--bg-elevated)' }} />
-          <div className="grid grid-cols-2 gap-2">
-            {[1, 2, 3, 4].map((i) => <div key={i} className="h-6 animate-pulse rounded" style={{ background: 'var(--bg-elevated)' }} />)}
+          <div className="h-8 w-full animate-pulse rounded" style={{ background: 'var(--bg-elevated)' }} />
+          <div className="space-y-2">
+            <div className="h-4 w-3/4 animate-pulse rounded" style={{ background: 'var(--bg-elevated)' }} />
+            <div className="h-4 w-1/2 animate-pulse rounded" style={{ background: 'var(--bg-elevated)' }} />
           </div>
         </div>
       </DashboardCard>
     );
   }
 
-  if (!primary) {
+  if (mortgages.length === 0) {
     return (
-      <DashboardCard title="Mortgage" subtitle="No mortgage data" accent="none">
-        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-          <a href="/mortgage" className="text-indigo-500 hover:underline">Add a mortgage</a> to see your payoff progress.
-        </p>
+      <DashboardCard title="Mortgage" subtitle="Loan overview">
+        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No mortgage data available.</p>
       </DashboardCard>
     );
   }
-
-  const pct = primary.progressPct;
-  const circumference = 2 * Math.PI * 28;
-  const offset = circumference * (1 - Math.min(pct, 100) / 100);
 
   return (
     <DashboardCard
-      title="Mortgage Summary"
-      subtitle={`${primary.name} — ${FREQ_LABELS[primary.paymentFrequency] ?? primary.paymentFrequency}`}
+      title="Mortgage"
+      subtitle={`${mortgages.length} loan${mortgages.length !== 1 ? 's' : ''}`}
       accent="left"
-      action={
-        <a href="/mortgage" className="text-xs font-medium hover:underline" style={{ color: 'var(--accent-text)' }}>
-          Open Mortgage →
-        </a>
-      }
+      href="/mortgage"
     >
-      <div className="space-y-3">
-        <div className="flex items-center gap-4">
-          {/* Progress ring */}
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="relative h-16 w-16 shrink-0"
-          >
-            <svg className="h-16 w-16 -rotate-90" viewBox="0 0 64 64">
-              <circle cx="32" cy="32" r="28" fill="none" stroke="var(--border-default)" strokeWidth="4" />
-              <circle
-                cx="32" cy="32" r="28" fill="none"
-                stroke="var(--accent-primary)" strokeWidth="4"
-                strokeDasharray={circumference}
-                strokeDashoffset={offset}
-                strokeLinecap="round"
-                className="premium-gauge"
+      {mortgages.map((m) => (
+        <div key={m.id}>
+          <div className="flex items-center justify-between">
+            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{m.name}</span>
+            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{m.paymentFrequency ? FREQ_LABELS[m.paymentFrequency] ?? '' : ''}</span>
+          </div>
+          <div className="mt-1">
+            <AnimatedValue target={m.remainingBalance} isCurrency />
+          </div>
+          <div className="mt-2 flex items-center gap-2">
+            <div className="h-2 flex-1 rounded-full" style={{ background: 'var(--bg-tertiary)' }}>
+              <motion.div
+                className="h-full rounded-full"
+                style={{ background: 'var(--accent-gradient)', width: `${m.principalPaidPct}%` }}
+                initial={{ width: 0 }}
+                animate={{ width: `${m.principalPaidPct}%` }}
+                transition={{ duration: 1, ease: 'easeOut' }}
               />
-            </svg>
-            <span className="absolute inset-0 flex items-center justify-center text-xs font-bold tabular-nums" style={{ color: 'var(--accent-primary)' }}>
-              {Math.round(pct)}%
-            </span>
-          </motion.div>
-
-          <div className="min-w-0 flex-1">
-            <div className="flex items-baseline justify-between">
-              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Remaining</span>
-              <AnimatedValue target={primary.remainingBalance} isCurrency />
             </div>
-            <div className="flex items-baseline justify-between">
-              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Payment</span>
-              <span className="text-sm font-medium tabular-nums" style={{ color: 'var(--text-secondary)' }}>{formatCurrency(primary.monthlyPayment)}</span>
-            </div>
-            <div className="flex items-baseline justify-between">
-              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Interest Saved</span>
-              <span className="text-sm font-medium tabular-nums text-emerald-600 dark:text-emerald-400">{formatCurrency(primary.interestSaved)}</span>
-            </div>
+            <span className="text-[11px] font-medium" style={{ color: 'var(--text-muted)' }}>{m.principalPaidPct.toFixed(0)}%</span>
+          </div>
+          <div className="mt-2 flex items-center justify-between">
+            <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Monthly: {formatCurrency(m.monthlyPayment)}</span>
+            <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{m.yearsRemaining}y remaining</span>
           </div>
         </div>
-
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-          <span style={{ color: 'var(--text-muted)' }}>Payoff Date</span>
-          <span className="text-right font-medium tabular-nums" style={{ color: 'var(--text-secondary)' }}>
-            {primary.payoffDate ? new Date(primary.payoffDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '—'}
-          </span>
-          <span style={{ color: 'var(--text-muted)' }}>Years Remaining</span>
-          <span className="text-right font-medium tabular-nums" style={{ color: 'var(--text-secondary)' }}>{primary.yearsRemaining}y</span>
-        </div>
-      </div>
+      ))}
     </DashboardCard>
   );
 });

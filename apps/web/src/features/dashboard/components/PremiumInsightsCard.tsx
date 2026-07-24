@@ -1,3 +1,5 @@
+import { ClickableCard } from '@/components/dashboard/ClickableCard';
+
 interface Insight {
   id: string;
   category: string;
@@ -10,6 +12,7 @@ interface Insight {
 interface Props {
   insights: Insight[];
   isLoading?: boolean;
+  href?: string;
 }
 
 function TypeIcon({ type }: { type: string }) {
@@ -28,7 +31,7 @@ const categoryColors: Record<string, string> = {
   net_worth: 'bg-violet-500/10 text-violet-400',
 };
 
-export function PremiumInsightsCard({ insights, isLoading }: Props) {
+export function PremiumInsightsCard({ insights, isLoading, href }: Props) {
   if (isLoading) {
     return (
       <div className="premium-card p-5 animate-pulse">
@@ -45,37 +48,39 @@ export function PremiumInsightsCard({ insights, isLoading }: Props) {
   if (insights.length === 0) return null;
 
   return (
-    <div className="premium-card p-5">
-      <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
-        Intelligent Insights
-      </h3>
+    <ClickableCard href={href} ariaLabel="View all financial insights">
+      <div className="premium-card p-5">
+        <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
+          Intelligent Insights
+        </h3>
 
-      <div className="space-y-2">
-        {insights.slice(0, 5).map((insight) => (
-          <div
-            key={insight.id}
-            className="flex items-start gap-3 p-3 rounded-lg"
-            style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)' }}
-          >
-            <div className="mt-0.5">
-              <TypeIcon type={insight.type} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
-                  {insight.title}
-                </span>
-                <span className={`px-1.5 py-0.5 rounded text-xs ${categoryColors[insight.category] ?? 'bg-gray-500/10 text-gray-400'}`}>
-                  {insight.category.replace('_', ' ')}
-                </span>
+        <div className="space-y-2">
+          {insights.slice(0, 5).map((insight) => (
+            <div
+              key={insight.id}
+              className="flex items-start gap-3 p-3 rounded-lg"
+              style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)' }}
+            >
+              <div className="mt-0.5">
+                <TypeIcon type={insight.type} />
               </div>
-              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                {insight.message}
-              </p>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    {insight.title}
+                  </span>
+                  <span className={`px-1.5 py-0.5 rounded text-xs ${categoryColors[insight.category] ?? 'bg-gray-500/10 text-gray-400'}`}>
+                    {insight.category.replace('_', ' ')}
+                  </span>
+                </div>
+                <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                  {insight.message}
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
+    </ClickableCard>
   );
 }

@@ -7,6 +7,7 @@ import type { DashboardUpcomingItem } from '@/lib/dashboard/types';
 interface Props {
   items: DashboardUpcomingItem[];
   isLoading?: boolean;
+  onItemClick?: (item: DashboardUpcomingItem) => void;
 }
 
 const TYPE_ICONS: Record<string, string> = {
@@ -34,7 +35,7 @@ function formatDate(dateStr: string): string {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-export const UpcomingSection = memo(function UpcomingSection({ items, isLoading }: Props) {
+export const UpcomingSection = memo(function UpcomingSection({ items, isLoading, onItemClick }: Props) {
   if (isLoading) {
     return (
       <DashboardCard title="Upcoming" subtitle="Next 30 days">
@@ -77,7 +78,12 @@ export const UpcomingSection = memo(function UpcomingSection({ items, isLoading 
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: i * 0.04 }}
-            className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+            className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer"
+            onClick={() => onItemClick?.(item)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onItemClick?.(item); } }}
+            role="button"
+            tabIndex={0}
+            aria-label={`View ${item.name}`}
           >
             <span className="text-lg">{TYPE_ICONS[item.type] ?? '📌'}</span>
             <div className="min-w-0 flex-1">
