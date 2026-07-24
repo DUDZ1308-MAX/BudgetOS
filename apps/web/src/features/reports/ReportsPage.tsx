@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth';
 import { accountsApi } from '@/lib/api/accounts';
 import { transactionsApi } from '@/lib/api/transactions';
@@ -8,54 +9,40 @@ import { savingsApi } from '@/lib/api/savings';
 import { mortgageApi } from '@/lib/api/mortgage';
 import { recurringApi } from '@/lib/api/recurring';
 import { categoriesApi } from '@/lib/api/categories';
-import { toMonthlyEquivalent } from '@budgetos/engine';
-import type { RecurringFrequency } from '@budgetos/shared';
-import { formatCurrency } from '@/services/transactionService';
 import { FinancialEngine } from '@/services/FinancialEngine';
-import { useNavigate } from 'react-router-dom';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend, Cell } from 'recharts';
 import { IconReports } from '@/components/ui/Icons';
-import { InteractiveDonut } from '@/components/dashboard/InteractiveDonut';
+import { useReportFilters } from './useReportFilters';
+import { applyFilters } from './utils/reportCalculator';
+import {
+  computeMonthlyKpis, computeCashFlowChart, computeCategoryPieChart,
+  computeBudgetBarChart, computeSavingsBarChart, computeMortgageChart,
+  computeNetWorthChart, computeIncomeTrendChart, computeExpenseTrendChart,
+  computeRecurringSummary, computeForecastSummary,
+} from './utils/reportCalculator';
+import {
+  generateCashFlowInsights, generateSpendingInsights, generateBudgetInsights,
+  generateSavingsInsights, generateNetWorthInsights, generateMortgageInsights,
+  generateRecurringInsights,
+} from './utils/reportInsights';
+import { exportReportCSV, exportReportExcel, exportReportPDF, buildCategoryExport, buildMonthlyTrendExport, buildBudgetExport } from './utils/reportExporter';
+import { ReportChart } from './components/ReportChart';
+import { ReportMetricsRow } from './components/ReportMetricsRow';
+import { ReportInsightsPanel } from './components/ReportInsightsPanel';
+import { ReportExporter } from './components/ReportExporter';
+import type { ReportTab, TimeRange } from './reportTypes';
 
-const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6', '#ec4899'];
-
-type ReportTab = 'monthly' | 'budget' | 'savings' | 'mortgage' | 'health' | 'recurring';
-
-function dateRangeFromTab(tab: string): { start: string; end: string } {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, '0');
-  const lastDay = new Date(y, now.getMonth() + 1, 0).getDate();
-  if (tab === 'last3') {
-    const s = new Date(y, now.getMonth() - 2, 1);
-    return { start: s.toISOString().slice(0, 10), end: `${y}-${m}-${String(lastDay).padStart(2, '0')}` };
-  }
-  if (tab === 'last12') {
-    const s = new Date(y - 1, now.getMonth(), 1);
-    return { start: s.toISOString().slice(0, 10), end: `${y}-${m}-${String(lastDay).padStart(2, '0')}` };
-  }
-  return { start: `${y}-${m}-01`, end: `${y}-${m}-${String(lastDay).padStart(2, '0')}` };
-}
-
-function TooltipCard({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-lg dark:border-slate-700 dark:bg-slate-800">
-      <p className="mb-1 text-xs font-medium text-slate-500 dark:text-slate-400">{label}</p>
-      {payload.map((p: any, i: number) => (
-        <p key={i} className="text-xs font-semibold" style={{ color: p.color }}>{p.name}: {formatCurrency(p.value)}</p>
-      ))}
-    </div>
-  );
-}
+const timeRanges: { key: TimeRange; label: string }[] = [
+  { key: '30d', label: '30 Days' },
+  { key: '90d', label: '90 Days' },
+  { key: '6m', label: '6 Months' },
+  { key: '1y', label: '1 Year' },
+  { key: 'all', label: 'All Time' },
+];
 
 export function ReportsPage() {
   const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
-  const [tab, setTab] = useState<ReportTab>('monthly');
-  const [rangeTab, setRangeTab] = useState('current');
-
-  const range = useMemo(() => dateRangeFromTab(rangeTab), [rangeTab]);
+  const { state: filterState, filters, tabs, setTab, setTimeRange, setType } = useReportFilters();
 
   const { data: accounts = [] } = useQuery({ queryKey: ['accounts', user?.id], queryFn: () => accountsApi.list(user!.id), enabled: !!user });
   const { data: allTxns = [] } = useQuery({ queryKey: ['transactions-all', user?.id], queryFn: () => transactionsApi.list(user!.id), enabled: !!user });
@@ -65,168 +52,254 @@ export function ReportsPage() {
   const { data: recurrings = [] } = useQuery({ queryKey: ['recurring-transactions', user?.id], queryFn: () => recurringApi.list(user!.id), enabled: !!user });
   const { data: categories = [] } = useQuery({ queryKey: ['categories', user?.id], queryFn: () => categoriesApi.list(user!.id), enabled: !!user });
 
-  const hasData = accounts.length > 0 || allTxns.length > 0 || budgets.length > 0 || savingsGoals.length > 0 || mortgages.length > 0;
+  const hasData = accounts.length > 0 || allTxns.length > 0 || budgets.length > 0;
 
-  const monthTxns = useMemo(() => allTxns.filter((t) => t.date >= range.start && t.date <= range.end), [allTxns, range]);
+  const filteredTxns = useMemo(() => applyFilters(allTxns, filters), [allTxns, filters]);
 
   const netWorth = useMemo(() => FinancialEngine.getNetWorth(accounts), [accounts]);
+  const cashFlow = useMemo(() => FinancialEngine.getCashFlow(filteredTxns, recurrings, filters.dateRange), [filteredTxns, recurrings, filters.dateRange]);
 
-  const cashFlow = useMemo(
-    () => FinancialEngine.getCashFlow(monthTxns, recurrings, range),
-    [monthTxns, recurrings, range],
-  );
+  const tabContent = useMemo(() => {
+    if (!hasData) return null;
+    const tab = filterState.tab;
+
+    switch (tab) {
+      case 'monthly': {
+        const kpis = computeMonthlyKpis(filteredTxns, recurrings, accounts, filters.dateRange);
+        const cashFlowChart = computeCashFlowChart(filteredTxns, filters.dateRange);
+        const categoryChart = computeCategoryPieChart(filteredTxns, categories);
+        const insights = [
+          ...generateCashFlowInsights(cashFlow.monthlyIncome, cashFlow.monthlyExpenses, cashFlow.cashFlow),
+          ...generateNetWorthInsights(netWorth.netWorth),
+        ];
+        return { kpis, charts: [cashFlowChart, categoryChart], insights };
+      }
+
+      case 'income': {
+        const incomeTxns = filteredTxns.filter((t) => Number(t.amount) > 0);
+        const totalIncome = incomeTxns.reduce((s, t) => s + Number(t.amount), 0);
+        const chart = computeIncomeTrendChart(filteredTxns);
+        const kpis = [
+          { label: 'Total Income', value: `$${totalIncome.toLocaleString()}`, color: 'var(--status-success)' },
+          { label: 'Monthly Avg', value: `$${(totalIncome / Math.max(1, incomeTxns.length || 1)).toLocaleString()}`, color: 'var(--text-primary)' },
+          { label: 'Transactions', value: incomeTxns.length.toLocaleString(), color: 'var(--text-primary)' },
+        ];
+        return { kpis, charts: [chart], insights: [] };
+      }
+
+      case 'expenses': {
+        const expenseTxns = filteredTxns.filter((t) => Number(t.amount) < 0);
+        const totalExpenses = expenseTxns.reduce((s, t) => s + Math.abs(Number(t.amount)), 0);
+        const chart = computeExpenseTrendChart(filteredTxns);
+        const kpis = [
+          { label: 'Total Expenses', value: `$${totalExpenses.toLocaleString()}`, color: 'var(--status-error)' },
+          { label: 'Monthly Avg', value: `$${(totalExpenses / Math.max(1, expenseTxns.length || 1)).toLocaleString()}`, color: 'var(--text-primary)' },
+          { label: 'Transactions', value: expenseTxns.length.toLocaleString(), color: 'var(--text-primary)' },
+        ];
+        return { kpis, charts: [chart, computeCategoryPieChart(filteredTxns, categories)], insights: [] };
+      }
+
+      case 'category': {
+        const expenseTxns = filteredTxns.filter((t) => Number(t.amount) < 0);
+        const totalExpenses = expenseTxns.reduce((s, t) => s + Math.abs(Number(t.amount)), 0);
+        const categoryChart = computeCategoryPieChart(filteredTxns, categories);
+        const catData = (categoryChart.data as Array<{ name: string; value: number; percent: number }>);
+        const kpis = [
+          { label: 'Total Categories', value: catData.length.toLocaleString(), color: 'var(--text-primary)' },
+          { label: 'Total Spending', value: `$${totalExpenses.toLocaleString()}`, color: 'var(--status-error)' },
+        ];
+        const insights = generateSpendingInsights(catData, totalExpenses);
+        return { kpis, charts: [categoryChart], insights };
+      }
+
+      case 'cashflow': {
+        const chart = computeCashFlowChart(filteredTxns, filters.dateRange);
+        const kpis = computeMonthlyKpis(filteredTxns, recurrings, accounts, filters.dateRange);
+        const insights = generateCashFlowInsights(cashFlow.monthlyIncome, cashFlow.monthlyExpenses, cashFlow.cashFlow);
+        return { kpis, charts: [chart], insights };
+      }
+
+      case 'budget': {
+        const budgetChart = computeBudgetBarChart(budgets, filteredTxns, categories, cashFlow.monthlyIncome);
+        const budgetHealth = FinancialEngine.getBudgetHealth(budgets, filteredTxns, categories, cashFlow.monthlyIncome);
+        const kpis = [
+          { label: 'Total Budgeted', value: `$${budgetHealth.totalBudgeted.toLocaleString()}`, color: 'var(--text-primary)' },
+          { label: 'Total Spent', value: `$${budgetHealth.totalSpent.toLocaleString()}`, color: 'var(--status-error)' },
+          { label: 'Remaining', value: `$${budgetHealth.remaining.toLocaleString()}`, color: 'var(--status-success)' },
+          { label: 'Adherence', value: `${budgetHealth.adherencePercent.toFixed(0)}%`, color: budgetHealth.adherencePercent >= 80 ? 'var(--status-success)' : 'var(--status-warning)' },
+        ];
+        const onTrack = budgetHealth.categories.filter((c) => c.status === 'under' || c.status === 'on_track').length;
+        const over = budgetHealth.categories.filter((c) => c.status === 'over').length;
+        const insights = generateBudgetInsights(onTrack, over, budgetHealth.categories.length, budgetHealth.adherencePercent);
+        return { kpis, charts: [budgetChart], insights };
+      }
+
+      case 'savings': {
+        const savingsResults = FinancialEngine.getSavingsGoals(savingsGoals);
+        const totalSaved = savingsResults.reduce((s, g) => s + g.currentAmount, 0);
+        const totalTarget = savingsResults.reduce((s, g) => s + g.targetAmount, 0);
+        const completedGoals = savingsResults.filter((g) => g.percentComplete >= 100).length;
+        const chart = computeSavingsBarChart(savingsGoals);
+        const kpis = [
+          { label: 'Total Saved', value: `$${totalSaved.toLocaleString()}`, color: 'var(--status-success)' },
+          { label: 'Total Target', value: `$${totalTarget.toLocaleString()}`, color: 'var(--text-primary)' },
+          { label: 'Progress', value: totalTarget > 0 ? `${((totalSaved / totalTarget) * 100).toFixed(0)}%` : '-', color: 'var(--accent-primary)' },
+          { label: 'Completed', value: completedGoals.toLocaleString(), color: 'var(--status-success)' },
+        ];
+        const insights = generateSavingsInsights(totalSaved, totalTarget, completedGoals, savingsResults.length);
+        return { kpis, charts: [chart], insights };
+      }
+
+      case 'mortgage': {
+        if (mortgages.length === 0) return null;
+        const mortgage = mortgages[0]!;
+        const mortgageResult = FinancialEngine.getMortgages(mortgages);
+        const mr = mortgageResult[0];
+        const chart = computeMortgageChart(mortgage);
+        const kpis = mr ? [
+          { label: 'Monthly Payment', value: `$${mr.monthlyPayment.toLocaleString()}`, color: 'var(--text-primary)' },
+          { label: 'Remaining Balance', value: `$${mr.remainingBalance.toLocaleString()}`, color: 'var(--status-error)' },
+          { label: 'Payoff Date', value: mr.payoffDate ? new Date(mr.payoffDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '-', color: 'var(--status-success)' },
+          { label: 'Interest Saved', value: `$${mr.interestSaved.toLocaleString()}`, color: 'var(--status-success)' },
+        ] : [];
+        const insights = mr ? generateMortgageInsights(mr.progressPct, mr.interestSaved, mr.remainingBalance) : [];
+        return { kpis, charts: [chart], insights };
+      }
+
+      case 'networth': {
+        const chart = computeNetWorthChart(filteredTxns, accounts);
+        const kpis = [
+          { label: 'Net Worth', value: `$${netWorth.netWorth.toLocaleString()}`, color: netWorth.netWorth >= 0 ? 'var(--status-success)' : 'var(--status-error)' },
+          { label: 'Total Assets', value: `$${netWorth.totalAssets.toLocaleString()}`, color: 'var(--status-success)' },
+          { label: 'Total Liabilities', value: `$${netWorth.totalLiabilities.toLocaleString()}`, color: 'var(--status-error)' },
+        ];
+        const insights = generateNetWorthInsights(netWorth.netWorth);
+        return { kpis, charts: [chart], insights };
+      }
+
+      case 'recurring': {
+        const chart = computeRecurringSummary(recurrings);
+        const activeRecurrings = recurrings.filter((r: any) => r.status === 'active');
+        const monthlyTotal = activeRecurrings
+          .filter((r: any) => r.type === 'expense')
+          .reduce((s: number, r: any) => s + Math.abs(Number(r.amount)), 0);
+        const kpis = [
+          { label: 'Active Recurring', value: activeRecurrings.length.toLocaleString(), color: 'var(--text-primary)' },
+          { label: 'Monthly Total', value: `$${monthlyTotal.toLocaleString()}`, color: 'var(--status-error)' },
+          { label: 'Recurring Income', value: `$${activeRecurrings.filter((r: any) => r.type === 'income').reduce((s: number, r: any) => s + Math.abs(Number(r.amount)), 0).toLocaleString()}`, color: 'var(--status-success)' },
+        ];
+        const insights = generateRecurringInsights(activeRecurrings.length, monthlyTotal);
+        return { kpis, charts: [chart], insights };
+      }
+
+      case 'forecast': {
+        const savingsResults = FinancialEngine.getSavingsGoals(savingsGoals);
+        const totalSaved = savingsResults.reduce((s, g) => s + g.currentAmount, 0);
+        const totalDebt = netWorth.totalLiabilities;
+        const savingsRate = cashFlow.monthlyIncome > 0 ? ((cashFlow.cashFlow / cashFlow.monthlyIncome) * 100) : 0;
+        const chart = computeForecastSummary(netWorth.netWorth, totalSaved, totalDebt, cashFlow.monthlyIncome, cashFlow.monthlyExpenses);
+        const kpis = [
+          { label: 'Current Net Worth', value: `$${netWorth.netWorth.toLocaleString()}`, color: 'var(--text-primary)' },
+          { label: 'Monthly Cash Flow', value: `$${cashFlow.cashFlow.toLocaleString()}`, color: cashFlow.cashFlow >= 0 ? 'var(--status-success)' : 'var(--status-error)' },
+          { label: 'Savings Rate', value: `${savingsRate.toFixed(1)}%`, color: savingsRate >= 20 ? 'var(--status-success)' : 'var(--status-warning)' },
+        ];
+        return { kpis, charts: [chart], insights: [] };
+      }
+
+      default:
+        return null;
+    }
+  }, [filterState.tab, filteredTxns, filters, accounts, categories, budgets, savingsGoals, mortgages, recurrings, hasData, cashFlow, netWorth]);
 
   const budgetHealth = useMemo(
-    () => FinancialEngine.getBudgetHealth(budgets, monthTxns, categories, cashFlow.monthlyIncome),
-    [budgets, monthTxns, categories, cashFlow.monthlyIncome],
+    () => FinancialEngine.getBudgetHealth(budgets, filteredTxns, categories, cashFlow.monthlyIncome),
+    [budgets, filteredTxns, categories, cashFlow.monthlyIncome],
   );
 
-  const savingsResults = useMemo(() => FinancialEngine.getSavingsGoals(savingsGoals), [savingsGoals]);
-
-  const totalSaved = useMemo(() => savingsResults.reduce((s, g) => s + g.currentAmount, 0), [savingsResults]);
-  const totalTarget = useMemo(() => savingsResults.reduce((s, g) => s + g.targetAmount, 0), [savingsResults]);
-  const completedGoals = useMemo(() => savingsResults.filter((g) => g.percentComplete >= 100).length, [savingsResults]);
-
-  const mortgageResults = useMemo(() => FinancialEngine.getMortgages(mortgages), [mortgages]);
-  const mortgageResult = mortgageResults.length > 0 ? mortgageResults[0] : null;
-
-  // Category spending breakdown for charts
-  const categorySpending = useMemo(() => {
-    const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
-    const map = new Map<string, number>();
-    for (const t of monthTxns) {
-      const amt = Math.abs(Number(t.amount));
-      const cat = t.category_id || 'Uncategorized';
-      map.set(cat, (map.get(cat) ?? 0) + amt);
+  const handleExportCSV = useCallback(() => {
+    if (!tabContent) return;
+    const tab = filterState.tab;
+    if (tab === 'category' || tab === 'expenses') {
+      const catChart = tabContent.charts.find((c) => c.title === 'Spending Breakdown');
+      if (catChart) {
+        exportReportCSV(buildCategoryExport(catChart.data as Array<{ name: string; value: number; percent: number }>));
+      }
+    } else {
+      const monthlyChart = tabContent.charts.find((c) => c.title === 'Cash Flow Trend');
+      if (monthlyChart) {
+        exportReportCSV(buildMonthlyTrendExport(monthlyChart.data as Array<{ month: string; income: number; expenses: number; net: number }>));
+      }
     }
-    const total = Array.from(map.values()).reduce((s, v) => s + v, 0);
-    return Array.from(map.entries())
-      .map(([catId, value]) => ({
-        id: catId,
-        name: categoryMap.get(catId) ?? (catId === 'Uncategorized' ? 'Uncategorized' : catId.slice(0, 12)),
-        value,
-        percent: total > 0 ? Math.round((value / total) * 100) : 0,
-      }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 8);
-  }, [monthTxns, categories]);
+  }, [tabContent, filterState.tab]);
 
-  // Monthly spending trend
-  const monthlyTrend = useMemo(() => {
-    const months = new Map<string, { income: number; expenses: number }>();
-    for (const t of allTxns) {
-      const key = t.date.slice(0, 7);
-      if (!months.has(key)) months.set(key, { income: 0, expenses: 0 });
-      const d = months.get(key)!;
-      const amt = Number(t.amount);
-      if (amt >= 0) d.income += amt;
-      else d.expenses += Math.abs(amt);
+  const handleExportExcel = useCallback(async () => {
+    const exports = [];
+    if (tabContent) {
+      for (const chart of tabContent.charts) {
+        if (chart.type === 'pie') {
+          exports.push(buildCategoryExport(chart.data as Array<{ name: string; value: number; percent: number }>));
+        } else {
+          exports.push(buildMonthlyTrendExport(chart.data as Array<{ month: string; income: number; expenses: number; net: number }>));
+        }
+      }
     }
-    return Array.from(months.entries()).map(([month, v]) => ({ month, ...v })).slice(-12);
-  }, [allTxns]);
+    if (filterState.tab === 'budget') {
+      const bd = budgetHealth.categories.map((c) => ({ category: c.categoryName, budgeted: c.budgeted, spent: c.spent, remaining: c.remaining }));
+      exports.push(buildBudgetExport(bd));
+    }
+    if (exports.length > 0) {
+      await exportReportExcel('BudgetOS Report', exports);
+    }
+  }, [tabContent, filterState.tab, budgetHealth]);
 
-  // Savings growth
-  const savingsGrowth = useMemo(() => {
-    return savingsGoals.map((g) => ({
-      name: g.name.slice(0, 14),
-      saved: Number(g.current_amount),
-      target: Number(g.target_amount),
-    }));
-  }, [savingsGoals]);
-
-  // Mortgage balance projection
-  const mortgageBalanceData = useMemo(() => {
-    if (!mortgages.length) return [];
-    const mortgage = mortgages[0];
-    if (!mortgage) return [];
-    const schedule = FinancialEngine.getMortgageSchedule(mortgage);
-    if (!schedule.length) return [];
-    return schedule.filter((_, i) => i % 12 === 0 || i === schedule.length - 1).map((r) => ({
-      year: `${Math.floor(r.month / 12) + 1}y`,
-      balance: r.remainingBalance,
-    }));
-  }, [mortgages]);
-
-  const tabs: { key: ReportTab; label: string }[] = [
-    { key: 'monthly', label: 'Monthly Summary' },
-    { key: 'budget', label: 'Budget' },
-    { key: 'savings', label: 'Savings' },
-    { key: 'mortgage', label: 'Mortgage' },
-    { key: 'health', label: 'Financial Health' },
-    { key: 'recurring', label: 'Recurring vs Manual' },
-  ];
-
-  const recurringExpenses = useMemo(() => {
-    const recurringTxnIds = new Set(recurrings.map((r) => r.id));
-    const withRecurring = allTxns.filter((t) => t.recurring_id);
-    const withoutRecurring = allTxns.filter((t) => !t.recurring_id && t.amount < 0);
-    return {
-      recurringTotal: withRecurring.reduce((s, t) => s + Math.abs(Number(t.amount)), 0),
-      manualTotal: withoutRecurring.reduce((s, t) => s + Math.abs(Number(t.amount)), 0),
-      recurringCount: withRecurring.length,
-      manualCount: withoutRecurring.length,
-    };
-  }, [allTxns, recurrings]);
-
-  const upcomingObligations = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0];
-    return recurrings
-      .filter((r) => r.type === 'expense' && r.status === 'active')
-      .map((r) => ({
-        name: r.name,
-        amount: Math.abs(Number(r.amount)),
-        monthlyAmount: toMonthlyEquivalent(Math.abs(Number(r.amount)), r.frequency as RecurringFrequency),
-        nextRun: r.next_run,
-        frequency: r.frequency,
-      }))
-      .sort((a, b) => a.nextRun.localeCompare(b.nextRun));
-  }, [recurrings]);
-
-  function exportCSV(data: Record<string, any>[], filename: string) {
-    if (!data.length) return;
-    const headers = Object.keys(data[0]!);
-    const csv = [headers.join(','), ...data.map((r) => headers.map((h) => `"${r[h] ?? ''}"`).join(','))].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `${filename}.csv`; a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  function categorySpendingCSV() {
-    return categorySpending.map((c) => ({ Category: c.name, Spent: c.value }));
-  }
-
-  function exportCurrentCSV() { exportCSV(categorySpendingCSV(), `spending-${range.start}`); }
-  function exportAllCSV() { exportCSV(monthlyTrend, `monthly-trend-${new Date().getFullYear()}`); }
+  const handleExportPDF = useCallback(async () => {
+    const exports = [];
+    if (tabContent) {
+      for (const chart of tabContent.charts) {
+        if (chart.type === 'pie') {
+          exports.push(buildCategoryExport(chart.data as Array<{ name: string; value: number; percent: number }>));
+        } else {
+          exports.push(buildMonthlyTrendExport(chart.data as Array<{ month: string; income: number; expenses: number; net: number }>));
+        }
+      }
+    }
+    if (filterState.tab === 'budget') {
+      const bd = budgetHealth.categories.map((c) => ({ category: c.categoryName, budgeted: c.budgeted, spent: c.spent, remaining: c.remaining }));
+      exports.push(buildBudgetExport(bd));
+    }
+    if (exports.length > 0) {
+      await exportReportPDF('BudgetOS Report', exports);
+    }
+  }, [tabContent, filterState.tab, budgetHealth]);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Reports</h1>
-        <div className="flex gap-2">
-          {hasData && (
-            <>
-              <button onClick={exportCurrentCSV} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800">CSV</button>
-              <button onClick={exportAllCSV} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800">Export All</button>
-            </>
-          )}
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Reports & Analytics</h1>
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Comprehensive financial analysis</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <ReportExporter onExportCSV={handleExportCSV} onExportExcel={handleExportExcel} onExportPDF={handleExportPDF} disabled={!hasData} />
         </div>
       </div>
 
+      {/* Empty state */}
       {!hasData && (
-        <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 py-16 dark:border-slate-700">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-950/50">
-            <IconReports className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+        <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed py-16" style={{ borderColor: 'var(--border-default)' }}>
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl" style={{ background: 'var(--accent-subtle)' }}>
+            <IconReports className="h-6 w-6" style={{ color: 'var(--accent-text)' }} />
           </div>
-          <h2 className="mt-4 text-base font-semibold text-slate-900 dark:text-white">No data to report on yet</h2>
-          <p className="mt-1 max-w-sm text-center text-sm text-slate-500 dark:text-slate-400">
+          <h2 className="mt-4 text-base font-semibold" style={{ color: 'var(--text-primary)' }}>No data to report on yet</h2>
+          <p className="mt-1 max-w-sm text-center text-sm" style={{ color: 'var(--text-muted)' }}>
             Add accounts, transactions, and budgets to see detailed reports with cash flow trends, category breakdowns, and savings projections.
           </p>
           <div className="mt-5 flex gap-3">
-            <button onClick={() => navigate('/accounts')} className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700">
+            <button onClick={() => navigate('/accounts')} className="rounded-xl px-4 py-2 text-sm font-medium text-white" style={{ background: 'var(--accent-primary)' }}>
               Add Account
             </button>
-            <button onClick={() => navigate('/transactions/add')} className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800">
+            <button onClick={() => navigate('/transactions/add')} className="rounded-xl border px-4 py-2 text-sm font-medium transition-colors" style={{ borderColor: 'var(--border-default)', color: 'var(--text-secondary)' }}>
               Add Transaction
             </button>
           </div>
@@ -234,290 +307,88 @@ export function ReportsPage() {
       )}
 
       {/* Tab bar */}
-      <div className="flex gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-slate-50 p-1 dark:border-slate-800 dark:bg-slate-900">
-        {tabs.map((t) => (
-          <button key={t.key} onClick={() => setTab(t.key)} className={`rounded-xl px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap ${tab === t.key ? 'bg-white text-indigo-600 shadow-sm dark:bg-slate-800 dark:text-indigo-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}>
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Date range */}
-      <div className="flex gap-2">
-        {['current', 'last3', 'last12'].map((r) => (
-          <button key={r} onClick={() => setRangeTab(r)} className={`rounded-lg px-3 py-1 text-xs font-medium ${rangeTab === r ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}>
-            {r === 'current' ? 'This Month' : r === 'last3' ? 'Last 3 Months' : 'Last 12 Months'}
-          </button>
-        ))}
-      </div>
-
-      {tab === 'monthly' && (
-        <div className="space-y-6">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Income</p>
-              <p className="mt-1.5 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(cashFlow.monthlyIncome)}</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Expenses</p>
-              <p className="mt-1.5 text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(cashFlow.monthlyExpenses)}</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Cash Flow</p>
-              <p className={`mt-1.5 text-2xl font-bold ${cashFlow.cashFlow >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>{formatCurrency(cashFlow.cashFlow)}</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Savings Rate</p>
-              <p className="mt-1.5 text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                {cashFlow.monthlyIncome > 0 ? `${((cashFlow.cashFlow / cashFlow.monthlyIncome) * 100).toFixed(1)}%` : '-'}
-              </p>
-            </div>
+      {hasData && (
+        <>
+          <div className="flex gap-1 overflow-x-auto rounded-xl border p-1" style={{ borderColor: 'var(--border-default)', background: 'var(--bg-elevated)' }}>
+            {tabs.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                className={`rounded-lg px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors ${
+                  filterState.tab === t.key
+                    ? 'text-white'
+                    : ''
+                }`}
+                style={{
+                  background: filterState.tab === t.key ? 'var(--accent-primary)' : 'transparent',
+                  color: filterState.tab === t.key ? 'white' : 'var(--text-secondary)',
+                }}
+              >
+                {t.label}
+              </button>
+            ))}
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-2">
-            {/* Spending breakdown - Premium Interactive Donut */}
-            <InteractiveDonut
-              data={categorySpending.map((c) => ({ name: c.name, value: c.value, percent: c.percent / 100 }))}
-              title="Spending Breakdown"
-            />
-
-            {/* Monthly trend */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <h3 className="mb-4 text-sm font-semibold text-slate-900 dark:text-white">Cash Flow Trend</h3>
-              {monthlyTrend.length === 0 ? (
-                <p className="py-6 text-center text-sm text-slate-400">No trend data.</p>
-              ) : (
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={monthlyTrend}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                      <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                      <Tooltip content={<TooltipCard />} />
-                      <Legend iconType="circle" formatter={(v: string) => <span className="text-xs text-slate-500">{v}</span>} />
-                      <Line type="monotone" dataKey="income" stroke="#10b981" strokeWidth={2} dot={false} />
-                      <Line type="monotone" dataKey="expenses" stroke="#ef4444" strokeWidth={2} dot={false} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {tab === 'budget' && (
-        <div className="space-y-6">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Budgeted</p>
-              <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">{formatCurrency(budgetHealth.totalBudgeted)}</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Spent</p>
-              <p className="mt-1.5 text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(budgetHealth.totalSpent)}</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Remaining</p>
-              <p className={`mt-1.5 text-2xl font-bold ${budgetHealth.remaining > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-white'}`}>
-                {formatCurrency(budgetHealth.remaining)}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Budget Health</p>
-              <p className="mt-1.5 text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                {budgetHealth.totalBudgeted > 0
-                  ? `${budgetHealth.adherencePercent.toFixed(0)}%`
-                  : '-'}
-              </p>
-            </div>
+          {/* Time Range + Type Filter */}
+          <div className="flex flex-wrap gap-2 items-center">
+            {timeRanges.map((r) => (
+              <button
+                key={r.key}
+                onClick={() => setTimeRange(r.key)}
+                className="rounded-lg px-3 py-1 text-xs font-medium transition-colors"
+                style={{
+                  background: filterState.timeRange === r.key ? 'var(--accent-primary)' : 'var(--bg-elevated)',
+                  color: filterState.timeRange === r.key ? 'white' : 'var(--text-secondary)',
+                  border: `1px solid ${filterState.timeRange === r.key ? 'transparent' : 'var(--border-default)'}`,
+                }}
+              >
+                {r.label}
+              </button>
+            ))}
+            <div className="w-px h-5" style={{ background: 'var(--border-default)' }} />
+            {(['all', 'income', 'expense'] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setType(t)}
+                className="rounded-lg px-3 py-1 text-xs font-medium transition-colors"
+                style={{
+                  background: filterState.type === t ? 'var(--accent-primary)' : 'var(--bg-elevated)',
+                  color: filterState.type === t ? 'white' : 'var(--text-secondary)',
+                  border: `1px solid ${filterState.type === t ? 'transparent' : 'var(--border-default)'}`,
+                }}
+              >
+                {t === 'all' ? 'All' : t.charAt(0).toUpperCase() + t.slice(1)}
+              </button>
+            ))}
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <h3 className="mb-4 text-sm font-semibold text-slate-900 dark:text-white">Category Spending</h3>
-            {categorySpending.length === 0 ? (
-              <p className="py-6 text-center text-sm text-slate-400">No budget data.</p>
-            ) : (
-              <div className="h-72">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={categorySpending} layout="vertical" margin={{ left: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
-                    <XAxis type="number" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                    <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} width={80} />
-                    <Tooltip content={<TooltipCard />} cursor={{ fill: 'transparent' }} />
-                    <Bar dataKey="value" radius={[0, 4, 4, 0]} maxBarSize={16}>
-                      {categorySpending.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {tab === 'savings' && (
-        <div className="space-y-6">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Saved</p>
-              <p className="mt-1.5 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(totalSaved)}</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Target</p>
-              <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">{formatCurrency(totalTarget)}</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Progress</p>
-              <p className="mt-1.5 text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                {totalTarget > 0 ? `${((totalSaved / totalTarget) * 100).toFixed(1)}%` : '-'}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Completed Goals</p>
-              <p className="mt-1.5 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{completedGoals}</p>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <h3 className="mb-4 text-sm font-semibold text-slate-900 dark:text-white">Goal Progress</h3>
-            {savingsGrowth.length === 0 ? (
-              <p className="py-6 text-center text-sm text-slate-400">No savings goals yet.</p>
-            ) : (
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={savingsGrowth} margin={{ top: 0, right: 0, left: -10, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                    <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                    <Tooltip content={<TooltipCard />} />
-                    <Legend iconType="circle" formatter={(v: string) => <span className="text-xs text-slate-500">{v}</span>} />
-                    <Bar dataKey="saved" name="Saved" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={24} />
-                    <Bar dataKey="target" name="Target" fill="#6366f1" radius={[4, 4, 0, 0]} maxBarSize={24} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {tab === 'mortgage' && (
-        <div className="space-y-6">
-          {!mortgageResult ? (
-            <div className="rounded-2xl border-2 border-dashed border-slate-200 p-12 text-center dark:border-slate-700">
-              <p className="text-sm text-slate-400">No mortgage data. Add a mortgage to see reports.</p>
-            </div>
-          ) : (
-            <>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Monthly Payment</p>
-                  <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">{formatCurrency(mortgageResult.monthlyPayment)}</p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Interest</p>
-                  <p className="mt-1.5 text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(mortgageResult.totalInterest)}</p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Payoff Date</p>
-                  <p className="mt-1.5 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{mortgageResult.payoffDate ? new Date(mortgageResult.payoffDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '—'}</p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Cost</p>
-                  <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">{formatCurrency(mortgageResult.totalCost)}</p>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <h3 className="mb-4 text-sm font-semibold text-slate-900 dark:text-white">Balance Projection</h3>
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={mortgageBalanceData}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                      <XAxis dataKey="year" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} />
-                      <Tooltip content={<TooltipCard />} />
-                      <Line type="monotone" dataKey="balance" stroke="#6366f1" strokeWidth={2} dot={false} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      )}
-
-      {tab === 'recurring' && (
-        <div className="space-y-6">
-          {/* Recurring vs Manual */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Recurring Spending</p>
-              <p className="mt-1.5 text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(recurringExpenses.recurringTotal)}</p>
-              <p className="text-xs text-slate-400">{recurringExpenses.recurringCount} transactions</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Manual Spending</p>
-              <p className="mt-1.5 text-2xl font-bold text-amber-600 dark:text-amber-400">{formatCurrency(recurringExpenses.manualTotal)}</p>
-              <p className="text-xs text-slate-400">{recurringExpenses.manualCount} transactions</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Obligations</p>
-              <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">{upcomingObligations.length}</p>
-              <p className="text-xs text-slate-400">active recurring</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Monthly Recurring Total</p>
-              <p className="mt-1.5 text-2xl font-bold text-indigo-600 dark:text-indigo-400">{formatCurrency(upcomingObligations.reduce((s, o) => s + o.monthlyAmount, 0))}</p>
-            </div>
-          </div>
-
-          {/* Upcoming Obligations */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <h3 className="mb-4 text-sm font-semibold text-slate-900 dark:text-white">Upcoming Monthly Obligations</h3>
-            {upcomingObligations.length === 0 ? (
-              <p className="py-6 text-center text-sm text-slate-400">No recurring expenses set up.</p>
-            ) : (
-              <div className="space-y-2">
-                {upcomingObligations.map((ob) => (
-                  <div key={ob.name} className="flex items-center justify-between py-1.5">
-                    <div>
-                      <p className="text-sm font-medium text-slate-900 dark:text-white">{ob.name}</p>
-                      <p className="text-xs text-slate-400">{ob.frequency} &middot; {new Date(ob.nextRun).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
-                    </div>
-                    <span className="text-sm font-semibold text-red-600 dark:text-red-400">{formatCurrency(ob.amount)}</span>
-                  </div>
+          {/* Tab Content */}
+          {tabContent && (
+            <div className="space-y-6">
+              <ReportMetricsRow metrics={tabContent.kpis} />
+              <div className="grid gap-6 lg:grid-cols-2">
+                {tabContent.charts.slice(0, 2).map((chart, i) => (
+                  <ReportChart key={i} config={chart} />
                 ))}
               </div>
-            )}
-          </div>
-        </div>
-      )}
+              {tabContent.charts.length > 2 && (
+                <div className="grid gap-6 lg:grid-cols-2">
+                  {tabContent.charts.slice(2).map((chart, i) => (
+                    <ReportChart key={i + 2} config={chart} />
+                  ))}
+                </div>
+              )}
+              <ReportInsightsPanel insights={tabContent.insights} />
+            </div>
+          )}
 
-      {tab === 'health' && (
-        <div className="space-y-6">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Net Worth</p>
-              <p className="mt-1.5 text-2xl font-bold text-indigo-600 dark:text-indigo-400">{formatCurrency(netWorth.netWorth)}</p>
+          {/* No data for this tab */}
+          {!tabContent && filterState.tab === 'mortgage' && (
+            <div className="rounded-xl border-2 border-dashed p-12 text-center" style={{ borderColor: 'var(--border-default)' }}>
+              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No mortgage data. Add a mortgage to see reports.</p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Cash Flow</p>
-              <p className={`mt-1.5 text-2xl font-bold ${cashFlow.cashFlow >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>{formatCurrency(cashFlow.cashFlow)}</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Savings Rate</p>
-              <p className="mt-1.5 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                {cashFlow.monthlyIncome > 0 ? `${((cashFlow.cashFlow / cashFlow.monthlyIncome) * 100).toFixed(1)}%` : '-'}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Income</p>
-              <p className="mt-1.5 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(cashFlow.monthlyIncome)}</p>
-            </div>
-          </div>
-        </div>
+          )}
+        </>
       )}
     </div>
   );
