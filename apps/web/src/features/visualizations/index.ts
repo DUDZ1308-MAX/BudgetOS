@@ -1,0 +1,11 @@
+export { Scene3D, SceneFallback, useReducedMotion, useThemeColors } from './components/Scene3D';
+export { NetWorth3D } from './components/NetWorth3D';
+export { CashFlow3D } from './components/CashFlow3D';
+export { Spending3D } from './components/Spending3D';
+export { BudgetProgress3D } from './components/BudgetProgress3D';
+export { FinancialHealth3D } from './components/FinancialHealth3D';
+export { NetWorth3DLazy, CashFlow3DLazy, Spending3DLazy, BudgetProgress3DLazy, FinancialHealth3DLazy } from './components/LazyScene3D';
+export { VisualizationModeSwitch, ViewModeProvider, useViewMode } from './components/VisualizationModeSwitch';
+export { Dashboard3DGrid } from './components/Dashboard3DGrid';
+export { ReportChart3D } from './components/ReportChart3D';
+export type { NetWorth3DData, CashFlow3DData, SpendingCategory3D, BudgetProgress3DData, FinancialHealth3DData, ViewMode } from './visualizationTypes';

@@ -23,7 +23,9 @@ import { PremiumRecommendationsCard } from './components/PremiumRecommendationsC
 import { PremiumProjectionsCard } from './components/PremiumProjectionsCard';
 import { PremiumInsightsCard } from './components/PremiumInsightsCard';
 import { RecentTransactionsCard } from './components/RecentTransactionsCard';
+import { VisualizationModeSwitch, Dashboard3DGrid } from '@/features/visualizations';
 import type { DashboardInsight, DashboardUpcomingItem } from '@/lib/dashboard/types';
+import type { SpendingCategory3D, BudgetProgress3DData, FinancialHealth3DData } from '@/features/visualizations';
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -153,6 +155,7 @@ export function DashboardPage() {
               <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
                 Updated {formatLastUpdated()}
               </span>
+              <VisualizationModeSwitch />
             </div>
           </div>
         </div>
@@ -262,6 +265,38 @@ export function DashboardPage() {
           currentCashFlow={d.cashFlow}
           topSpending={d.topSpendingCategories}
           isLoading={isLoading || cashFlowHistoryLoading}
+        />
+      </motion.div>
+
+      {/* Section 3b: 3D Visualizations (when enabled) */}
+      <motion.div variants={section}>
+        <Dashboard3DGrid
+          netWorth={{ assets: d.totalAssets, liabilities: d.totalLiabilities, netWorth: d.netWorth }}
+          cashFlow={{ income: d.monthlyIncome, expenses: d.monthlyExpenses, savings: Math.max(d.cashFlow, 0), remaining: d.cashFlow }}
+          spending={(d.topSpendingCategories || []).map((c, i) => ({
+            name: c.categoryName,
+            amount: c.amount,
+            color: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6'][i % 8]!,
+            percent: d.monthlyExpenses > 0 ? (c.amount / d.monthlyExpenses) * 100 : 0,
+          }))}
+          budgetProgress={d.budgetUtilization.map((b) => ({
+            label: b.categoryName || 'Budget',
+            budgeted: b.budgeted,
+            spent: b.spent,
+            remaining: b.remaining,
+            percentUsed: b.budgeted > 0 ? (b.spent / b.budgeted) * 100 : 0,
+          }))}
+          healthScore={{
+            score: d.financialHealth?.overallScore ?? 0,
+            maxScore: 100,
+            label: d.financialHealth?.tier ?? 'Fair',
+            components: Object.entries(d.financialHealth?.subscores ?? {}).map(([key, val]) => ({
+              label: key,
+              score: (val as any)?.score ?? 0,
+              maxScore: 100,
+              color: (val as any)?.score >= 80 ? '#10b981' : (val as any)?.score >= 60 ? '#f59e0b' : '#ef4444',
+            })),
+          }}
         />
       </motion.div>
 
