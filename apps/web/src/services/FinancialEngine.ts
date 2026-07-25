@@ -1637,12 +1637,15 @@ export const FinancialEngine = {
     // 13. Insights
     const insights = FinancialEngine.getInsights(cashFlow, budgetHealth, savingsRate, mortgageResults, netWorth, savingsGoals, financialHealth);
 
-    // 14. Top Spending Categories (computed from transaction data)
-    const categorySpending = new Map<string, { name: string; amount: number }>();
-    for (const txn of transactions) {
-      if (!txn.category_id) continue;
-      const cat = categoryMap.get(txn.category_id);
-      if (cat?.type !== 'income') {
+// 14. Top Spending Categories (computed from transaction data)
+  // Filters out archived, pending, and income transactions per FinancialEngine SSOT rules
+  const categorySpending = new Map<string, { name: string; amount: number }>();
+  for (const txn of transactions) {
+    if (!txn.category_id) continue;
+    if (txn.is_archived) continue;
+    if (txn.is_pending) continue;
+    const cat = categoryMap.get(txn.category_id);
+    if (cat?.type !== 'income') {
         const amount = Math.abs(Number(txn.amount ?? 0));
         const existing = categorySpending.get(txn.category_id);
         if (existing) {

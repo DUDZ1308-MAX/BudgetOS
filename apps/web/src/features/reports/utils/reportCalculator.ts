@@ -35,6 +35,7 @@ export function computeTimeRange(timeRange: TimeRange): { start: string; end: st
 export function applyFilters(txns: Transaction[], filters: ReportFilters): Transaction[] {
   return txns.filter((t) => {
     if (t.is_archived) return false;
+    if (t.is_pending) return false;
     if (filters.type === 'income' && Number(t.amount) < 0) return false;
     if (filters.type === 'expense' && Number(t.amount) >= 0) return false;
     if (filters.accountId && t.account_id !== filters.accountId) return false;
@@ -86,12 +87,18 @@ export function computeCategoryPieChart(txns: Transaction[], categories: Categor
   const map = new Map<string, number>();
   for (const t of txns) {
     if (Number(t.amount) >= 0) continue;
+    if (t.is_archived) continue;
     const cat = t.category_id || 'Uncategorized';
     map.set(cat, (map.get(cat) ?? 0) + Math.abs(Number(t.amount)));
   }
   const total = Array.from(map.values()).reduce((s, v) => s + v, 0) || 1;
-  const data = Array.from(map.entries()).map(([id, value]) => ({ name: categoryMap.get(id) ?? (id === 'Uncategorized' ? 'Uncategorized' : id.slice(0, 12)), value, percent: Math.round((value / total) * 100) }))
-    .sort((a, b) => b.value - a.value).slice(0, 8);
+  const data = Array.from(map.entries())
+    .map(([id, value]) => {
+      const percent = total > 0 ? Math.round((value / total) * 100) : 0;
+      return { name: categoryMap.get(id) ?? (id === 'Uncategorized' ? 'Uncategorized' : id.slice(0, 12)), value, percent: Math.min(percent, 100) };
+    })
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 8);
   const series: ChartSeries[] = [{ name: 'Spending', dataKey: 'value', color: '#6366f1' }];
   return { title: 'Spending Breakdown', type: 'pie', data, series, xKey: 'name' };
 }
