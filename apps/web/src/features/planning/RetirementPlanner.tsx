@@ -16,7 +16,7 @@ export function RetirementPlanner({ userId, className = '' }: RetirementPlannerP
   const [returnRate, setReturnRate] = useState(0.07);
   const [inflationRate, setInflationRate] = useState(0.03);
 
-  const readiness = useMemo<RetryReadiness | null>(() => {
+  const readiness = useMemo(() => {
     return calculateRetirementReadiness(age, contribution, returnRate, inflationRate);
   }, [age, contribution, returnRate, inflationRate]);
 
@@ -62,7 +62,7 @@ export function RetirementPlanner({ userId, className = '' }: RetirementPlannerP
   );
 }
 
-interface RetryReadiness {
+interface RetirementReadinessLocal {
   score: number;
   yearsToRetire: number;
   projectedNestEgg: number;
@@ -70,7 +70,7 @@ interface RetryReadiness {
   incomeTarget: number;
 }
 
-function calculateRetirementReadiness(age: number, contribution: number, returnRate: number, inflationRate: number): RetryReadiness | null {
+function calculateRetirementReadiness(age: number, contribution: number, returnRate: number, inflationRate: number): RetirementReadinessLocal | null {
   const yearsToRetire = Math.max(0, age - 25);
   if (yearsToRetire <= 0 || contribution <= 0) return null;
   const monthlyContribution = contribution * 12;

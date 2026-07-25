@@ -4,7 +4,7 @@ import { Suspense, lazy, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Environment } from '@react-three/drei';
 import { useThemeColors } from './Scene3D';
-import { FloatingChart, SphericalProgress } from './Advanced3DComponents';
+import { FloatingMetric, SphericalProgress } from './Advanced3DComponents';
 import type { NetWorth3DData, CashFlow3DData, SpendingCategory3D, BudgetProgress3DData, FinancialHealth3DData } from '../visualizationTypes';
 
 const FinancialHealth3DLazy = lazy(() => import('./FinancialHealth3D').then(m => ({ default: m.FinancialHealth3D })));
@@ -73,23 +73,23 @@ export function Advanced3DFeatures({ netWorth, cashFlow, spending, budgetProgres
         <ambientLight intensity={0.4} />
         <pointLight position={[5, 5, 5]} intensity={0.8} />
         <Suspense fallback={null}>
-          {/* Floating financial metrics */}
-          {FloatingMetrics.map((metric, i) => (
-            <FloatingChart
-              key={metric.label}
-              position={metric.position}
-              value={metric.value}
-              maxValue={metric.maxValue}
-              label={metric.label}
-              icon={metric.icon}
-              color={metric.color}
-              index={i}
-            />
-          ))}
+{/* Floating financial metrics */}
+           {FloatingMetrics.map((metric, i) => (
+             <FloatingMetric
+               key={metric.label}
+               position={metric.position}
+               value={metric.value}
+               maxValue={metric.maxValue}
+               label={metric.label}
+               icon={metric.icon}
+               color={metric.color}
+               index={i}
+             />
+           ))}
           
           {/* Spherical progress rings */}
           <SphericalProgress
-            position={[0, -1, 0]}
+            position={{ x: 0, y: -1, z: 0 }}
             size={3}
             segments={3}
             colors={[colors.success, colors.warning, colors.accent]}

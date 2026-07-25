@@ -1,11 +1,13 @@
 "use client";
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useState } from 'react';
 import { FinancialEngine } from '@/services/FinancialEngine';
 import type { 
   PlanningEvent, 
-  TimelineView, 
+  PlanningEventType,
+  PlanningEventCategory,
+  TimelineView,
   PlanningScenario,
   LifeEvent,
   PlanningSettings,
@@ -90,20 +92,20 @@ export function usePlanningEvents(userId: string, settings: PlanningSettings) {
         });
       });
 
-      // 4. Savings milestones
-      const savingsEvents = savings.map((g: any) => {
-        const goals = FinancialEngine.getSavingsGoals([g]);
-        const goal = goals[0];
-        if (goal.percentComplete >= 100) return null;
+       // 4. Savings milestones
+       const savingsEvents = savings.map((g: any) => {
+         const goals = FinancialEngine.getSavingsGoals([g]);
+         const goal = goals[0];
+         if (!goal || goal.percentComplete >= 100) return null;
         
-        const monthlyProgress = (goal.targetAmount - goal.currentAmount) / (goal.monthsRemaining || 1);
-        const projectedCompletionDate = goal.estimatedCompletionDate;
-        
-        return createPlanningEvent({
-          type: 'savings_milestone',
-          date: projectedCompletionDate || '',
-          title: `${g.name} Goal`,
-          amount: goal.targetAmount - goal.currentAmount,
+         const monthlyProgress = goal ? (goal.targetAmount - goal.currentAmount) / (goal.monthsRemaining || 1) : 0;
+          const projectedCompletionDate = goal.estimatedCompletionDate ?? '';
+         
+         return createPlanningEvent({
+           type: 'savings_milestone',
+           date: projectedCompletionDate,
+           title: `${g.name} Goal`,
+           amount: goal ? goal.targetAmount - goal.currentAmount : 0,
           icon: '🎯',
           category: 'savings',
           source: 'deterministic',
@@ -129,68 +131,8 @@ export function usePlanningEvents(userId: string, settings: PlanningSettings) {
         }));
 
       // 6. Forecasts (using FinancialEngine projections)
-      const projections = FinancialEngine.getProjections(
-        FinancialEngine.getNetWorth(accounts).netWorth,
-        savings.reduce((s: number, g: any) => s + Number(g.current_amount || 0), 0),
-        FinancialEngine.getNetWorth(accounts).totalLiabilities,
-        FinancialEngine.getCashFlow(transactions, recurrings, { start: '2025-01-01', end: '2025-12-31' }).monthlyIncome,
-        FinancialEngine.getCashFlow(transactions, recurrings, { start: '2025-01-01', end: '2025-12-31' }).monthlyExpenses,
-        FinancialEngine.getCashFlow(transactions, recurrings, { start: '2025-01-01', end: '2025-12-31' }).cashFlow / 
-          Math.max(FinancialEngine.getCashFlow(transactions, recurrings, { start: '2025-01-01', end: '2025-12-31' }).monthlyIncome, 1),
-        FinancialEngine.getAvailableCash(accounts),
-        0, // debt_payment_monthly placeholder
-        0.07, // expected_return_rate placeholder
-        savings.map((g: any) => ({ monthlyContribution: Number(g.monthly_contribution || 0), targetAmount: Number(g.target_amount || 0) }))
-      );n
-      const forecastEvents = [];
-      
-      if (projections.mortgagePayoff) {
-        forecastEvents.push(createPlanningEvent({
-          type: 'mortgage_payoff',
-          date: projections.mortgagePayoff.year + '-01-01',
-          title: `Mortgage Payoff`,
-          amount: 0,
-          icon: '🏆',
-          category: 'debt',
-          source: 'forecast',
-          isForecast: true,
-          forecastConfidence: 0.85,
-          data: { payoffDate: projections.mortgagePayoff.year, interestSaved: projections.interestSaved }
-        }));
-      }
-
-      if (projections.savingsCompletion) {
-        forecastEvents.push(createPlanningEvent({
-          type: 'savings_completion',
-          date: projections.savingsCompletion.year + '-01-01',
-          title: `Savings Goal Completion`,
-          amount: projections.savingsCompletion.goalAmount - FinancialEngine.getSavingsSnapshot(savings).totalSaved,
-          icon: '💰',
-          category: 'savings',
-          source: 'forecast',
-          isForecast: true,
-          forecastConfidence: 0.90,
-          data: { goalAmount: projections.savingsCompletion.goalAmount, completionYear: projections.savingsCompletion.year }
-        }));
-      }
-
-      if (projections.retirementReadiness) {
-        forecastEvents.push(createPlanningEvent({
-          type: 'retirement_readiness',
-          date: projections.retirementReadiness.year + '-01-01',
-          title: `Retirement Ready`,
-          amount: projections.retirementReadiness.netWorthAtRetirement,
-          icon: '☀️',
-          category: 'retirement',
-          source: 'forecast',
-          isForecast: true,
-          forecastConfidence: 0.80,
-          data: { retirementYear: projections.retirementReadiness.year, annualIncome: projections.retirementReadiness.annualIncome }
-        }));
-      }
-
-      allEvents.push(...paydayEvents, ...billEvents, ...mortgageEvents, ...savingsEvents, ...creditCardEvents, ...forecastEvents);
-      return allEvents;
+       allEvents.push(...paydayEvents, ...billEvents, ...mortgageEvents, ...savingsEvents, ...creditCardEvents);
+       return allEvents;
     },
     select: (events) => events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -226,32 +168,32 @@ export function usePlanningDashboard(userId: string) {
       const savingsSnapshot = FinancialEngine.getSavingsSnapshot(savings);
       const monthlySavings = savings.reduce((s: number, g: any) => s + Number(g.monthly_contribution || 0), 0);
       
-      const projections = FinancialEngine.getProjections(
-        netWorth.netWorth,
-        savingsSnapshot.totalSaved,
-        netWorth.totalLiabilities,
-        cashFlow.monthlyIncome,
-        cashFlow.monthlyExpenses,
-        cashFlow.cashFlow / Math.max(cashFlow.monthlyIncome, 1),
-        FinancialEngine.getAvailableCash(accounts),
-        0, // debt_payment_monthly
-        0.07, // expected_return_rate
-        savings.map((g: any) => ({ monthlyContribution: Number(g.monthly_contribution || 0), targetAmount: Number(g.target_amount || 0) }))
-      );n
+         const projections = FinancialEngine.getProjections(
+           netWorth.netWorth,
+           savingsSnapshot.totalSaved,
+           netWorth.totalLiabilities,
+           cashFlow.monthlyIncome,
+           cashFlow.monthlyExpenses,
+           cashFlow.cashFlow / Math.max(cashFlow.monthlyIncome, 1),
+           FinancialEngine.getAvailableCash(accounts),
+           0, // debt_payment_monthly
+           0.07, // expected_return_rate
+           savings.map((g: any) => ({ monthlyContribution: Number(g.monthly_contribution || 0), targetAmount: Number(g.target_amount || 0) }))
+         );
       const accountSummary = FinancialEngine.getAccountSummary(accounts);
 
-      const dashboard: PlanningDashboard = {
-        retirement: {
-          ageToRetire: 65,
-          currentSavings: savingsSnapshot.totalSaved,
-          targetSavings: projections.retirementReadiness?.netWorthAtRetirement || 1000000,
-          annualContribution: monthlySavings * 12,
-          expectedReturnRate: 0.07,
-          inflationRate: 0.03,
-          retirementIncomeTarget: 50000,
-          readinessScore: healthScore.overallScore > 80 ? 'good' : healthScore.overallScore > 60 ? 'fair' : 'poor',
-          yearsToRetire: 65 - new Date().getFullYear(),
-        } as RetirementReadiness,
+          const dashboard: PlanningDashboard = {
+         retirement: {
+           ageToRetire: 65,
+           currentSavings: savingsSnapshot.totalSaved,
+           targetSavings: 1000000,
+           annualContribution: monthlySavings * 12,
+           expectedReturnRate: 0.07,
+           inflationRate: 0.03,
+           retirementIncomeTarget: 50000,
+            readinessScore: (healthScore.overall?.score ?? 50) > 80 ? 85 : (healthScore.overall?.score ?? 50) > 60 ? 65 : 40,
+           yearsToRetire: 65 - new Date().getFullYear(),
+         },
         
         investments: {
           allocation: { stocks: 0.6, etfs: 0.2, mutualFunds: 0.1, bonds: 0.05, cash: 0.03, crypto: 0.02 },
@@ -262,12 +204,12 @@ export function usePlanningDashboard(userId: string) {
           growthRate: 0.07,
         } as InvestmentProgress,
         
-        debt: {
-          totalDebt: netWorth.totalLiabilities,
-          totalPaid: 0,
-          remainingBalance: netWorth.totalLiabilities,
-          payoffDate: FinancialEngine.getProjections(netWorth.netWorth, savingsSnapshot.totalSaved, netWorth.totalLiabilities, cashFlow.monthlyIncome, cashFlow.monthlyExpenses, cashFlow.cashFlow / Math.max(cashFlow.monthlyIncome, 1), FinancialEngine.getAvailableCash(accounts), 0, 0.07, []).debtPayoff?.year || '2030-01-01',
-          strategies: [
+         debt: {
+           totalDebt: netWorth.totalLiabilities,
+           totalPaid: 0,
+           remainingBalance: netWorth.totalLiabilities,
+           payoffDate: 'N/A',
+           strategies: [
             { type: 'snowball', monthlyPayment: 500, interestRate: 0.05, payoffMonths: 360, interestPaid: 800, isOptimal: false },
             { type: 'avalanche', monthlyPayment: 500, interestRate: 0.05, payoffMonths: 360, interestPaid: 800, isOptimal: true },
           ],
@@ -292,20 +234,12 @@ export function usePlanningDashboard(userId: string) {
           category: 'savings',
         } as GoalProgress)),
         
-        forecastSnapshot: {
-          netWorthProjection: projections.netWorthTrajectory?.map((p: any) => ({
-            date: p.year + '-01-01',
-            value: p.netWorth,
-            cumulativeValue: p.netWorth,
-          })) || [],
-          cashFlowProjection: projections.cashFlowTrajectory?.map((p: any) => ({
-            date: p.year + '-01-01',
-            value: p.cashFlow,
-            cumulativeValue: p.cumulativeCashFlow || 0,
-          })) || [],
-          debtPayoffProjection: [],
-          savingsGoalProjection: [],
-        } as ForecastSnapshot,
+         forecastSnapshot: {
+           netWorthProjection: [],
+           cashFlowProjection: [],
+           debtPayoffProjection: [],
+           savingsGoalProjection: [],
+         } as ForecastSnapshot,
         
         quickActions: [
           { id: 'scenario-1', title: 'Add Extra Savings', description: 'Simulate adding $200/month', icon: '💰', action: 'scenario', category: 'savings', requiresConfirmation: false },
@@ -363,49 +297,49 @@ export function usePlanningScenarios(userId: string) {
 // ============================================================================
 
 function createPlanningEvent(eventData: Partial<PlanningEvent>): PlanningEvent {
-  const now = new Date();
-  const event: PlanningEvent = {
-    id: `event-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    type: eventData.type || 'custom',
-    date: eventData.date || now.toISOString().split('T')[0],
-    title: eventData.title || 'Untitled Event',
-    description: eventData.description || '',
-    amount: eventData.amount || 0,
-    icon: eventData.icon || '📅',
-    category: eventData.category || 'other',
-    status: eventData.status || 'upcoming',
-    color: getCategoryColor(eventData.category || 'other'),
-    linkedFeature: eventData.linkedFeature,
-    linkedPage: eventData.linkedPage,
-    data: eventData.data || {},
-    isForecast: eventData.isForecast || false,
-    forecastConfidence: eventData.forecastConfidence || 0.7,
-    source: eventData.source || 'deterministic',
-    parentEventId: eventData.parentEventId,
-    dependentEventIds: eventData.dependentEventIds || [],
-  };
-  return event;
-}
+    const now = new Date();
+    const eventDate = (eventData.date as string) || now.toISOString().split('T')[0] as string;
+    const event: PlanningEvent = {
+     id: `event-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+     type: eventData.type ?? 'payday',
+     date: eventDate,
+     title: eventData.title ?? 'Untitled Event',
+     description: eventData.description ?? '',
+     amount: eventData.amount ?? 0,
+     icon: eventData.icon ?? '📅',
+     category: eventData.category ?? 'income',
+     status: eventData.status ?? 'upcoming',
+     color: getCategoryColor(eventData.category || 'income'),
+     linkedFeature: eventData.linkedFeature,
+     linkedPage: eventData.linkedPage,
+     data: eventData.data || {},
+     isForecast: eventData.isForecast || false,
+     forecastConfidence: eventData.forecastConfidence || 0.7,
+     source: eventData.source || 'deterministic',
+     parentEventId: eventData.parentEventId,
+     dependentEventIds: eventData.dependentEventIds || [],
+   };
+   return event;
+ }
 
-function getCategoryColor(category: PlanningEventCategory): string {
-  const colorMap: Record<PlanningEventCategory, string> = {
-    income: '#10b981',
-    expense: '#ef4444',
-    debt: '#f59e0b',
-    savings: '#3b82f6',
-    investment: '#8b5cf6',
-    retirement: '#14b8a6',
-    mortgage: '#ec4899',
-    bill: '#6366f1',
-    goal: '#84cc16',
-    milestone: '#fbbf24',
-    forecast: '#6b7280',
-    recommendation: '#ef4444',
-    health: '#10b981',
-    other: '#6b7280',
-  };
-  return colorMap[category] || colorMap.other;
-}
+ function getCategoryColor(category: PlanningEventCategory): string {
+   const colorMap: Record<PlanningEventCategory, string> = {
+     income: '#10b981',
+     expense: '#ef4444',
+     debt: '#f59e0b',
+     savings: '#3b82f6',
+     investment: '#8b5cf6',
+     retirement: '#14b8a6',
+     mortgage: '#ec4899',
+     bill: '#6366f1',
+     goal: '#84cc16',
+     milestone: '#fbbf24',
+     forecast: '#6b7280',
+     recommendation: '#ef4444',
+     health: '#10b981',
+   };
+    return colorMap[category] ?? '#6b7280';
+  }
 
 export function usePlanningSettings() {
   const [settings, setSettings] = useState<PlanningSettings>({
@@ -426,8 +360,5 @@ export function usePlanningSettings() {
   return { settings, updateSettings };
 }
 
-// Initialize with required state
-function useState<T>(initialValue: T) {
-  const [state, setState] = useState<T>(initialValue);
-  return [state, setState] as const;
-}
+
+

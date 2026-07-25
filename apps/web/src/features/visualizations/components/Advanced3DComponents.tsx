@@ -1,6 +1,6 @@
 import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Text, Circle, RoundedBox } from '@react-three/drei';
+import { Text, Circle, RoundedBox, Sphere } from '@react-three/drei';
 import { useThemeColors } from './Scene3D';
 import * as THREE from 'three';
 
@@ -90,7 +90,7 @@ function SphericalProgress({ position, size, segments, colors, data }: Spherical
   });
 
   return (
-    <group position={position} rotation={[Math.PI / 2, 0, 0]} ref={groupRef}>
+    <group position={[position.x, position.y, position.z]} rotation={[Math.PI / 2, 0, 0]} ref={groupRef}>
       {Array.from({ length: segments }).map((_, i) => {
         const angle = (i / segments) * Math.PI * 2;
         const fillRatio = Object.values(data)[i] || 0;
