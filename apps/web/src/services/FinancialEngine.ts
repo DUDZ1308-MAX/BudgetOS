@@ -1637,7 +1637,7 @@ export const FinancialEngine = {
     // 13. Insights
     const insights = FinancialEngine.getInsights(cashFlow, budgetHealth, savingsRate, mortgageResults, netWorth, savingsGoals, financialHealth);
 
-// 14. Top Spending Categories (computed from transaction data)
+    // 14. Top Spending Categories (computed from transaction data)
   // Filters out archived, pending, and income transactions per FinancialEngine SSOT rules
   const categorySpending = new Map<string, { name: string; amount: number }>();
   for (const txn of transactions) {
@@ -1645,32 +1645,32 @@ export const FinancialEngine = {
     if (txn.is_archived) continue;
     if (txn.is_pending) continue;
     const cat = categoryMap.get(txn.category_id);
-    if (cat?.type !== 'income') {
-        const amount = Math.abs(Number(txn.amount ?? 0));
-        const existing = categorySpending.get(txn.category_id);
-        if (existing) {
-          existing.amount += amount;
-        } else {
-          categorySpending.set(txn.category_id, { name: cat?.name ?? 'Unknown', amount });
-        }
+    if (cat?.type === 'expense') {
+      const amount = Math.abs(Number(txn.amount ?? 0));
+      const existing = categorySpending.get(txn.category_id);
+      if (existing) {
+        existing.amount += amount;
+      } else {
+        categorySpending.set(txn.category_id, { name: cat?.name ?? 'Unknown', amount });
       }
     }
-    const topSpendingCategories = [...categorySpending.values()]
-      .sort((a, b) => b.amount - a.amount)
-      .slice(0, 5)
-      .map((c) => ({ categoryName: c.name, amount: c.amount }));
+  }
+  const topSpendingCategories = [...categorySpending.values()]
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, 5)
+    .map((c) => ({ categoryName: c.name, amount: c.amount }));
 
-    // 15. Recent Transactions (last 5)
-    const recentTransactions = transactions.slice(0, 5).map((txn) => {
-      const cat = txn.category_id ? categoryMap.get(txn.category_id) : null;
-      return {
-        id: txn.id,
-        amount: Number(txn.amount ?? 0),
-        date: txn.date,
-        merchant: txn.merchant,
-        categoryName: cat?.name ?? null,
-        accountName: txn.account_id ? accountMap.get(txn.account_id) ?? null : null,
-      };
+  // 15. Recent Transactions (last 5)
+  const recentTransactions = transactions.slice(0, 5).map((txn) => {
+    const cat = txn.category_id ? categoryMap.get(txn.category_id) : null;
+    return {
+      id: txn.id,
+      amount: Number(txn.amount ?? 0),
+      date: txn.date,
+      merchant: txn.merchant,
+      categoryName: cat?.name ?? null,
+      accountName: txn.account_id ? accountMap.get(txn.account_id) ?? null : null,
+    };
     });
 
     return {

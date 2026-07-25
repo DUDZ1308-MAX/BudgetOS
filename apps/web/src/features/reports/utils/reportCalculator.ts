@@ -88,8 +88,11 @@ export function computeCategoryPieChart(txns: Transaction[], categories: Categor
   for (const t of txns) {
     if (Number(t.amount) >= 0) continue;
     if (t.is_archived) continue;
-    const cat = t.category_id || 'Uncategorized';
-    map.set(cat, (map.get(cat) ?? 0) + Math.abs(Number(t.amount)));
+    if (t.is_pending) continue;
+    const cat = categories.find((c) => c.id === t.category_id);
+    if (!cat || cat.type !== 'expense') continue;
+    const id = t.category_id || 'Uncategorized';
+    map.set(id, (map.get(id) ?? 0) + Math.abs(Number(t.amount)));
   }
   const total = Array.from(map.values()).reduce((s, v) => s + v, 0) || 1;
   const data = Array.from(map.entries())
