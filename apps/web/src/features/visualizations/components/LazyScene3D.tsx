@@ -1,6 +1,14 @@
 import { lazy, Suspense, type FC } from 'react';
-import { SceneFallback } from './Scene3D';
 import type { NetWorth3DData, CashFlow3DData, SpendingCategory3D, BudgetProgress3DData, FinancialHealth3DData } from '../visualizationTypes';
+
+export function SceneFallback({ height = 200 }: { height?: number }) {
+  return (
+    <div
+      className="rounded-xl animate-pulse"
+      style={{ height, background: 'var(--bg-elevated)' }}
+    />
+  );
+}
 
 interface LazyWrapperProps {
   height?: number;

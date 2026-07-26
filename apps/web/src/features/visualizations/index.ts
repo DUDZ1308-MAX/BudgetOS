@@ -1,4 +1,5 @@
-export { Scene3D, SceneFallback, useReducedMotion, useThemeColors } from './components/Scene3D';
+export { Scene3D, useReducedMotion, useThemeColors } from './components/Scene3D';
+export { SceneFallback } from './components/LazyScene3D';
 export { NetWorth3D } from './components/NetWorth3D';
 export { CashFlow3D } from './components/CashFlow3D';
 export { Spending3D } from './components/Spending3D';
