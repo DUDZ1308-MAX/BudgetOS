@@ -6,7 +6,6 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { RouteErrorBoundary } from '@/components/ui/RouteErrorBoundary';
 import { NetworkStatus } from '@/components/ui/NetworkStatus';
 import { router } from '@/router';
-import { ViewModeProvider } from '@/features/visualizations/components/VisualizationModeSwitch';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,9 +23,7 @@ export function AppProviders() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <RouteErrorBoundary>
-            <ViewModeProvider>
-              <RouterProvider router={router} />
-            </ViewModeProvider>
+            <RouterProvider router={router} />
           </RouteErrorBoundary>
         </AuthProvider>
       </QueryClientProvider>

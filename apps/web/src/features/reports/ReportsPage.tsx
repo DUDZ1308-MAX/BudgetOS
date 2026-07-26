@@ -29,7 +29,6 @@ import { ReportChart } from './components/ReportChart';
 import { ReportMetricsRow } from './components/ReportMetricsRow';
 import { ReportInsightsPanel } from './components/ReportInsightsPanel';
 import { ReportExporter } from './components/ReportExporter';
-import { VisualizationModeSwitch, useViewMode, ReportChart3D } from '@/features/visualizations';
 import type { ReportTab, TimeRange } from './reportTypes';
 
 const timeRanges: { key: TimeRange; label: string }[] = [
@@ -273,8 +272,6 @@ export function ReportsPage() {
     }
   }, [tabContent, filterState.tab, budgetHealth]);
 
-  const { mode: viewMode } = useViewMode();
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -284,7 +281,6 @@ export function ReportsPage() {
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Comprehensive financial analysis</p>
         </div>
         <div className="flex items-center gap-2">
-          <VisualizationModeSwitch />
           <ReportExporter onExportCSV={handleExportCSV} onExportExcel={handleExportExcel} onExportPDF={handleExportPDF} disabled={!hasData} />
         </div>
       </div>
@@ -372,17 +368,13 @@ export function ReportsPage() {
               <ReportMetricsRow metrics={tabContent.kpis} />
               <div className="grid gap-6 lg:grid-cols-2">
                 {tabContent.charts.slice(0, 2).map((chart, i) => (
-                  viewMode === '3d'
-                    ? <ReportChart3D key={i} config={chart} />
-                    : <ReportChart key={i} config={chart} />
+                  <ReportChart key={i} config={chart} />
                 ))}
               </div>
               {tabContent.charts.length > 2 && (
                 <div className="grid gap-6 lg:grid-cols-2">
                   {tabContent.charts.slice(2).map((chart, i) => (
-                    viewMode === '3d'
-                      ? <ReportChart3D key={i + 2} config={chart} />
-                      : <ReportChart key={i + 2} config={chart} />
+                    <ReportChart key={i + 2} config={chart} />
                   ))}
                 </div>
               )}
