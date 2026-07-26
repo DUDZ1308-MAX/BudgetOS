@@ -97,8 +97,8 @@ export function computeCategoryPieChart(txns: Transaction[], categories: Categor
   const total = Array.from(map.values()).reduce((s, v) => s + v, 0) || 1;
   const data = Array.from(map.entries())
     .map(([id, value]) => {
-      const percent = total > 0 ? Math.round((value / total) * 100) : 0;
-      return { name: categoryMap.get(id) ?? (id === 'Uncategorized' ? 'Uncategorized' : id.slice(0, 12)), value, percent: Math.min(percent, 100) };
+      const share = total > 0 ? Math.round((value / total) * 100) : 0;
+      return { name: categoryMap.get(id) ?? (id === 'Uncategorized' ? 'Uncategorized' : id.slice(0, 12)), value, share: Math.min(share, 100) };
     })
     .sort((a, b) => b.value - a.value)
     .slice(0, 8);

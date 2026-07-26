@@ -103,7 +103,7 @@ export function ReportsPage() {
         const expenseTxns = filteredTxns.filter((t) => Number(t.amount) < 0);
         const totalExpenses = expenseTxns.reduce((s, t) => s + Math.abs(Number(t.amount)), 0);
         const categoryChart = computeCategoryPieChart(filteredTxns, categories);
-        const catData = (categoryChart.data as Array<{ name: string; value: number; percent: number }>);
+        const catData = (categoryChart.data as Array<{ name: string; value: number; share: number }>);
         const kpis = [
           { label: 'Total Categories', value: catData.length.toLocaleString(), color: 'var(--text-primary)' },
           { label: 'Total Spending', value: `$${totalExpenses.toLocaleString()}`, color: 'var(--status-error)' },
@@ -222,7 +222,7 @@ export function ReportsPage() {
     if (tab === 'category' || tab === 'expenses') {
       const catChart = tabContent.charts.find((c) => c.title === 'Spending Breakdown');
       if (catChart) {
-        exportReportCSV(buildCategoryExport(catChart.data as Array<{ name: string; value: number; percent: number }>));
+        exportReportCSV(buildCategoryExport(catChart.data as Array<{ name: string; value: number; share: number }>));
       }
     } else {
       const monthlyChart = tabContent.charts.find((c) => c.title === 'Cash Flow Trend');
@@ -237,7 +237,7 @@ export function ReportsPage() {
     if (tabContent) {
       for (const chart of tabContent.charts) {
         if (chart.type === 'pie') {
-          exports.push(buildCategoryExport(chart.data as Array<{ name: string; value: number; percent: number }>));
+          exports.push(buildCategoryExport(chart.data as Array<{ name: string; value: number; share: number }>));
         } else {
           exports.push(buildMonthlyTrendExport(chart.data as Array<{ month: string; income: number; expenses: number; net: number }>));
         }
@@ -257,7 +257,7 @@ export function ReportsPage() {
     if (tabContent) {
       for (const chart of tabContent.charts) {
         if (chart.type === 'pie') {
-          exports.push(buildCategoryExport(chart.data as Array<{ name: string; value: number; percent: number }>));
+          exports.push(buildCategoryExport(chart.data as Array<{ name: string; value: number; share: number }>));
         } else {
           exports.push(buildMonthlyTrendExport(chart.data as Array<{ month: string; income: number; expenses: number; net: number }>));
         }

@@ -32,7 +32,7 @@ describe('reportInsights', () => {
 
   describe('generateSpendingInsights', () => {
     it('returns neutral insight for highest spending category', () => {
-      const catData = [{ name: 'Food', value: 2000, percent: 40 }];
+      const catData = [{ name: 'Food', value: 2000, share: 40 }];
       const insights = generateSpendingInsights(catData, 5000);
       const neutral = insights.find((i) => i.type === 'neutral');
       expect(neutral?.title).toMatch(/Highest Spending Category/);

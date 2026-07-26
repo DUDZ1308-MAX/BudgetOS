@@ -4,7 +4,7 @@ import { buildCategoryExport, buildMonthlyTrendExport, buildBudgetExport } from 
 describe('reportExporter', () => {
   describe('buildCategoryExport', () => {
     it('returns ExportPayload with category data', () => {
-      const catData = [{ name: 'Food', value: 500, percent: 25 }, { name: 'Rent', value: 1500, percent: 75 }];
+      const catData = [{ name: 'Food', value: 500, share: 25 }, { name: 'Rent', value: 1500, share: 75 }];
       const result = buildCategoryExport(catData);
       expect(result.title).toBe('Category Spending');
       expect(result.headers).toContain('Category');

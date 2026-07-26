@@ -13,14 +13,14 @@ export function generateCashFlowInsights(monthlyIncome: number, monthlyExpenses:
   return insights;
 }
 
-export function generateSpendingInsights(categoryData: Array<{ name: string; value: number; percent: number }>, totalExpenses: number): ReportInsight[] {
+export function generateSpendingInsights(categoryData: Array<{ name: string; value: number; share: number }>, totalExpenses: number): ReportInsight[] {
   const insights: ReportInsight[] = [];
   if (categoryData.length > 0) {
     const top = categoryData[0]!;
-    insights.push({ type: 'neutral', title: 'Highest Spending Category', message: `${top.name} accounts for ${top.percent}% of spending at $${top.value.toLocaleString()}.`, metric: top.name });
+    insights.push({ type: 'neutral', title: 'Highest Spending Category', message: `${top.name} accounts for ${top.share}% of spending at $${top.value.toLocaleString()}.`, metric: top.name });
     if (categoryData.length > 1) {
       const second = categoryData[1]!;
-      insights.push({ type: 'neutral', title: 'Second Highest', message: `${second.name} at $${second.value.toLocaleString()} (${second.percent}% of spending).` });
+      insights.push({ type: 'neutral', title: 'Second Highest', message: `${second.name} at $${second.value.toLocaleString()} (${second.share}% of spending).` });
     }
   }
   if (totalExpenses > 0 && categoryData.length > 0) {

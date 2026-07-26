@@ -29,11 +29,11 @@ export async function exportReportPDF(title: string, payloads: ExportPayload[]):
   }, `${title.toLowerCase().replace(/\s+/g, '_')}.pdf`);
 }
 
-export function buildCategoryExport(categoryData: Array<{ name: string; value: number; percent: number }>): ExportPayload {
+export function buildCategoryExport(categoryData: Array<{ name: string; value: number; share: number }>): ExportPayload {
   return {
     title: 'Category Spending',
     headers: ['Category', 'Amount', 'Percentage'],
-    rows: categoryData.map((c) => ({ Category: c.name, Amount: c.value, Percentage: `${c.percent}%` })),
+    rows: categoryData.map((c) => ({ Category: c.name, Amount: c.value, Percentage: `${c.share}%` })),
   };
 }
 
