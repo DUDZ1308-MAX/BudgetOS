@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { notificationService } from '@/services/notifications/notificationService';
-import type { Notification } from '@/intelligence/types';
+import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead, useArchiveNotification, useDeleteNotification } from '@/hooks/useNotifications';
+import type { Notification } from '@budgetos/database';
 
 const TYPE_ICONS: Record<string, string> = {
   budget: 'bg-red-50 text-red-600 dark:bg-red-950 dark:text-red-400',
@@ -20,21 +20,16 @@ interface NotificationPanelProps {
 }
 
 export function NotificationPanel({ open, onClose }: NotificationPanelProps) {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const { data: allNotifications = [] } = useNotifications();
+  const markRead = useMarkNotificationRead();
+  const markAllRead = useMarkAllNotificationsRead();
+  const archiveNotif = useArchiveNotification();
+  const deleteNotif = useDeleteNotification();
+  const notifications = allNotifications.slice(0, 20);
   const navigate = useNavigate();
   const panelRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-
-  useEffect(() => {
-    const update = () => {
-      const all = notificationService.getFiltered({ unreadOnly: false });
-      setNotifications(all.slice(0, 20));
-    };
-    update();
-    const unsub = notificationService.subscribe(update);
-    return unsub;
-  }, []);
 
   const handleClose = useCallback(() => {
     setIsAnimating(true);
@@ -117,7 +112,7 @@ export function NotificationPanel({ open, onClose }: NotificationPanelProps) {
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-700">
           <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Notifications</h3>
           <button
-            onClick={() => { notificationService.markAllRead(); }}
+            onClick={() => { markAllRead.mutate(); }}
             className="text-xs text-brand-600 hover:text-brand-700 dark:text-brand-400"
           >
             Mark all read
@@ -140,25 +135,25 @@ export function NotificationPanel({ open, onClose }: NotificationPanelProps) {
               <button
                 key={n.id}
                 onClick={() => {
-                  notificationService.markRead(n.id);
+                  if (!n.is_read) markRead.mutate(n.id);
                   handleClose();
                 }}
                 className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 ${
-                  !n.read ? 'bg-brand-50/30 dark:bg-brand-900/10' : ''
+                  !n.is_read ? 'bg-brand-50/30 dark:bg-brand-900/10' : ''
                 }`}
               >
-                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${TYPE_ICONS[n.type] ?? 'bg-slate-100 text-slate-600'}`}>
-                  {n.type.charAt(0).toUpperCase()}
+                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${TYPE_ICONS[n.category] ?? 'bg-slate-100 text-slate-600'}`}>
+                  {n.category.charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    {!n.read && <span className="h-1.5 w-1.5 rounded-full bg-brand-500" />}
-                    <p className={`text-xs font-medium ${n.read ? 'text-slate-600 dark:text-slate-400' : 'text-slate-900 dark:text-white'}`}>
+                    {!n.is_read && <span className="h-1.5 w-1.5 rounded-full bg-brand-500" />}
+                    <p className={`text-xs font-medium ${n.is_read ? 'text-slate-600 dark:text-slate-400' : 'text-slate-900 dark:text-white'}`}>
                       {n.title}
                     </p>
                   </div>
-                  <p className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">{n.message}</p>
-                  <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">{formatTime(n.timestamp)}</p>
+                  <p className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">{n.description}</p>
+                  <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">{formatTime(n.created_at)}</p>
                 </div>
               </button>
             ))

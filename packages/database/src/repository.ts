@@ -19,6 +19,9 @@ import type {
   Feedback,
   FeedbackInsert,
   FeedbackUpdate,
+  Notification,
+  NotificationInsert,
+  NotificationUpdate,
 } from './types';
 
 const DEFAULT_INCOME_NAMES = [
@@ -422,4 +425,87 @@ export function deleteFeedback(client: SupabaseClient, feedbackId: string) {
   return as<Feedback>(
     client.from('feedback').delete().eq('id', feedbackId).select('*').single(),
   );
+}
+
+// ============================================================
+// Notifications
+// ============================================================
+
+export function getNotifications(client: SupabaseClient, userId: string) {
+  return asList<Notification>(
+    client
+      .from('notifications')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('is_archived', false)
+      .order('created_at', { ascending: false }),
+  );
+}
+
+export function getNotification(client: SupabaseClient, notificationId: string) {
+  return as<Notification>(
+    client.from('notifications').select('*').eq('id', notificationId).single(),
+  );
+}
+
+export function createNotification(client: SupabaseClient, userId: string, data: NotificationInsert) {
+  return as<Notification>(
+    client.from('notifications').insert({ user_id: userId, ...data }).select('*').single(),
+  );
+}
+
+export function createNotificationsBatch(client: SupabaseClient, userId: string, items: NotificationInsert[]) {
+  const rows = items.map((item) => ({ user_id: userId, ...item }));
+  return client.from('notifications').insert(rows);
+}
+
+export function updateNotification(client: SupabaseClient, notificationId: string, data: NotificationUpdate) {
+  return as<Notification>(
+    client.from('notifications').update(data).eq('id', notificationId).select('*').single(),
+  );
+}
+
+export function markNotificationRead(client: SupabaseClient, notificationId: string) {
+  return as<Notification>(
+    client
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('id', notificationId)
+      .select('*')
+      .single(),
+  );
+}
+
+export function markAllNotificationsRead(client: SupabaseClient, userId: string) {
+  return client
+    .from('notifications')
+    .update({ is_read: true })
+    .eq('user_id', userId)
+    .eq('is_read', false);
+}
+
+export function archiveNotification(client: SupabaseClient, notificationId: string) {
+  return as<Notification>(
+    client
+      .from('notifications')
+      .update({ is_archived: true })
+      .eq('id', notificationId)
+      .select('*')
+      .single(),
+  );
+}
+
+export function deleteNotification(client: SupabaseClient, notificationId: string) {
+  return as<Notification>(
+    client.from('notifications').delete().eq('id', notificationId).select('*').single(),
+  );
+}
+
+export function getUnreadNotificationCount(client: SupabaseClient, userId: string) {
+  return client
+    .from('notifications')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('is_read', false)
+    .eq('is_archived', false);
 }

@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuthStore } from '@/stores/auth';
 import { useDemoStore } from '@/stores/demoMode';
 import { useAnnouncementsStore } from '@/stores/announcements';
-import { notificationService } from '@/services/notifications/notificationService';
-import { IconBell, IconMenu, IconDemo, IconMegaphone } from '@/components/ui/Icons';
+import { useUnreadNotificationCount } from '@/hooks/useNotifications';
+import { IconBell, IconMenu, IconDemo } from '@/components/ui/Icons';
 import { NotificationPanel } from './NotificationPanel';
 
 interface HeaderProps {
@@ -33,17 +33,8 @@ export function Header({ onMenuClick }: HeaderProps) {
   const displayName = user?.user_metadata?.full_name ?? user?.email?.split('@')[0] ?? 'there';
   const initial = displayName.charAt(0).toUpperCase();
 
-  const [unreadCount, setUnreadCount] = useState(0);
+  const { data: unreadCount = 0 } = useUnreadNotificationCount();
   const [showNotifications, setShowNotifications] = useState(false);
-
-  useEffect(() => {
-    const update = () => {
-      setUnreadCount(notificationService.getUnreadCount());
-    };
-    update();
-    const unsub = notificationService.subscribe(update);
-    return unsub;
-  }, []);
 
   const totalUnread = unreadCount + unreadAnnouncements;
 

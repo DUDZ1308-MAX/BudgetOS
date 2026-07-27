@@ -307,3 +307,56 @@ export interface FeedbackUpdate {
   status?: FeedbackStatus;
   admin_notes?: string | null;
 }
+
+// ============================================================
+// Notifications
+// ============================================================
+
+export type NotificationCategory =
+  | 'budget'
+  | 'savings'
+  | 'mortgage'
+  | 'spending'
+  | 'cashflow'
+  | 'system'
+  | 'achievement'
+  | 'milestone';
+
+export type NotificationPriority = 'critical' | 'high' | 'medium' | 'low';
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string;
+  category: NotificationCategory;
+  priority: NotificationPriority;
+  icon: string | null;
+  is_read: boolean;
+  is_archived: boolean;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NotificationInsert {
+  title: string;
+  description: string;
+  category: NotificationCategory;
+  priority?: NotificationPriority;
+  icon?: string | null;
+  is_read?: boolean;
+  is_archived?: boolean;
+  metadata?: Record<string, unknown> | null;
+}
+
+export interface NotificationUpdate {
+  title?: string;
+  description?: string;
+  category?: NotificationCategory;
+  priority?: NotificationPriority;
+  icon?: string | null;
+  is_read?: boolean;
+  is_archived?: boolean;
+  metadata?: Record<string, unknown> | null;
+}
