@@ -16,7 +16,7 @@ export function ReportExporter({ onExportCSV, onExportExcel, onExportPDF, disabl
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="rounded-xl border px-3 py-2 text-xs font-medium transition-colors"
+        className="flex items-center rounded-xl border px-3 min-h-[44px] text-xs font-medium transition-colors"
         style={{ borderColor: 'var(--border-default)', color: 'var(--text-secondary)', background: 'var(--bg-elevated)' }}
       >
         Export ▾
@@ -28,13 +28,13 @@ export function ReportExporter({ onExportCSV, onExportExcel, onExportPDF, disabl
             className="absolute right-0 z-20 mt-1 w-36 rounded-xl border py-1 shadow-lg"
             style={{ borderColor: 'var(--border-default)', background: 'var(--bg-primary)' }}
           >
-            <button onClick={() => { setOpen(false); onExportCSV(); }} className="w-full px-3 py-2 text-left text-xs hover:bg-black/5 dark:hover:bg-white/5" style={{ color: 'var(--text-secondary)' }}>
+            <button onClick={() => { setOpen(false); onExportCSV(); }} className="flex items-center w-full px-3 min-h-[44px] text-left text-xs hover:bg-black/5 dark:hover:bg-white/5" style={{ color: 'var(--text-secondary)' }}>
               Export CSV
             </button>
-            <button onClick={() => { setOpen(false); onExportExcel(); }} className="w-full px-3 py-2 text-left text-xs hover:bg-black/5 dark:hover:bg-white/5" style={{ color: 'var(--text-secondary)' }}>
+            <button onClick={() => { setOpen(false); onExportExcel(); }} className="flex items-center w-full px-3 min-h-[44px] text-left text-xs hover:bg-black/5 dark:hover:bg-white/5" style={{ color: 'var(--text-secondary)' }}>
               Export Excel
             </button>
-            <button onClick={() => { setOpen(false); onExportPDF(); }} className="w-full px-3 py-2 text-left text-xs hover:bg-black/5 dark:hover:bg-white/5" style={{ color: 'var(--text-secondary)' }}>
+            <button onClick={() => { setOpen(false); onExportPDF(); }} className="flex items-center w-full px-3 min-h-[44px] text-left text-xs hover:bg-black/5 dark:hover:bg-white/5" style={{ color: 'var(--text-secondary)' }}>
               Export PDF
             </button>
           </div>

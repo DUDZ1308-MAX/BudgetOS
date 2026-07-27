@@ -34,7 +34,7 @@ export function ReportChart({ config }: { config: ChartConfig }) {
         return (
           <ResponsiveContainer width="100%" height={Math.min(height, 300)}>
             <PieChart>
-              <Pie data={data} dataKey="value" nameKey={xKey} cx="50%" cy="50%" outerRadius={100} label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}>
+              <Pie data={data} dataKey="value" nameKey={xKey} cx="50%" cy="50%" outerRadius={80} innerRadius={40} label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}>
                 {data.map((_entry: any, i: number) => (
                   <Cell key={i} fill={COLORS[i % COLORS.length]} />
                 ))}

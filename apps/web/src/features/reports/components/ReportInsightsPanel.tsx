@@ -35,7 +35,7 @@ export function ReportInsightsPanel({ insights }: { insights: ReportInsight[] })
         {insights.map((insight, i) => {
           const s = STYLES[insight.type] ?? STYLES.neutral;
           return (
-            <div key={i} className={`rounded-xl border p-4 ${s!.border} ${s!.bg}`}>
+            <div key={i} className={`rounded-xl border p-3 sm:p-4 ${s!.border} ${s!.bg}`}>
               <div className="flex items-start gap-3">
                 <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${s!.iconBg} ${s!.iconColor}`}>
                   {ICONS[insight.type] ?? 'i'}

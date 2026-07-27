@@ -309,12 +309,12 @@ export function ReportsPage() {
       {/* Tab bar */}
       {hasData && (
         <>
-          <div className="flex gap-1 overflow-x-auto rounded-xl border p-1" style={{ borderColor: 'var(--border-default)', background: 'var(--bg-elevated)' }}>
+          <div className="flex gap-1 overflow-x-auto rounded-xl border p-1 scrollbar-none" style={{ borderColor: 'var(--border-default)', background: 'var(--bg-elevated)' }}>
             {tabs.map((t) => (
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors ${
+                className={`flex items-center rounded-lg px-3 min-h-[44px] text-xs font-medium whitespace-nowrap transition-colors ${
                   filterState.tab === t.key
                     ? 'text-white'
                     : ''
@@ -335,7 +335,7 @@ export function ReportsPage() {
               <button
                 key={r.key}
                 onClick={() => setTimeRange(r.key)}
-                className="rounded-lg px-3 py-1 text-xs font-medium transition-colors"
+                className="flex items-center rounded-lg px-3 min-h-[44px] text-xs font-medium transition-colors"
                 style={{
                   background: filterState.timeRange === r.key ? 'var(--accent-primary)' : 'var(--bg-elevated)',
                   color: filterState.timeRange === r.key ? 'white' : 'var(--text-secondary)',
@@ -345,12 +345,12 @@ export function ReportsPage() {
                 {r.label}
               </button>
             ))}
-            <div className="w-px h-5" style={{ background: 'var(--border-default)' }} />
+            <div className="hidden sm:block w-px h-5" style={{ background: 'var(--border-default)' }} />
             {(['all', 'income', 'expense'] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setType(t)}
-                className="rounded-lg px-3 py-1 text-xs font-medium transition-colors"
+                className="flex items-center rounded-lg px-3 min-h-[44px] text-xs font-medium transition-colors"
                 style={{
                   background: filterState.type === t ? 'var(--accent-primary)' : 'var(--bg-elevated)',
                   color: filterState.type === t ? 'white' : 'var(--text-secondary)',
@@ -384,7 +384,7 @@ export function ReportsPage() {
 
           {/* No data for this tab */}
           {!tabContent && filterState.tab === 'mortgage' && (
-            <div className="rounded-xl border-2 border-dashed p-12 text-center" style={{ borderColor: 'var(--border-default)' }}>
+            <div className="rounded-xl border-2 border-dashed p-6 sm:p-12 text-center" style={{ borderColor: 'var(--border-default)' }}>
               <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No mortgage data. Add a mortgage to see reports.</p>
             </div>
           )}

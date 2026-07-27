@@ -11,7 +11,7 @@ export function ReportMetricsRow({ metrics }: { metrics: KpiMetric[] }) {
           style={{ borderColor: 'var(--border-default)', background: 'var(--bg-elevated)' }}
         >
           <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>{m.label}</p>
-          <p className="mt-1 text-xl font-bold tabular-nums" style={{ color: m.color ?? 'var(--text-primary)' }}>{m.value}</p>
+          <p className="mt-1 text-lg sm:text-xl font-bold tabular-nums" style={{ color: m.color ?? 'var(--text-primary)' }}>{m.value}</p>
           {m.change && (
             <p className={`mt-0.5 text-xs ${m.change.positive ? 'text-emerald-500' : 'text-red-500'}`}>
               {m.change.positive ? '↑' : '↓'} {m.change.value}
