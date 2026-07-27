@@ -179,8 +179,8 @@ export function DataManagementPage() {
   }, [user]);
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Data Management</h1>
+    <div className="space-y-4 sm:space-y-5 lg:space-y-6">
+      <h1 className="text-xl font-bold text-slate-900 sm:text-2xl dark:text-white">Data Management</h1>
 
       <div className="flex gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
         {(['import', 'export', 'backup'] as Tab[]).map((tab) => (

@@ -16,7 +16,7 @@ export function ForecastSidebar({ dailyForecast, monthlyForecast, selectedDate, 
   const formatCurrency = (n: number) => `$${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
 
   return (
-    <div className="flex flex-col gap-4 w-80 shrink-0">
+    <div className="flex flex-col gap-4 w-full lg:w-80 lg:shrink-0">
       {/* Monthly Forecast Card */}
       <div className="bg-white/5 rounded-xl border border-white/10 p-4">
         <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Monthly Forecast</h3>

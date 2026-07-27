@@ -48,13 +48,13 @@ export function CalendarPage() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="p-6 max-w-7xl mx-auto"
+      className="p-3 sm:p-6 max-w-7xl mx-auto"
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Financial Calendar</h1>
-          <p className="text-sm text-gray-400 mt-1">
+          <h1 className="text-xl font-bold text-white sm:text-2xl">Financial Calendar</h1>
+          <p className="text-xs text-gray-400 mt-1 sm:text-sm">
             Forecast your cash flow and stay ahead of upcoming bills
           </p>
         </div>
@@ -73,7 +73,7 @@ export function CalendarPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <h2 className="text-lg font-semibold text-white min-w-[180px] text-center">{monthLabel}</h2>
+          <h2 className="text-base font-semibold text-white text-center sm:text-lg min-w-0 sm:min-w-[180px]">{monthLabel}</h2>
           <button
             onClick={goToNextMonth}
             className="p-1.5 text-gray-400 hover:text-white bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors"
@@ -94,7 +94,7 @@ export function CalendarPage() {
           <p className="text-red-400">Failed to load calendar data</p>
         </div>
       ) : (
-        <div className="flex gap-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:gap-6">
           <div className="flex-1 min-w-0">
             <CalendarGrid
               year={currentYear}

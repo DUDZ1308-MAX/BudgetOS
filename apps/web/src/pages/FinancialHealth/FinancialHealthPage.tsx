@@ -142,8 +142,8 @@ export function FinancialHealthPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-4 sm:space-y-5 lg:space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Financial Health</h1>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-xl font-bold text-slate-900 sm:text-2xl dark:text-white">Financial Health</h1>
         <button
           onClick={compute}
           disabled={loading}
@@ -153,16 +153,16 @@ export function FinancialHealthPage() {
         </button>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-slate-900" aria-label="Financial health score">
+      <div className="rounded-xl border border-slate-200 bg-white p-4 text-center sm:p-8 dark:border-slate-800 dark:bg-slate-900" aria-label="Financial health score">
         <div className="mb-1 flex items-center justify-center gap-1.5">
           <h2 className="text-xs font-medium uppercase tracking-wider text-slate-400">Overall Score</h2>
           <InfoTooltip content="A composite score from 0-100 based on cash flow, savings rate, budget adherence, debt levels, and emergency fund coverage" />
         </div>
-        <div className={`text-6xl font-bold ${getHealthColor(result.overallScore)}`}>
+        <div className={`text-4xl font-bold sm:text-6xl ${getHealthColor(result.overallScore)}`}>
           {result.overallScore}
         </div>
         <p className="mt-2 text-xs text-slate-500">out of 100</p>
-        <div className="mx-auto mt-4 h-2 w-48 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+        <div className="mx-auto mt-4 h-2 w-32 overflow-hidden rounded-full bg-slate-200 sm:w-48 dark:bg-slate-700">
           <div
             className={`h-full rounded-full transition-all ${getHealthBg(result.overallScore)}`}
             style={{ width: `${result.overallScore}%` }}

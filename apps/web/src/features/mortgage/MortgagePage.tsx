@@ -239,7 +239,7 @@ export function MortgagePage() {
     <div className="space-y-4 sm:space-y-5 lg:space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-bold text-slate-900 sm:text-2xl dark:text-white">Mortgage</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
           {mortgages.length > 1 && (
             <select
               value={activeMortgage?.id ?? ''}
@@ -277,17 +277,17 @@ export function MortgagePage() {
       ) : (
         <>
           {/* Dashboard stats */}
-          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Remaining Balance</p>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+            <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-5 dark:border-slate-800 dark:bg-slate-900">
+              <p className="text-xs font-medium text-slate-500 sm:text-sm dark:text-slate-400">Remaining Balance</p>
               {(() => { devError('remainingBalance', dashboard?.remainingBalance); return null; })()}
-              <p className="mt-1.5 text-2xl font-bold text-indigo-600 dark:text-indigo-400">{dashboard ? formatCurrency(dashboard.remainingBalance) : '—'}</p>
-              <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+              <p className="mt-1 text-lg font-bold text-indigo-600 sm:mt-1.5 sm:text-2xl dark:text-indigo-400">{dashboard ? formatCurrency(dashboard.remainingBalance) : '—'}</p>
+              <p className="mt-0.5 text-[10px] text-slate-400 sm:text-xs dark:text-slate-500">
                 of {dashboard ? formatCurrency(dashboard.originalAmount) : '—'} original
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+            <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-5 dark:border-slate-800 dark:bg-slate-900">
+              <p className="text-xs font-medium text-slate-500 sm:text-sm dark:text-slate-400">
                 {calcResult?.paymentFrequency === 'monthly' ? 'Monthly' :
                  calcResult?.paymentFrequency === 'semi_monthly' ? 'Semi-Monthly' :
                  calcResult?.paymentFrequency === 'bi_weekly' ? 'Bi-Weekly' :
@@ -295,60 +295,60 @@ export function MortgagePage() {
                  calcResult?.paymentFrequency === 'weekly' ? 'Weekly' : 'Accel. Weekly'} Payment
               </p>
               {(() => { devError('paymentAmount', calcResult?.paymentAmount); return null; })()}
-              <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">{calcResult ? formatCurrency(calcResult.paymentAmount) : '—'}</p>
+              <p className="mt-1 text-lg font-bold text-slate-900 sm:mt-1.5 sm:text-2xl dark:text-white">{calcResult ? formatCurrency(calcResult.paymentAmount) : '—'}</p>
               {calcResult && calcResult.paymentFrequency !== 'monthly' && (
-                <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
-                  ({formatCurrency(calcResult.monthlyEquivalent)}/mo equivalent)
+                <p className="mt-0.5 text-[10px] text-slate-400 sm:text-xs dark:text-slate-500">
+                  ({formatCurrency(calcResult.monthlyEquivalent)}/mo equiv.)
                 </p>
               )}
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Payoff Date</p>
+            <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-5 dark:border-slate-800 dark:bg-slate-900">
+              <p className="text-xs font-medium text-slate-500 sm:text-sm dark:text-slate-400">Payoff Date</p>
               {(() => { devError('payoffDate', dashboard?.payoffDate); return null; })()}
-              <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">{dashboard?.payoffDate ? new Date(dashboard.payoffDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '—'}</p>
-              <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
-                {calcResult?.payoffMonths ?? 0} months ({Math.round((calcResult?.payoffMonths ?? 0) / 12 * 10) / 10} years)
+              <p className="mt-1 text-lg font-bold text-slate-900 sm:mt-1.5 sm:text-2xl dark:text-white">{dashboard?.payoffDate ? new Date(dashboard.payoffDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '—'}</p>
+              <p className="mt-0.5 text-[10px] text-slate-400 sm:text-xs dark:text-slate-500">
+                {calcResult?.payoffMonths ?? 0} months ({Math.round((calcResult?.payoffMonths ?? 0) / 12 * 10) / 10} yr)
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Interest</p>
+            <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-5 dark:border-slate-800 dark:bg-slate-900">
+              <p className="text-xs font-medium text-slate-500 sm:text-sm dark:text-slate-400">Total Interest</p>
               {(() => { devError('totalInterest', dashboard?.totalInterest); return null; })()}
-              <p className="mt-1.5 text-2xl font-bold text-red-600 dark:text-red-400">{dashboard ? formatCurrency(dashboard.totalInterest) : '—'}</p>
-              <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+              <p className="mt-1 text-lg font-bold text-red-600 sm:mt-1.5 sm:text-2xl dark:text-red-400">{dashboard ? formatCurrency(dashboard.totalInterest) : '—'}</p>
+              <p className="mt-0.5 text-[10px] text-slate-400 sm:text-xs dark:text-slate-500">
                 EAR: {((calcResult?.effectiveAnnualRate ?? 0) * 100).toFixed(2)}%
               </p>
             </div>
           </div>
 
           {/* Progress ring */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div className="flex items-center gap-8">
-              <div className="relative flex h-28 w-28 items-center justify-center">
-                <svg className="h-28 w-28 -rotate-90" viewBox="0 0 100 100">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:gap-8">
+              <div className="relative flex h-24 w-24 shrink-0 items-center justify-center sm:h-28 sm:w-28">
+                <svg className="h-24 w-24 sm:h-28 sm:w-28 -rotate-90" viewBox="0 0 100 100">
                   <circle cx="50" cy="50" r="42" fill="none" stroke="#e2e8f0" strokeWidth="8" className="dark:stroke-slate-700" />
                   <circle cx="50" cy="50" r="42" fill="none" stroke="url(#progressGrad)" strokeWidth="8" strokeDasharray={`${2 * Math.PI * 42}`} strokeDashoffset={`${2 * Math.PI * 42 * (1 - Math.min((dashboard?.progressPct ?? 0) / 100, 1))}`} strokeLinecap="round" className="transition-all duration-700" />
                   <defs><linearGradient id="progressGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#6366f1" /><stop offset="100%" stopColor="#8b5cf6" /></linearGradient></defs>
                 </svg>
-                <span className="absolute text-lg font-bold text-slate-900 dark:text-white">{dashboard ? `${Math.round(dashboard.progressPct)}%` : '—'}</span>
+                <span className="absolute text-base font-bold text-slate-900 dark:text-white sm:text-lg">{dashboard ? `${Math.round(dashboard.progressPct)}%` : '—'}</span>
               </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-4">
-                  <span className="text-slate-500 dark:text-slate-400 w-28">Principal Paid</span>
+              <div className="w-full space-y-2 text-sm">
+                <div className="flex items-center justify-between gap-2 sm:justify-start sm:gap-4">
+                  <span className="text-slate-500 dark:text-slate-400 sm:w-28">Principal Paid</span>
                   {(() => { devError('paidSoFar.principal', dashboard?.paidSoFar?.principal); return null; })()}
                   <span className="font-semibold text-slate-900 dark:text-white">{dashboard ? formatCurrency(dashboard.paidSoFar.principal) : '—'}</span>
                 </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-slate-500 dark:text-slate-400 w-28">Interest Paid</span>
+                <div className="flex items-center justify-between gap-2 sm:justify-start sm:gap-4">
+                  <span className="text-slate-500 dark:text-slate-400 sm:w-28">Interest Paid</span>
                   {(() => { devError('paidSoFar.interest', dashboard?.paidSoFar?.interest); return null; })()}
                   <span className="font-semibold text-slate-900 dark:text-white">{dashboard ? formatCurrency(dashboard.paidSoFar.interest) : '—'}</span>
                 </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-slate-500 dark:text-slate-400 w-28">Interest Saved</span>
+                <div className="flex items-center justify-between gap-2 sm:justify-start sm:gap-4">
+                  <span className="text-slate-500 dark:text-slate-400 sm:w-28">Interest Saved</span>
                   {(() => { devError('interestSaved', calcResult?.interestSaved); return null; })()}
                   <span className="font-semibold text-emerald-600 dark:text-emerald-400">{calcResult ? formatCurrency(calcResult.interestSaved) : '—'}</span>
                 </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-slate-500 dark:text-slate-400 w-28">Equity Built</span>
+                <div className="flex items-center justify-between gap-2 sm:justify-start sm:gap-4">
+                  <span className="text-slate-500 dark:text-slate-400 sm:w-28">Equity Built</span>
                   {(() => { devError('equityBuilt', dashboard?.equityBuilt); return null; })()}
                   <span className="font-semibold text-slate-900 dark:text-white">{dashboard ? formatCurrency(dashboard.equityBuilt) : '—'}</span>
                 </div>
@@ -412,7 +412,7 @@ export function MortgagePage() {
               <div className="p-5">
                 {showSchedule && calcResult?.schedule ? (
                   <div className="max-h-80 overflow-y-auto">
-                    <table className="w-full text-left text-xs">
+                    <table className="w-full text-left text-xs overflow-x-auto">
                       <thead>
                         <tr className="text-slate-400 dark:text-slate-500">
                           <th className="pb-2 pr-2 font-medium">#</th>

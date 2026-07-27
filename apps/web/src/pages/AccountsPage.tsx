@@ -100,7 +100,7 @@ export function AccountsPage() {
                     </p>
                     <button
                       onClick={() => setEditingAccount(account)}
-                      className="rounded-lg p-1.5 text-slate-400 opacity-0 transition-opacity hover:bg-slate-100 hover:text-slate-600 group-hover:opacity-100 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+                      className="rounded-lg p-1.5 text-slate-400 md:opacity-0 md:transition-opacity hover:bg-slate-100 hover:text-slate-600 md:group-hover:opacity-100 dark:hover:bg-slate-800 dark:hover:text-slate-300"
                       aria-label={`Edit ${account.name}`}
                     >
                       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -109,7 +109,7 @@ export function AccountsPage() {
                     </button>
                     <button
                       onClick={() => setDeletingAccount(account)}
-                      className="rounded-lg p-1.5 text-slate-400 opacity-0 transition-opacity hover:bg-red-50 hover:text-red-600 group-hover:opacity-100 dark:hover:bg-red-950 dark:hover:text-red-400"
+                      className="rounded-lg p-1.5 text-slate-400 md:opacity-0 md:transition-opacity hover:bg-red-50 hover:text-red-600 md:group-hover:opacity-100 dark:hover:bg-red-950 dark:hover:text-red-400"
                       aria-label={`Delete ${account.name}`}
                     >
                       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

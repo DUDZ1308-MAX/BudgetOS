@@ -140,11 +140,11 @@ export function RecurringPage() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-5 sm:p-6 lg:space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-5 lg:space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Recurring Transactions</h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <h1 className="text-xl font-bold text-slate-900 sm:text-2xl dark:text-white">Recurring Transactions</h1>
+          <p className="mt-1 text-xs text-slate-500 sm:text-sm dark:text-slate-400">
             Manage bills, subscriptions, and recurring income
           </p>
         </div>

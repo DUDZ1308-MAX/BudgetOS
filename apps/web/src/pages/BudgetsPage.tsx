@@ -46,9 +46,9 @@ export function BudgetsPage() {
 
   return (
     <div className="space-y-4 sm:space-y-5 lg:space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Budgets</h1>
+          <h1 className="text-xl font-bold text-slate-900 sm:text-2xl dark:text-white">Budgets</h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             {MONTH_NAMES[month - 1]} {year}
           </p>
@@ -98,7 +98,7 @@ export function BudgetsPage() {
                     </span>
                     <button
                       onClick={() => { setEditingBudget(budget); setShowModal(true); }}
-                      className="rounded-lg p-1.5 text-slate-400 opacity-0 transition-opacity hover:bg-slate-100 hover:text-slate-600 group-hover:opacity-100 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+                      className="rounded-lg p-1.5 text-slate-400 md:opacity-0 md:transition-opacity hover:bg-slate-100 hover:text-slate-600 md:group-hover:opacity-100 dark:hover:bg-slate-800 dark:hover:text-slate-300"
                       aria-label={`Edit budget for ${cat?.name ?? 'Unknown'}`}
                     >
                       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -107,7 +107,7 @@ export function BudgetsPage() {
                     </button>
                     <button
                       onClick={() => setDeletingBudget(budget)}
-                      className="rounded-lg p-1.5 text-slate-400 opacity-0 transition-opacity hover:bg-red-50 hover:text-red-600 group-hover:opacity-100 dark:hover:bg-red-950 dark:hover:text-red-400"
+                      className="rounded-lg p-1.5 text-slate-400 md:opacity-0 md:transition-opacity hover:bg-red-50 hover:text-red-600 md:group-hover:opacity-100 dark:hover:bg-red-950 dark:hover:text-red-400"
                       aria-label={`Delete budget for ${cat?.name ?? 'Unknown'}`}
                     >
                       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

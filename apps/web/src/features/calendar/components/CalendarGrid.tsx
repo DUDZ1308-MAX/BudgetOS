@@ -81,7 +81,7 @@ export function CalendarGrid({ year, month, events, selectedDate, onSelectDate }
               key={date}
               onClick={() => onSelectDate(date)}
               className={`
-                min-h-[80px] p-1.5 flex flex-col gap-0.5 text-left transition-colors
+                min-h-[56px] sm:min-h-[80px] p-1 sm:p-1.5 flex flex-col gap-0.5 text-left transition-colors
                 ${isCurrentMonth ? 'bg-white/5' : 'bg-white/[0.02]'}
                 ${isSelected ? 'ring-2 ring-cyan-400 ring-inset' : ''}
                 ${isToday ? 'bg-cyan-500/10' : ''}
