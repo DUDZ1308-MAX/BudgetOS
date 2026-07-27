@@ -1,4 +1,3 @@
-import { FinancialEngine } from '@/services/FinancialEngine';
 import { analyzeFinancials, buildSummary } from './AnalysisEngine';
 import type { AiCoachState, AiAnalysisResult } from './types';
 import type { DashboardSummaryData } from '@/lib/dashboard/types';
