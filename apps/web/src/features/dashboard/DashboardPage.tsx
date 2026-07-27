@@ -23,6 +23,7 @@ import { PremiumRecommendationsCard } from './components/PremiumRecommendationsC
 import { PremiumProjectionsCard } from './components/PremiumProjectionsCard';
 import { PremiumInsightsCard } from './components/PremiumInsightsCard';
 import { RecentTransactionsCard } from './components/RecentTransactionsCard';
+import { AiCoachCard } from '@/features/ai-coach/components/AiCoachCard';
 import type { DashboardInsight, DashboardUpcomingItem } from '@/lib/dashboard/types';
 
 function getGreeting(): string {
@@ -227,6 +228,7 @@ export function DashboardPage() {
           isLoading={isLoading}
           href="/reports"
         />
+        <AiCoachCard />
       </motion.div>
 
       {/* Section 1c: Insights */}

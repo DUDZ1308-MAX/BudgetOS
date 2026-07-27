@@ -29,6 +29,7 @@ const PricingPage = lazy(() => import('@/pages/PricingPage').then(m => ({ defaul
 const FinancialHealthPage = lazy(() => import('@/pages/FinancialHealth/FinancialHealthPage').then(m => ({ default: m.FinancialHealthPage })));
 const NotificationsPage = lazy(() => import('@/pages/Notifications/NotificationsPage').then(m => ({ default: m.NotificationsPage })));
 const CalendarPage = lazy(() => import('@/features/calendar/CalendarPage').then(m => ({ default: m.CalendarPage })));
+const AiCoachPage = lazy(() => import('@/features/ai-coach/components/AiCoachPage').then(m => ({ default: m.AiCoachPage })));
 
 // Phase 8.0 pages
 const LandingPage = lazy(() => import('@/pages/LandingPage').then(m => ({ default: m.LandingPage })));
@@ -99,6 +100,7 @@ export const router = createBrowserRouter([
       { path: '/notifications', element: <Lazy name="notifications"><NotificationsPage /></Lazy> },
       { path: '/calendar', element: <Lazy name="calendar"><CalendarPage /></Lazy> },
       { path: '/ai', element: <Lazy name="AI"><AiPage /></Lazy> },
+      { path: '/ai-coach', element: <Lazy name="AI Coach"><AiCoachPage /></Lazy> },
       { path: '/billing', element: <Lazy name="billing"><BillingPage /></Lazy> },
       { path: '/pricing', element: <Lazy name="pricing"><PricingPage /></Lazy> },
       { path: '/admin/beta-readiness', element: <Lazy name="beta readiness"><BetaReadinessPage /></Lazy> },
