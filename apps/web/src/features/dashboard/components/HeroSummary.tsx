@@ -44,7 +44,7 @@ function AnimatedCount({ target, isCurrency, isPercent, isPositive }: { target: 
       ? 'var(--status-success)'
       : 'var(--status-error)';
 
-  return <span className="text-2xl font-bold tabular-nums" style={{ color }}>{formatted}</span>;
+  return <span className="text-lg font-bold tabular-nums sm:text-xl md:text-2xl" style={{ color }}>{formatted}</span>;
 }
 
 const HeroMetric = memo(function HeroMetric({ label, value, isCurrency, isPercent, isPositive, delay = 0, onClick, ariaLabel }: HeroMetricProps) {
@@ -54,7 +54,7 @@ const HeroMetric = memo(function HeroMetric({ label, value, isCurrency, isPercen
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="rounded-xl border p-4"
+        className="rounded-xl border p-3 sm:p-4"
         style={{ borderColor: 'var(--border-default)', background: 'var(--bg-elevated)' }}
       >
         <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>{label}</p>
@@ -81,16 +81,16 @@ interface HeroSummaryProps {
 export const HeroSummary = memo(function HeroSummary({ netWorth, availableCash, monthlyIncome, monthlyExpenses, cashFlow, savingsRate, healthScore, isLoading, onMetricClick = {} }: HeroSummaryProps) {
   if (isLoading) {
     return (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 xl:grid-cols-7">
         {Array.from({ length: 7 }).map((_, i) => (
-          <div key={i} className="h-20 animate-pulse rounded-xl" style={{ background: 'var(--bg-elevated)' }} />
+          <div key={i} className="h-16 sm:h-20 animate-pulse rounded-xl" style={{ background: 'var(--bg-elevated)' }} />
         ))}
       </div>
     );
   }
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 xl:grid-cols-7">
       <HeroMetric label="Net Worth" value={netWorth} isCurrency isPositive={netWorth >= 0} delay={0.05} onClick={onMetricClick.netWorth} ariaLabel="View net worth details" />
       <HeroMetric label="Available Cash" value={availableCash} isCurrency isPositive delay={0.1} onClick={onMetricClick.availableCash} ariaLabel="View available cash" />
       <HeroMetric label="Monthly Income" value={monthlyIncome} isCurrency isPositive delay={0.15} onClick={onMetricClick.monthlyIncome} ariaLabel="View income transactions" />

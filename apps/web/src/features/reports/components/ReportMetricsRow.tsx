@@ -3,11 +3,11 @@ import type { KpiMetric } from '../reportTypes';
 export function ReportMetricsRow({ metrics }: { metrics: KpiMetric[] }) {
   if (metrics.length === 0) return null;
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+    <div className="grid gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3 lg:gap-4 xl:grid-cols-5">
       {metrics.map((m) => (
         <div
           key={m.label}
-          className="rounded-xl border p-4"
+          className="rounded-xl border p-3 sm:p-4"
           style={{ borderColor: 'var(--border-default)', background: 'var(--bg-elevated)' }}
         >
           <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>{m.label}</p>

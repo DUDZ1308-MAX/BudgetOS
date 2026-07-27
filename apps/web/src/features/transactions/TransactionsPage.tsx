@@ -17,9 +17,9 @@ export function TransactionsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Transactions</h1>
+    <div className="space-y-4 sm:space-y-5 lg:space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-xl font-bold text-slate-900 sm:text-2xl dark:text-white">Transactions</h1>
         <button
           onClick={() => navigate('/transactions/add')}
           className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"

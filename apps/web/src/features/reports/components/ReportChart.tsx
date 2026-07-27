@@ -32,7 +32,7 @@ export function ReportChart({ config }: { config: ChartConfig }) {
     switch (type) {
       case 'pie':
         return (
-          <ResponsiveContainer width="100%" height={height}>
+          <ResponsiveContainer width="100%" height={Math.min(height, 300)}>
             <PieChart>
               <Pie data={data} dataKey="value" nameKey={xKey} cx="50%" cy="50%" outerRadius={100} label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}>
                 {data.map((_entry: any, i: number) => (
@@ -103,8 +103,8 @@ export function ReportChart({ config }: { config: ChartConfig }) {
   }, [data, type, series, xKey, height]);
 
   return (
-    <div className="rounded-xl border p-5" style={{ borderColor: 'var(--border-default)', background: 'var(--bg-elevated)' }}>
-      <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>{title}</h3>
+    <div className="rounded-xl border p-4 sm:p-5" style={{ borderColor: 'var(--border-default)', background: 'var(--bg-elevated)' }}>
+      <h3 className="mb-3 text-xs font-semibold sm:text-sm sm:mb-4" style={{ color: 'var(--text-primary)' }}>{title}</h3>
       {data.length === 0 ? (
         <p className="py-8 text-center text-sm" style={{ color: 'var(--text-muted)' }}>No data available for this period.</p>
       ) : chart}

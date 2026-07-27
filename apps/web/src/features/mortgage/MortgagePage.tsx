@@ -236,9 +236,9 @@ export function MortgagePage() {
   const dashboard = useMemo(() => calcResult ? computeMortgageDashboard(calcResult) : null, [calcResult]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Mortgage</h1>
+    <div className="space-y-4 sm:space-y-5 lg:space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-xl font-bold text-slate-900 sm:text-2xl dark:text-white">Mortgage</h1>
         <div className="flex gap-2">
           {mortgages.length > 1 && (
             <select
@@ -265,7 +265,7 @@ export function MortgagePage() {
       </div>
 
       {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => <div key={i} className="h-24 animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800" />)}
         </div>
       ) : !activeMortgage ? (
@@ -277,7 +277,7 @@ export function MortgagePage() {
       ) : (
         <>
           {/* Dashboard stats */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Remaining Balance</p>
               {(() => { devError('remainingBalance', dashboard?.remainingBalance); return null; })()}
@@ -357,7 +357,7 @@ export function MortgagePage() {
           </div>
 
           {/* Premium Visualizations: Payoff Timeline + Interest Saved */}
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-4 sm:gap-5 lg:grid-cols-2 lg:gap-6">
             {calcResult?.schedule && (
               <MortgagePayoffTimeline
                 schedule={calcResult.schedule}
@@ -375,7 +375,7 @@ export function MortgagePage() {
           </div>
 
           {/* Extra Payments + Schedule */}
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-4 sm:gap-5 lg:grid-cols-2 lg:gap-6">
             {/* Extra Payments */}
             <div className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-slate-800">

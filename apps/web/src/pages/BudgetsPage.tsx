@@ -45,7 +45,7 @@ export function BudgetsPage() {
   const isPending = createBudget.isPending || updateBudget.isPending;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-5 lg:space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Budgets</h1>
@@ -61,7 +61,7 @@ export function BudgetsPage() {
         </button>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
         {isLoading ? (
           <p className="col-span-full text-sm text-slate-400">Loading budgets...</p>
         ) : budgets.length === 0 ? (

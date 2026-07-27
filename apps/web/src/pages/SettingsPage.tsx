@@ -34,7 +34,7 @@ export function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('account');
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-5 lg:space-y-6">
       <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Settings</h1>
 
       <div className="flex flex-wrap gap-1 border-b border-slate-200 dark:border-slate-700" role="tablist" aria-label="Settings sections">
@@ -738,7 +738,7 @@ function AboutSection() {
 
 function FeedbackSection() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-5 lg:space-y-6">
       <section className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
         <h2 className="mb-1 text-sm font-semibold text-slate-900 dark:text-white">Send Feedback</h2>
         <p className="mb-4 text-xs text-slate-500 dark:text-slate-400">

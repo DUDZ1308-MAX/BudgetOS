@@ -40,7 +40,7 @@ export const InsightsCards = memo(function InsightsCards({ insights, isLoading, 
 
   if (insights.length === 0) {
     return (
-      <div className="rounded-xl border p-6 text-center" style={{ borderColor: 'var(--border-default)' }}>
+      <div className="rounded-xl border p-4 text-center sm:p-6" style={{ borderColor: 'var(--border-default)' }}>
         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No insights available yet. Add more financial data to see personalized insights.</p>
       </div>
     );
@@ -56,7 +56,7 @@ export const InsightsCards = memo(function InsightsCards({ insights, isLoading, 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: i * 0.08, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className={`rounded-xl border p-4 ${styles.border} ${styles.bg}`}
+              className={`rounded-xl border p-3 sm:p-4 ${styles.border} ${styles.bg}`}
             >
               <div className="flex items-start gap-3">
                 <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm ${styles.iconBg}`}>

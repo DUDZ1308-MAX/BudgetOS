@@ -33,19 +33,19 @@
 
   /* ===== PAGE LAYOUT ===== */
   .page-container {
-    @apply space-y-6;
+    @apply space-y-4 md:space-y-5 lg:space-y-6;
   }
 
   .page-header {
-    @apply flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between;
+    @apply flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between;
   }
 
   .page-title {
-    @apply text-2xl font-bold tracking-tight text-slate-900 dark:text-white;
+    @apply text-xl font-bold tracking-tight text-slate-900 sm:text-2xl dark:text-white;
   }
 
   .page-subtitle {
-    @apply text-sm text-slate-500 dark:text-slate-400;
+    @apply text-xs text-slate-500 sm:text-sm dark:text-slate-400;
   }
 
   /* ===== BUTTON SYSTEM ===== */
@@ -149,29 +149,82 @@
 
   /* ===== GRID UTILITIES ===== */
   .grid-auto-fit {
-    @apply grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4;
+    @apply grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4;
   }
 
   .grid-auto-fit-2 {
-    @apply grid gap-4 sm:grid-cols-2 md:grid-cols-3;
+    @apply grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3;
+  }
+
+  /* Dashboard flexible grid — eliminates gaps, auto-fills cards with equal heights */
+  .dashboard-grid {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: 1fr;
+    grid-auto-flow: dense;
+    align-items: stretch;
+  }
+
+  @media (min-width: 640px) {
+    .dashboard-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.875rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .dashboard-grid {
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+  }
+
+  @media (min-width: 1536px) {
+    .dashboard-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1rem;
+    }
+  }
+
+  /* Dashboard grid children stretch to fill height */
+  .dashboard-grid > * {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dashboard-grid > * > * {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Cards that span 2 columns on wider screens */
+  .col-span-2 {
+    grid-column: span 1;
+  }
+
+  @media (min-width: 640px) {
+    .col-span-2 {
+      grid-column: span 2;
+    }
   }
 
   /* ===== TEXT RESPONSIVENESS ===== */
   .text-responsive {
-    @apply text-sm md:text-base;
+    @apply text-xs sm:text-sm md:text-base;
   }
 
   .heading-responsive {
-    @apply text-2xl font-bold tracking-tight md:text-3xl;
+    @apply text-xl font-bold tracking-tight sm:text-2xl md:text-3xl;
   }
 
   /* ===== SECTION SPACING ===== */
   .section-spacing {
-    @apply py-6 md:py-8;
+    @apply py-4 sm:py-6 md:py-8;
   }
 
   .card-spacing {
-    @apply gap-4 p-4 md:gap-6 md:p-6;
+    @apply gap-3 p-3 sm:gap-4 sm:p-4 md:gap-6 md:p-6;
   }
 
   /* ===== DIVIDER ===== */
@@ -248,5 +301,94 @@
 
   .z-notification {
     z-index: 150;
+  }
+}
+
+/* ===== RESPONSIVE UTILITIES ===== */
+@layer utilities {
+  /* Hide on mobile, show on tablet+ */
+  .hidden-mobile {
+    @apply hidden sm:block;
+  }
+
+  /* Show on mobile, hide on tablet+ */
+  .show-mobile {
+    @apply block sm:hidden;
+  }
+
+  /* Responsive padding for cards */
+  .card-padding-responsive {
+    @apply p-3 sm:p-4 md:p-5;
+  }
+
+  /* Responsive gap for grids */
+  .gap-responsive {
+    @apply gap-3 sm:gap-4 lg:gap-5;
+  }
+
+  /* Touch-friendly minimum sizes */
+  .touch-min {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Prevent horizontal overflow */
+  .overflow-x-safe {
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Responsive font for stat values */
+  .stat-value-responsive {
+    @apply text-lg font-bold tabular-nums tracking-tight sm:text-xl md:text-2xl;
+  }
+}
+
+/* ===== RESPONSIVE TABLES (card layout on mobile) ===== */
+@layer components {
+  .responsive-table-wrapper {
+    @apply w-full overflow-x-auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .responsive-table {
+    @apply w-full min-w-[480px];
+  }
+
+  /* Mobile card layout for table rows */
+  @media (max-width: 639px) {
+    .table-to-cards tbody tr {
+      @apply mb-3 block rounded-xl border p-3;
+      border-color: var(--border-default);
+      background: var(--bg-card);
+    }
+
+    .table-to-cards tbody td {
+      @apply block border-0 p-0 py-1;
+    }
+
+    .table-to-cards thead {
+      @apply hidden;
+    }
+  }
+}
+
+/* ===== RESPONSIVE CHARTS ===== */
+@layer components {
+  .chart-responsive {
+    @apply w-full;
+    min-height: 200px;
+  }
+
+  @media (max-width: 639px) {
+    .chart-responsive {
+      min-height: 180px;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .chart-responsive {
+      min-height: 300px;
+    }
   }
 }

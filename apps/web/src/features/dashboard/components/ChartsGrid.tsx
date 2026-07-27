@@ -16,15 +16,15 @@ export const ChartsGrid = memo(function ChartsGrid({ cashFlowHistory, currentInc
     : [{ month: 'This Month', income: currentIncome, expenses: currentExpenses, net: currentCashFlow }];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Cash Flow Trend — full width */}
       <AnimatedCashFlow data={cashFlowData} isLoading={isLoading} />
 
       {/* Category Spending — simple bar list */}
       {topSpending.length > 0 && (
-        <div className="rounded-xl border p-5" style={{ borderColor: 'var(--border-default)', background: 'var(--bg-elevated)' }}>
-          <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Top Spending Categories</h3>
-          <div className="space-y-3">
+        <div className="rounded-xl border p-4 sm:p-5" style={{ borderColor: 'var(--border-default)', background: 'var(--bg-elevated)' }}>
+          <h3 className="text-xs font-semibold mb-3 sm:text-sm sm:mb-4" style={{ color: 'var(--text-primary)' }}>Top Spending Categories</h3>
+          <div className="space-y-2.5 sm:space-y-3">
             {topSpending.map((cat, i) => {
               const maxAmount = topSpending[0]?.amount ?? 1;
               const pct = (cat.amount / maxAmount) * 100;

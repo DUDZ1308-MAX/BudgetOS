@@ -78,7 +78,7 @@ export const UpcomingSection = memo(function UpcomingSection({ items, isLoading,
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: i * 0.04 }}
-            className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer"
+            className="flex min-h-[44px] items-center gap-3 rounded-lg p-2 transition-colors hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer"
             onClick={() => onItemClick?.(item)}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onItemClick?.(item); } }}
             role="button"

@@ -275,10 +275,10 @@ export function ReportsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Reports & Analytics</h1>
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Comprehensive financial analysis</p>
+          <h1 className="text-lg font-bold sm:text-xl" style={{ color: 'var(--text-primary)' }}>Reports & Analytics</h1>
+          <p className="text-xs sm:text-sm" style={{ color: 'var(--text-muted)' }}>Comprehensive financial analysis</p>
         </div>
         <div className="flex items-center gap-2">
           <ReportExporter onExportCSV={handleExportCSV} onExportExcel={handleExportExcel} onExportPDF={handleExportPDF} disabled={!hasData} />
@@ -287,7 +287,7 @@ export function ReportsPage() {
 
       {/* Empty state */}
       {!hasData && (
-        <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed py-16" style={{ borderColor: 'var(--border-default)' }}>
+        <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed py-10 sm:py-16" style={{ borderColor: 'var(--border-default)' }}>
           <div className="flex h-12 w-12 items-center justify-center rounded-xl" style={{ background: 'var(--accent-subtle)' }}>
             <IconReports className="h-6 w-6" style={{ color: 'var(--accent-text)' }} />
           </div>
@@ -364,15 +364,15 @@ export function ReportsPage() {
 
           {/* Tab Content */}
           {tabContent && (
-            <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-5 lg:space-y-6">
               <ReportMetricsRow metrics={tabContent.kpis} />
-              <div className="grid gap-6 lg:grid-cols-2">
+              <div className="grid gap-4 sm:gap-5 lg:grid-cols-2 lg:gap-6">
                 {tabContent.charts.slice(0, 2).map((chart, i) => (
                   <ReportChart key={i} config={chart} />
                 ))}
               </div>
               {tabContent.charts.length > 2 && (
-                <div className="grid gap-6 lg:grid-cols-2">
+                <div className="grid gap-4 sm:gap-5 lg:grid-cols-2 lg:gap-6">
                   {tabContent.charts.slice(2).map((chart, i) => (
                     <ReportChart key={i + 2} config={chart} />
                   ))}

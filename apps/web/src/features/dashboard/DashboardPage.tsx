@@ -197,7 +197,7 @@ export function DashboardPage() {
       {/* Section 1b: Premium Health Score Grid */}
       <motion.div
         variants={section}
-        className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4"
+        className="dashboard-grid"
         aria-label="Premium financial health"
       >
         <PremiumHealthScoreCard
@@ -244,7 +244,7 @@ export function DashboardPage() {
       {/* Section 2: Snapshot Cards — Mortgage, Savings, Budget, Accounts */}
       <motion.div
         variants={section}
-        className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4"
+        className="dashboard-grid"
         aria-label="Financial snapshots"
       >
         <MortgageSummary mortgages={d.mortgages} isLoading={isLoading} />
@@ -268,7 +268,7 @@ export function DashboardPage() {
       {/* Section 4: Upcoming Activity + Quick Actions + Recent Transactions */}
       <motion.div
         variants={section}
-        className="grid gap-6 lg:grid-cols-3"
+        className="grid gap-4 sm:gap-5 lg:grid-cols-3 lg:gap-6"
         aria-label="Planning section"
       >
         <div className="lg:col-span-2">

@@ -20,16 +20,16 @@ const actions: QuickAction[] = [
 export const QuickActionsPanel = memo(function QuickActionsPanel() {
   return (
     <DashboardCard title="Quick Actions">
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {actions.map((action) => (
           <a
             key={action.label}
             href={action.href ?? '#'}
             onClick={action.onClick}
-            className="flex flex-col items-center gap-1 rounded-xl border p-3 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            className="flex min-h-[44px] flex-col items-center justify-center gap-1 rounded-xl border p-2.5 transition-all hover:scale-[1.02] active:scale-[0.98] sm:p-3"
             style={{ borderColor: 'var(--border-default)' }}
           >
-            <span className="text-xl">{action.icon}</span>
+            <span className="text-lg sm:text-xl">{action.icon}</span>
             <span className="text-[10px] font-medium text-center leading-tight" style={{ color: 'var(--text-secondary)' }}>
               {action.label}
             </span>

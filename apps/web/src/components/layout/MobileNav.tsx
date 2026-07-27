@@ -19,7 +19,7 @@ export function MobileNav() {
             key={item.label}
             to={item.href}
             className={({ isActive }) =>
-              `flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium transition-colors ${
+              `flex flex-1 flex-col items-center gap-0.5 py-2 min-h-[44px] text-xs font-medium transition-colors ${
                 isActive
                   ? 'text-indigo-600 dark:text-indigo-400'
                   : 'text-slate-500 dark:text-slate-400'

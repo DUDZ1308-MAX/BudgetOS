@@ -238,31 +238,31 @@ export function SavingsPage() {
   const dashboard = computeSavingsDashboard(goals);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Savings Goals</h1>
+    <div className="space-y-4 sm:space-y-5 lg:space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-xl font-bold text-slate-900 sm:text-2xl dark:text-white">Savings Goals</h1>
         <button onClick={() => { setEditGoal(null); setShowForm(true); }} className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700">
           + New Goal
         </button>
       </div>
 
       {/* Dashboard */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Saved</p>
-          <p className="mt-1.5 text-2xl font-bold text-indigo-600 dark:text-indigo-400">{formatCurrency(dashboard.totalSaved)}</p>
+      <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 dark:border-slate-800 dark:bg-slate-900">
+          <p className="text-xs font-medium text-slate-500 sm:text-sm dark:text-slate-400">Total Saved</p>
+          <p className="mt-1 text-lg font-bold text-indigo-600 sm:mt-1.5 sm:text-2xl dark:text-indigo-400">{formatCurrency(dashboard.totalSaved)}</p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Active Goals</p>
-          <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">{dashboard.activeGoals}</p>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 dark:border-slate-800 dark:bg-slate-900">
+          <p className="text-xs font-medium text-slate-500 sm:text-sm dark:text-slate-400">Active Goals</p>
+          <p className="mt-1 text-lg font-bold text-slate-900 sm:mt-1.5 sm:text-2xl dark:text-white">{dashboard.activeGoals}</p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Completed</p>
-          <p className="mt-1.5 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{dashboard.completedGoals}</p>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 dark:border-slate-800 dark:bg-slate-900">
+          <p className="text-xs font-medium text-slate-500 sm:text-sm dark:text-slate-400">Completed</p>
+          <p className="mt-1 text-lg font-bold text-emerald-600 sm:mt-1.5 sm:text-2xl dark:text-emerald-400">{dashboard.completedGoals}</p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Largest Goal</p>
-          <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 dark:border-slate-800 dark:bg-slate-900">
+          <p className="text-xs font-medium text-slate-500 sm:text-sm dark:text-slate-400">Largest Goal</p>
+          <p className="mt-1 text-lg font-bold text-slate-900 sm:mt-1.5 sm:text-2xl dark:text-white">
             {dashboard.largestGoal ? formatCurrency(dashboard.largestGoal.target) : '-'}
           </p>
         </div>
@@ -270,7 +270,7 @@ export function SavingsPage() {
 
       {/* Goal Cards */}
       {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-60 animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800" />
           ))}
@@ -282,7 +282,7 @@ export function SavingsPage() {
           action={{ label: 'Create Goal', onClick: () => setShowForm(true) }}
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           {goals.map((goal) => (
             <SavingsGoalCard
               key={goal.id}
