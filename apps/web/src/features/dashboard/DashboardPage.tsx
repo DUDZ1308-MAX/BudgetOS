@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth';
+import { useProfileStore } from '@/stores/profile';
 import { computeDashboard } from '@/lib/dashboard/computeDashboard';
 import { FinancialEngine } from '@/services/FinancialEngine';
 import { useRecurringWidgetData } from './useRecurringWidgetData';
@@ -31,6 +32,13 @@ function getGreeting(): string {
   if (hour < 12) return 'Good morning';
   if (hour < 17) return 'Good afternoon';
   return 'Good evening';
+}
+
+function getDisplayName(profile: { display_name?: string | null; full_name?: string | null } | null, email?: string): string {
+  if (profile?.display_name) return profile.display_name.split(' ')[0] ?? profile.display_name;
+  if (profile?.full_name) return profile.full_name.split(' ')[0] ?? profile.full_name;
+  if (email) return email.split('@')[0] ?? email;
+  return 'there';
 }
 
 function formatLastUpdated(): string {
@@ -63,6 +71,7 @@ const upcomingTypeRoute: Record<string, string> = {
 export function DashboardPage() {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
+  const profile = useProfileStore((s) => s.profile);
   const { data: result, isLoading, isError } = useQuery({
     queryKey: ['dashboard-summary', user?.id],
     queryFn: () => computeDashboard(user!.id),
@@ -112,7 +121,7 @@ export function DashboardPage() {
   };
   const queryErrors = result?.errors ?? [];
 
-  const displayName = (user as any)?.user_metadata?.full_name ?? (user as any)?.email?.split('@')[0] ?? 'there';
+  const displayName = getDisplayName(profile, user?.email);
 
   const metricNavigation = {
     netWorth: () => navigate('/accounts'),

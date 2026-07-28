@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuthStore } from '@/stores/auth';
+import { useProfileStore } from '@/stores/profile';
 import { useDemoStore } from '@/stores/demoMode';
 import { useAnnouncementsStore } from '@/stores/announcements';
 import { useUnreadNotificationCount } from '@/hooks/useNotifications';
@@ -26,11 +27,19 @@ function greeting(): string {
   return 'Good evening';
 }
 
+function getDisplayName(profile: { display_name?: string | null; full_name?: string | null } | null, email?: string): string {
+  if (profile?.display_name) return profile.display_name;
+  if (profile?.full_name) return profile.full_name;
+  if (email) return email.split('@')[0] ?? email;
+  return 'there';
+}
+
 export function Header({ onMenuClick }: HeaderProps) {
   const { user, signOut } = useAuthStore();
+  const profile = useProfileStore((s) => s.profile);
   const isDemo = useDemoStore((s) => s.isDemo);
   const unreadAnnouncements = useAnnouncementsStore((s) => s.announcements.filter((a) => !s.readIds.includes(a.id)).length);
-  const displayName = user?.user_metadata?.full_name ?? user?.email?.split('@')[0] ?? 'there';
+  const displayName = getDisplayName(profile, user?.email);
   const initial = displayName.charAt(0).toUpperCase();
 
   const { data: unreadCount = 0 } = useUnreadNotificationCount();
