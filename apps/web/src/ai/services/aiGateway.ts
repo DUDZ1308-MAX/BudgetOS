@@ -34,8 +34,22 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
   if (!session?.access_token) {
     throw new AiGatewayError('Not authenticated. Please sign in.', 'AUTH');
   }
+
+  const { error: userError } = await supabase.auth.getUser();
+  if (userError) {
+    const { data: { session: refreshed }, error: refreshError } = await supabase.auth.refreshSession();
+    if (refreshError || !refreshed?.access_token) {
+      throw new AiGatewayError('Session expired. Please sign in again.', 'AUTH');
+    }
+    return {
+      Authorization: `Bearer ${refreshed.access_token}`,
+      'Content-Type': 'application/json',
+    };
+  }
+
+  const { data: { session: fresh } } = await supabase.auth.getSession();
   return {
-    Authorization: `Bearer ${session.access_token}`,
+    Authorization: `Bearer ${fresh?.access_token ?? session.access_token}`,
     'Content-Type': 'application/json',
   };
 }
@@ -157,6 +171,9 @@ export async function testGatewayConnection(
     return { success: true, message: `Connected via gateway (${provider})` };
   } catch (err) {
     if (err instanceof AiGatewayError) {
+      if (err.code === 'AUTH') {
+        return { success: false, message: err.message };
+      }
       if (err.status === 401) {
         return { success: false, message: 'Not authenticated. Please sign in.' };
       }
