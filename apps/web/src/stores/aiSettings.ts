@@ -7,11 +7,13 @@ const STORAGE_KEY_STATUS = 'budgetos_ai_connection_status';
 const STORAGE_KEY_TESTED = 'budgetos_ai_last_tested';
 const STORAGE_KEY_MODELS = 'budgetos_ai_models';
 
+const GATEWAY_URL = 'https://lhkytairslljxlkguhsp.supabase.co/functions/v1/ai-gateway';
+
 const DEFAULT_PROVIDER_SETUPS: Record<AiProviderName, ProviderSetup> = {
-  gemini: { model: 'gemini-2.0-flash', apiKey: '', baseUrl: 'https://generativelanguage.googleapis.com' },
-  openai: { model: 'gpt-4o-mini', apiKey: '', baseUrl: 'https://api.openai.com/v1' },
-  deepseek: { model: 'deepseek-chat', apiKey: '', baseUrl: 'https://api.deepseek.com/v1' },
-  ollama: { model: 'llama3', apiKey: '', baseUrl: 'http://localhost:11434' },
+  gemini: { model: 'gemini-2.0-flash', baseUrl: GATEWAY_URL },
+  openai: { model: 'gpt-4o-mini', baseUrl: GATEWAY_URL },
+  deepseek: { model: 'deepseek-chat', baseUrl: GATEWAY_URL },
+  ollama: { model: 'llama3', baseUrl: 'http://localhost:11434' },
 };
 
 function loadFromStorage<T>(key: string, fallback: T): T {
@@ -70,7 +72,6 @@ export const useAiSettingsStore = create<AiSettingsState>((set, get) => ({
     const config: AiProviderConfig = {
       model: setup.model,
       temperature: get().config.temperature,
-      apiKey: '',
       baseUrl: setup.baseUrl,
       streaming: get().config.streaming,
       maxTokens: get().config.maxTokens,
@@ -121,7 +122,6 @@ export const useAiSettingsStore = create<AiSettingsState>((set, get) => ({
     const setup = get().providerSetups[name] ?? DEFAULT_PROVIDER_SETUPS[name];
     const config: AiProviderConfig = {
       model: setup.model,
-      apiKey: '',
       baseUrl: setup.baseUrl,
       temperature: 0.7,
     };
@@ -164,7 +164,6 @@ export const useAiSettingsStore = create<AiSettingsState>((set, get) => ({
     const config: AiProviderConfig = {
       ...getDefaultConfig(provider),
       model: setup.model,
-      apiKey: '',
       baseUrl: setup.baseUrl,
     };
 

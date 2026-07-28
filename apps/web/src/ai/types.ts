@@ -35,7 +35,6 @@ export type ConnectionStatus = 'unknown' | 'connected' | 'failed';
 
 export interface ProviderSetup {
   model: string;
-  apiKey: string;
   baseUrl: string;
 }
 

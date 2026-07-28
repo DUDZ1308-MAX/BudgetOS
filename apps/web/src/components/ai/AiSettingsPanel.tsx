@@ -140,14 +140,25 @@ export function AiSettingsPanel({ onClose }: AiSettingsPanelProps) {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400">Base URL</label>
-                  <input
-                    type="text"
-                    value={setup.baseUrl}
-                    disabled={!meta.requiresKey}
-                    placeholder={name === 'ollama' ? 'http://localhost:11434' : 'Managed by gateway'}
-                    className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                  />
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400">Endpoint</label>
+                  {meta.requiresKey ? (
+                    <div className="mt-1 block w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-400 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-500">
+                      Managed by gateway
+                    </div>
+                  ) : (
+                    <input
+                      type="text"
+                      value={setup.baseUrl}
+                      onChange={(e) => {
+                        const { updateProviderModel } = useAiSettingsStore.getState();
+                        const setups = { ...providerSetups };
+                        setups[name] = { ...setups[name], baseUrl: e.target.value };
+                        useAiSettingsStore.setState({ providerSetups: setups });
+                      }}
+                      placeholder="http://localhost:11434"
+                      className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                    />
+                  )}
                 </div>
               </div>
 
