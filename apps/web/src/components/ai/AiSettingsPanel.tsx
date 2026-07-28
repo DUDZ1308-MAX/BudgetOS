@@ -7,12 +7,13 @@ interface AiSettingsPanelProps {
 }
 
 const PROVIDER_META: Record<AiProviderName, { name: string; icon: string; description: string; requiresKey: boolean }> = {
+  gemini: { name: 'Google Gemini', icon: '✦', description: 'Fast, capable cloud AI — Gemini 2.0 Flash', requiresKey: true },
   openai: { name: 'OpenAI', icon: '⚡', description: 'Premium cloud AI — GPT-4o and more', requiresKey: true },
   deepseek: { name: 'DeepSeek', icon: '🔍', description: 'Low-cost cloud AI — competitive quality', requiresKey: true },
   ollama: { name: 'Ollama', icon: '🦙', description: 'Free & private — runs 100% locally', requiresKey: false },
 };
 
-const PROVIDER_RECOMMENDATIONS: AiProviderName[] = ['ollama', 'deepseek', 'openai'];
+const PROVIDER_RECOMMENDATIONS: AiProviderName[] = ['gemini', 'ollama', 'deepseek', 'openai'];
 
 function formatTimestamp(iso: string | null): string {
   if (!iso) return '';
@@ -69,7 +70,7 @@ export function AiSettingsPanel({ onClose }: AiSettingsPanelProps) {
 
       <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-800 dark:bg-emerald-950/30">
         <p className="text-xs text-emerald-700 dark:text-emerald-400">
-          API keys are managed securely on the server. Select a provider and model below — no keys needed in the browser.
+          All AI requests are routed through a secure server-side gateway. API keys never leave the server. Select a provider and model below.
         </p>
       </div>
 
@@ -134,7 +135,7 @@ export function AiSettingsPanel({ onClose }: AiSettingsPanelProps) {
                     type="text"
                     value={setup.model}
                     onChange={(e) => updateProviderModel(name, e.target.value)}
-                    placeholder={name === 'openai' ? 'gpt-4o-mini' : name === 'deepseek' ? 'deepseek-chat' : 'llama3'}
+                    placeholder={name === 'gemini' ? 'gemini-2.0-flash' : name === 'openai' ? 'gpt-4o-mini' : name === 'deepseek' ? 'deepseek-chat' : 'llama3'}
                     className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                   />
                 </div>

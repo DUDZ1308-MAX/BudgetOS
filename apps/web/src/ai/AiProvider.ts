@@ -2,14 +2,17 @@ import type { AiProvider, AiProviderName, AiProviderConfig } from '@/ai/types';
 import { OpenAIProvider } from '@/ai/providers/OpenAIProvider';
 import { OllamaProvider } from '@/ai/providers/OllamaProvider';
 import { DeepSeekProvider } from '@/ai/providers/DeepSeekProvider';
+import { GeminiProvider } from '@/ai/providers/GeminiProvider';
 
 const providers: Record<AiProviderName, AiProvider> = {
+  gemini: GeminiProvider,
   openai: OpenAIProvider,
   ollama: OllamaProvider,
   deepseek: DeepSeekProvider,
 };
 
 const defaultConfigs: Record<AiProviderName, AiProviderConfig> = {
+  gemini: { model: 'gemini-2.0-flash', temperature: 0.7, maxTokens: 2048, streaming: true },
   openai: { model: 'gpt-4o-mini', temperature: 0.7, maxTokens: 2048, streaming: true },
   ollama: { model: 'llama3', temperature: 0.7, maxTokens: 2048, streaming: true },
   deepseek: { model: 'deepseek-chat', temperature: 0.7, maxTokens: 2048, streaming: true },

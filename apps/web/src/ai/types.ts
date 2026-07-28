@@ -2,7 +2,7 @@ import type { EngineTransaction, EngineCategory, BudgetSummary, CashFlowSummary,
 import type { GoalProgressResult, SavingsDashboard } from '@/engine/SavingsEngine';
 import type { MortgageDashboard, MortgageResult } from '@/engine/MortgageEngine';
 
-export type AiProviderName = 'openai' | 'ollama' | 'deepseek';
+export type AiProviderName = 'openai' | 'ollama' | 'deepseek' | 'gemini';
 
 export interface AiProviderConfig {
   apiKey?: string;

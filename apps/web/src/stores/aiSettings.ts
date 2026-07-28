@@ -8,6 +8,7 @@ const STORAGE_KEY_TESTED = 'budgetos_ai_last_tested';
 const STORAGE_KEY_MODELS = 'budgetos_ai_models';
 
 const DEFAULT_PROVIDER_SETUPS: Record<AiProviderName, ProviderSetup> = {
+  gemini: { model: 'gemini-2.0-flash', apiKey: '', baseUrl: 'https://generativelanguage.googleapis.com' },
   openai: { model: 'gpt-4o-mini', apiKey: '', baseUrl: 'https://api.openai.com/v1' },
   deepseek: { model: 'deepseek-chat', apiKey: '', baseUrl: 'https://api.deepseek.com/v1' },
   ollama: { model: 'llama3', apiKey: '', baseUrl: 'http://localhost:11434' },
@@ -53,14 +54,14 @@ interface AiSettingsState {
 }
 
 export const useAiSettingsStore = create<AiSettingsState>((set, get) => ({
-  provider: 'openai',
-  config: getDefaultConfig('openai'),
+  provider: 'gemini',
+  config: getDefaultConfig('gemini'),
   providers: getSupportedProviders(),
   initialized: false,
 
   providerSetups: { ...DEFAULT_PROVIDER_SETUPS },
-  connectionStatus: { openai: 'unknown', deepseek: 'unknown', ollama: 'unknown' },
-  lastTested: { openai: null, deepseek: null, ollama: null },
+  connectionStatus: { gemini: 'unknown', openai: 'unknown', deepseek: 'unknown', ollama: 'unknown' },
+  lastTested: { gemini: null, openai: null, deepseek: null, ollama: null },
   testingProvider: null,
 
   setProvider: (name) => {
@@ -141,16 +142,16 @@ export const useAiSettingsStore = create<AiSettingsState>((set, get) => ({
   },
 
   load: () => {
-    const activeProvider = loadFromStorage<AiProviderName>(STORAGE_KEY_ACTIVE, 'openai');
+    const activeProvider = loadFromStorage<AiProviderName>(STORAGE_KEY_ACTIVE, 'gemini');
     const savedStatus = loadFromStorage<Record<AiProviderName, ConnectionStatus>>(STORAGE_KEY_STATUS, {
-      openai: 'unknown', deepseek: 'unknown', ollama: 'unknown',
+      gemini: 'unknown', openai: 'unknown', deepseek: 'unknown', ollama: 'unknown',
     });
     const savedTested = loadFromStorage<Record<AiProviderName, string | null>>(STORAGE_KEY_TESTED, {
-      openai: null, deepseek: null, ollama: null,
+      gemini: null, openai: null, deepseek: null, ollama: null,
     });
     const savedModels = loadFromStorage<Record<string, string>>(STORAGE_KEY_MODELS, {});
 
-    const provider = getSupportedProviders().includes(activeProvider) ? activeProvider : 'openai';
+    const provider = getSupportedProviders().includes(activeProvider) ? activeProvider : 'gemini';
 
     const setups = { ...DEFAULT_PROVIDER_SETUPS };
     for (const [key, model] of Object.entries(savedModels)) {
@@ -188,11 +189,11 @@ export const useAiSettingsStore = create<AiSettingsState>((set, get) => ({
       // ignore
     }
     set({
-      provider: 'openai',
-      config: getDefaultConfig('openai'),
+      provider: 'gemini',
+      config: getDefaultConfig('gemini'),
       providerSetups: { ...DEFAULT_PROVIDER_SETUPS },
-      connectionStatus: { openai: 'unknown', deepseek: 'unknown', ollama: 'unknown' },
-      lastTested: { openai: null, deepseek: null, ollama: null },
+      connectionStatus: { gemini: 'unknown', openai: 'unknown', deepseek: 'unknown', ollama: 'unknown' },
+      lastTested: { gemini: null, openai: null, deepseek: null, ollama: null },
     });
   },
 }));

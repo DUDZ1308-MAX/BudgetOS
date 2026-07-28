@@ -1,7 +1,7 @@
 import type { AiMessage, AiProviderName, AiResponse } from '@/ai/types';
 import { supabase } from '@/lib/supabase';
 
-export type GatewayProvider = 'openai' | 'deepseek';
+export type GatewayProvider = 'openai' | 'deepseek' | 'gemini';
 
 interface GatewayChatRequest {
   messages: AiMessage[];
