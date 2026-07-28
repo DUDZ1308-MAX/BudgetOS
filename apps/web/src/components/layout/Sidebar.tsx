@@ -22,7 +22,7 @@ const navGroups = [
   },
   {
     label: 'Planning',
-    items: ['Mortgage', 'Financial Health'] as const,
+    items: ['Planning', 'Mortgage', 'Financial Health'] as const,
   },
   {
     label: 'Tools',

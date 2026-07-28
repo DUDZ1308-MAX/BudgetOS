@@ -22,6 +22,9 @@ import type {
   Notification,
   NotificationInsert,
   NotificationUpdate,
+  PlanningScenario,
+  PlanningScenarioInsert,
+  PlanningScenarioUpdate,
 } from './types';
 
 const DEFAULT_INCOME_NAMES = [
@@ -508,4 +511,58 @@ export function getUnreadNotificationCount(client: SupabaseClient, userId: strin
     .eq('user_id', userId)
     .eq('is_read', false)
     .eq('is_archived', false);
+}
+
+// ============================================================================
+// Planning Scenarios
+// ============================================================================
+
+export function listPlanningScenarios(client: SupabaseClient, userId: string) {
+  return client
+    .from('planning_scenarios')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_preset', false)
+    .order('created_at', { ascending: false });
+}
+
+export function getPlanningScenario(client: SupabaseClient, scenarioId: string) {
+  return as<PlanningScenario>(
+    client.from('planning_scenarios').select('*').eq('id', scenarioId).single(),
+  );
+}
+
+export function insertPlanningScenario(
+  client: SupabaseClient,
+  userId: string,
+  data: PlanningScenarioInsert,
+) {
+  return as<PlanningScenario>(
+    client
+      .from('planning_scenarios')
+      .insert({ ...data, user_id: userId, adjustments: data.adjustments ?? [] })
+      .select('*')
+      .single(),
+  );
+}
+
+export function updatePlanningScenario(
+  client: SupabaseClient,
+  scenarioId: string,
+  data: PlanningScenarioUpdate,
+) {
+  return as<PlanningScenario>(
+    client
+      .from('planning_scenarios')
+      .update(data)
+      .eq('id', scenarioId)
+      .select('*')
+      .single(),
+  );
+}
+
+export function deletePlanningScenario(client: SupabaseClient, scenarioId: string) {
+  return as<PlanningScenario>(
+    client.from('planning_scenarios').delete().eq('id', scenarioId).select('*').single(),
+  );
 }

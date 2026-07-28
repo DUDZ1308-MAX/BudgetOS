@@ -14,6 +14,7 @@ import {
   IconBell,
   IconRecurring,
   IconCalendar,
+  IconPlanning,
 } from '@/components/ui/Icons';
 
 export interface NavItem {
@@ -33,6 +34,7 @@ export const navigation: NavItem[] = [
   { label: 'Mortgage', href: '/mortgage', icon: IconMortgage },
   { label: 'Reports', href: '/reports', icon: IconReports },
   { label: 'Financial Health', href: '/health', icon: IconHeart },
+  { label: 'Planning', href: '/planning', icon: IconPlanning },
   { label: 'Notifications', href: '/notifications', icon: IconBell },
   { label: 'AI Copilot', href: '/ai', icon: IconSparkles },
   { label: 'Billing', href: '/billing', icon: IconCrown },

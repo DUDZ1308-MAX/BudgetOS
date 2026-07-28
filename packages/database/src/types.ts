@@ -360,3 +360,40 @@ export interface NotificationUpdate {
   is_archived?: boolean;
   metadata?: Record<string, unknown> | null;
 }
+
+// ============================================================================
+// Planning Scenarios
+// ============================================================================
+
+export interface ScenarioAdjustment {
+  type: 'income' | 'expense' | 'savings' | 'debt' | 'investment';
+  value: number;
+  label: string;
+}
+
+export interface PlanningScenario {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string | null;
+  adjustments: ScenarioAdjustment[];
+  is_active: boolean;
+  is_preset: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PlanningScenarioInsert {
+  name: string;
+  description?: string | null;
+  adjustments?: ScenarioAdjustment[];
+  is_active?: boolean;
+  is_preset?: boolean;
+}
+
+export interface PlanningScenarioUpdate {
+  name?: string;
+  description?: string | null;
+  adjustments?: ScenarioAdjustment[];
+  is_active?: boolean;
+}
