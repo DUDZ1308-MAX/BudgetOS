@@ -76,7 +76,7 @@ function MortgageFormModal({ open, onClose, onSave, mortgage }: { open: boolean;
             <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Property Name</label>
             <input value={name} onChange={(e) => setName(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-transparent px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:text-white" placeholder="Home" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Loan Amount</label>
               <input type="number" value={principal} onChange={(e) => setPrincipal(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-transparent px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:text-white" />
@@ -86,7 +86,7 @@ function MortgageFormModal({ open, onClose, onSave, mortgage }: { open: boolean;
               <input type="number" step="0.01" value={annualRate} onChange={(e) => setAnnualRate(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-transparent px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:text-white" />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Amortization (years)</label>
               <input type="number" value={amortizationYears} onChange={(e) => setAmortizationYears(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-transparent px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:text-white" />
@@ -108,7 +108,7 @@ function MortgageFormModal({ open, onClose, onSave, mortgage }: { open: boolean;
               ))}
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Start Date</label>
               <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-transparent px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:text-white" />
@@ -412,7 +412,8 @@ export function MortgagePage() {
               <div className="p-5">
                 {showSchedule && calcResult?.schedule ? (
                   <div className="max-h-80 overflow-y-auto">
-                    <table className="w-full text-left text-xs overflow-x-auto">
+                    <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
                       <thead>
                         <tr className="text-slate-400 dark:text-slate-500">
                           <th className="pb-2 pr-2 font-medium">#</th>
@@ -436,6 +437,7 @@ export function MortgagePage() {
                         ))}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 ) : (
                   <p className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">

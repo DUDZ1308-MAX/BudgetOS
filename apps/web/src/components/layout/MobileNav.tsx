@@ -11,7 +11,7 @@ const mobileNavItems = [
 
 export function MobileNav() {
   return (
-    <nav role="navigation" aria-label="Mobile navigation" className="fixed bottom-0 left-0 right-0 z-50 flex border-t border-slate-200 bg-white/95 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 md:hidden">
+    <nav role="navigation" aria-label="Mobile navigation" className="fixed bottom-0 left-0 right-0 z-50 flex border-t border-slate-200 bg-white/95 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 md:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
       {mobileNavItems.map((item) => {
         const Icon = item.icon;
         return (

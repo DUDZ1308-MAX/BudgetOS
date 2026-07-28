@@ -53,7 +53,7 @@ export const RecurringRow = memo(function RecurringRow({
         ? 'border-amber-200 dark:border-amber-800'
         : 'border-slate-200 dark:border-slate-800'
     }`}>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm ${typeColors[recurring.type]}`}>
             {categoryIcon ? <span className="text-xs">{categoryIcon}</span> : <span>{typeIcons[recurring.type]}</span>}
@@ -92,14 +92,14 @@ export const RecurringRow = memo(function RecurringRow({
             </div>
           </div>
 
-          <div className={`text-sm font-semibold tabular-nums ${
+          <div className={`text-sm font-semibold tabular-nums shrink-0 ${
             recurring.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
           }`}>
             {recurring.type === 'income' ? '+' : '-'}${formatCurrency(Math.abs(recurring.amount))}
           </div>
         </div>
 
-        <div className="flex items-center gap-1 ml-3 shrink-0">
+        <div className="flex items-center gap-1 sm:ml-3 sm:shrink-0">
           <button onClick={onTogglePause} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300" title={isPaused ? 'Resume' : 'Pause'}>
             {isPaused ? (
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

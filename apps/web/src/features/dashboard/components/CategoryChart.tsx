@@ -47,7 +47,7 @@ export const CategoryChart = memo(function CategoryChart({ categories, isLoading
                 tick={{ fontSize: 11, fill: '#94a3b8' }}
                 axisLine={false}
                 tickLine={false}
-                width={90}
+                width={70}
               />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
               <Bar dataKey="amount" radius={[0, 4, 4, 0]} maxBarSize={16}>

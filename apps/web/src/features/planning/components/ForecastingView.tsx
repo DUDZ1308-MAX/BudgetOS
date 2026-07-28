@@ -117,7 +117,7 @@ export function ForecastingView({
             <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Financial Forecast</h2>
             <p className="text-sm text-slate-500 dark:text-slate-400">Project your financial future over time</p>
           </div>
-          <div className="flex gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
+          <div className="flex flex-wrap gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
             {PERIODS.map((p) => (
               <button
                 key={p.key}

@@ -133,12 +133,12 @@ export function FinancialTimeline({ userId, className = '' }: FinancialTimelineP
   return (
     <div className={`bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden ${className}`}>
       <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-slate-800 dark:to-slate-700 p-6 border-b border-slate-200 dark:border-slate-700">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
           <div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Financial Timeline</h2>
             <p className="text-sm text-slate-600 dark:text-slate-400">Your complete financial roadmap</p>
           </div>
-          <div className="flex gap-1">
+          <div className="flex flex-wrap gap-1">
             {viewOptions.map((opt) => (
               <button key={opt.key} onClick={() => setCurrentView(opt.key)} className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${currentView === opt.key ? 'bg-emerald-500 text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'}`}>
                 {opt.label}
@@ -190,7 +190,7 @@ export function FinancialTimeline({ userId, className = '' }: FinancialTimelineP
       </div>
       <AnimatePresence>
         {selectedEvent && (
-          <motion.div initial={{ opacity: 0, x: 100 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 100 }} className="fixed right-6 top-6 w-80 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xl p-4 z-50">
+          <motion.div initial={{ opacity: 0, x: 100 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 100 }} className="fixed right-4 top-20 w-[calc(100vw-2rem)] max-w-80 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xl p-4 z-50">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold text-slate-900 dark:text-slate-100">{selectedEvent.title}</h3>
               <button onClick={() => setSelectedEvent(null)} className="text-slate-400 hover:text-slate-600"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg></button>

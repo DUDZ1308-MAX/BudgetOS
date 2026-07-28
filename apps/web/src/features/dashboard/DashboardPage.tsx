@@ -145,7 +145,7 @@ export function DashboardPage() {
         <div className="flex items-center gap-3">
           <div>
             <h1 className="page-title">{getGreeting()}, {displayName}</h1>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <p className="page-subtitle">Financial Command Center</p>
               <span className="premium-badge premium-badge-info">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" style={{ boxShadow: '0 0 6px rgba(52, 211, 153, 0.5)' }} />

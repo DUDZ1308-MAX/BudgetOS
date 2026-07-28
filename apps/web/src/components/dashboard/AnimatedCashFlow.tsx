@@ -108,7 +108,7 @@ export const AnimatedCashFlow = memo(function AnimatedCashFlow({ data, isLoading
       accent="top"
       delay={0.15}
     >
-      <div className="mb-4 flex gap-4">
+      <div className="mb-4 flex flex-wrap gap-4">
         <div className="flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-sm bg-emerald-500" style={{ boxShadow: '0 0 6px rgba(52, 211, 153, 0.4)' }} />
           <span className="text-xs" style={{ color: 'var(--text-muted)' }}>

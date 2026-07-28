@@ -93,7 +93,7 @@ export function Header({ onMenuClick }: HeaderProps) {
           onClick={() => {
             signOut();
           }}
-          className="ml-1 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+          className="ml-1 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 hidden sm:inline-flex"
           aria-label="Sign out"
         >
           Sign Out
