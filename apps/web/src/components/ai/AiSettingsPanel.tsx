@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { useAiSettingsStore } from '@/stores/aiSettings';
-import { ApiKeyGuide } from './ApiKeyGuide';
 import type { AiProviderName, ConnectionStatus, ProviderSetup } from '@/ai/types';
 
 interface AiSettingsPanelProps {
@@ -14,12 +13,6 @@ const PROVIDER_META: Record<AiProviderName, { name: string; icon: string; descri
 };
 
 const PROVIDER_RECOMMENDATIONS: AiProviderName[] = ['ollama', 'deepseek', 'openai'];
-
-function isConfigured(name: AiProviderName, setups: Record<AiProviderName, ProviderSetup>): boolean {
-  if (name === 'ollama') return true;
-  const setup = setups[name];
-  return !!setup.apiKey;
-}
 
 function formatTimestamp(iso: string | null): string {
   if (!iso) return '';
@@ -43,15 +36,13 @@ export function AiSettingsPanel({ onClose }: AiSettingsPanelProps) {
     lastTested,
     testingProvider,
     setProvider,
-    updateProviderSetup,
+    updateProviderModel,
     runTestConnection,
     reset,
   } = useAiSettingsStore();
 
-  const [guideProvider, setGuideProvider] = useState<AiProviderName | null>(null);
   const [testResults, setTestResults] = useState<Record<AiProviderName, { success: boolean; message: string } | null>>({} as Record<AiProviderName, { success: boolean; message: string } | null>);
   const [saved, setSaved] = useState(false);
-  const [showApiKey, setShowApiKey] = useState<Record<AiProviderName, boolean>>({} as Record<AiProviderName, boolean>);
 
   const handleSave = useCallback(() => {
     setSaved(true);
@@ -63,12 +54,6 @@ export function AiSettingsPanel({ onClose }: AiSettingsPanelProps) {
     const result = await runTestConnection(name);
     setTestResults((prev) => ({ ...prev, [name]: result }));
   }, [runTestConnection]);
-
-  const anyConfigured = Object.keys(PROVIDER_META).some((k) =>
-    isConfigured(k as AiProviderName, providerSetups)
-  );
-
-  const anyKeyProvider = (Object.keys(PROVIDER_META) as AiProviderName[]).filter((k) => PROVIDER_META[k].requiresKey);
 
   return (
     <div className="space-y-5 rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
@@ -82,9 +67,11 @@ export function AiSettingsPanel({ onClose }: AiSettingsPanelProps) {
         </button>
       </div>
 
-      {!anyConfigured && (
-        <WelcomeCard />
-      )}
+      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-800 dark:bg-emerald-950/30">
+        <p className="text-xs text-emerald-700 dark:text-emerald-400">
+          API keys are managed securely on the server. Select a provider and model below — no keys needed in the browser.
+        </p>
+      </div>
 
       <div className="space-y-4">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
@@ -96,11 +83,9 @@ export function AiSettingsPanel({ onClose }: AiSettingsPanelProps) {
           const setup = providerSetups[name];
           const status = connectionStatus[name];
           const tested = lastTested[name];
-          const configured = isConfigured(name, providerSetups);
           const isActive = name === activeProvider;
           const isTesting = testingProvider === name;
           const testResult = testResults[name];
-          const keyVisible = showApiKey[name];
 
           return (
             <div
@@ -136,7 +121,6 @@ export function AiSettingsPanel({ onClose }: AiSettingsPanelProps) {
                           Active
                         </span>
                       )}
-                      <StatusDot configured={configured} status={status} />
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400">{meta.description}</p>
                   </div>
@@ -149,114 +133,27 @@ export function AiSettingsPanel({ onClose }: AiSettingsPanelProps) {
                   <input
                     type="text"
                     value={setup.model}
-                    onChange={(e) => updateProviderSetup(name, { model: e.target.value })}
+                    onChange={(e) => updateProviderModel(name, e.target.value)}
                     placeholder={name === 'openai' ? 'gpt-4o-mini' : name === 'deepseek' ? 'deepseek-chat' : 'llama3'}
                     className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                   />
                 </div>
-
-                {meta.requiresKey ? (
-                  <div>
-                    <label className="block text-xs font-medium text-slate-500 dark:text-slate-400">API Key</label>
-                    <div className="relative mt-1">
-                      <input
-                        type={keyVisible ? 'text' : 'password'}
-                        value={setup.apiKey}
-                        onChange={(e) => updateProviderSetup(name, { apiKey: e.target.value })}
-                        placeholder={`${meta.name} API key`}
-                        className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 pr-20 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                      />
-                      <div className="absolute right-1 top-1/2 flex -translate-y-1/2 gap-0.5">
-                        <button
-                          type="button"
-                          onClick={() => setShowApiKey((prev) => ({ ...prev, [name]: !prev[name] }))}
-                          className="rounded p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                          title={keyVisible ? 'Hide key' : 'Show key'}
-                        >
-                          {keyVisible ? (
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                            </svg>
-                          ) : (
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                          )}
-                        </button>
-                        {setup.apiKey && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              navigator.clipboard.writeText(setup.apiKey).catch(() => {});
-                            }}
-                            className="rounded p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                            title="Copy key"
-                          >
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                            </svg>
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            try {
-                              const text = await navigator.clipboard.readText();
-                              if (text) updateProviderSetup(name, { apiKey: text });
-                            } catch {
-                              // Clipboard read denied
-                            }
-                          }}
-                          className="rounded p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                          title="Paste from clipboard"
-                        >
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                          </svg>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => updateProviderSetup(name, { apiKey: '' })}
-                          className="rounded p-1 text-slate-400 hover:text-red-500 dark:hover:text-red-400"
-                          title="Clear key"
-                        >
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <label className="block text-xs font-medium text-slate-500 dark:text-slate-400">Base URL</label>
-                    <input
-                      type="text"
-                      value={setup.baseUrl}
-                      onChange={(e) => updateProviderSetup(name, { baseUrl: e.target.value })}
-                      placeholder="http://localhost:11434"
-                      className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                    />
-                  </div>
-                )}
-              </div>
-
-              {meta.requiresKey && (
-                <div className="mt-3">
-                  <button
-                    onClick={() => setGuideProvider(name)}
-                    className="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400"
-                  >
-                    How do I get an API key?
-                  </button>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400">Base URL</label>
+                  <input
+                    type="text"
+                    value={setup.baseUrl}
+                    disabled={!meta.requiresKey}
+                    placeholder={name === 'ollama' ? 'http://localhost:11434' : 'Managed by gateway'}
+                    className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                  />
                 </div>
-              )}
+              </div>
 
               <div className="mt-3 flex flex-wrap items-center gap-3">
                 <button
                   onClick={() => handleTestConnection(name)}
-                  disabled={isTesting || (!meta.requiresKey && !setup.baseUrl)}
+                  disabled={isTesting}
                   className="flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
                 >
                   {isTesting ? (
@@ -372,82 +269,6 @@ export function AiSettingsPanel({ onClose }: AiSettingsPanelProps) {
         >
           Reset
         </button>
-      </div>
-
-      {guideProvider && (
-        <ApiKeyGuide provider={guideProvider} onClose={() => setGuideProvider(null)} />
-      )}
-    </div>
-  );
-}
-
-function StatusDot({ configured, status }: { configured: boolean; status: ConnectionStatus }) {
-  const color = status === 'connected'
-    ? 'bg-emerald-500'
-    : configured
-      ? 'bg-amber-400'
-      : 'bg-slate-300 dark:bg-slate-600';
-
-  const label = status === 'connected'
-    ? 'Connected'
-    : configured
-      ? 'Configured'
-      : 'Not Configured';
-
-  return (
-    <span className="flex items-center gap-1 text-[10px] text-slate-400">
-      <span className={`inline-block h-2 w-2 rounded-full ${color}`} />
-      {label}
-    </span>
-  );
-}
-
-function WelcomeCard() {
-  return (
-    <div className="rounded-xl border border-brand-200 bg-gradient-to-br from-brand-50 to-white p-5 dark:border-brand-800 dark:from-brand-950 dark:to-slate-900">
-      <h3 className="mb-2 text-base font-bold text-slate-900 dark:text-white">
-        Welcome to AI Copilot
-      </h3>
-      <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">
-        Your personal financial assistant. Ask questions about your spending, get budget insights,
-        forecast future balances, and receive personalized recommendations — all powered by AI.
-      </p>
-
-      <div className="mb-4 space-y-2">
-        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Supported providers:</p>
-        <div className="flex flex-wrap gap-2">
-          {(Object.keys(PROVIDER_META) as AiProviderName[]).map((name) => {
-            const meta = PROVIDER_META[name];
-            return (
-              <div
-                key={name}
-                className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs shadow-sm dark:bg-slate-800"
-              >
-                <span>{meta.icon}</span>
-                <span className="font-medium text-slate-700 dark:text-slate-300">{meta.name}</span>
-                <span className="text-slate-400">— {meta.description}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="rounded-lg bg-white p-3 dark:bg-slate-800">
-        <p className="mb-2 text-xs font-semibold text-slate-500 dark:text-slate-400">Recommendations:</p>
-        <ol className="space-y-1.5">
-          {PROVIDER_RECOMMENDATIONS.map((name, i) => {
-            const meta = PROVIDER_META[name];
-            return (
-              <li key={name} className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-100 text-[10px] font-bold text-brand-600 dark:bg-brand-900/30 dark:text-brand-400">
-                  {i + 1}
-                </span>
-                <span className="font-medium">{meta.name}</span>
-                <span className="text-xs text-slate-400">— {meta.description}</span>
-              </li>
-            );
-          })}
-        </ol>
       </div>
     </div>
   );

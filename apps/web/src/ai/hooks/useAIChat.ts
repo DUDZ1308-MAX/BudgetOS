@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAiSettingsStore } from '@/stores/aiSettings';
 import { AiService, ChatHistory } from '@/ai/AiService';
-import { AiClient } from '@/ai/services/aiClient';
-import type { AiContext, ChatSession, AiProviderName, AiProviderConfig } from '@/ai/types';
+import type { AiContext, ChatSession } from '@/ai/types';
 
 interface UseAIChatOptions {
   context: AiContext | null;
@@ -33,7 +32,6 @@ export function useAIChat({ context }: UseAIChatOptions): UseAIChatReturn {
   const [isCancelled, setIsCancelled] = useState(false);
 
   const aiServiceRef = useRef<AiService | null>(null);
-  const aiClientRef = useRef<AiClient | null>(null);
   const sessionRef = useRef<ChatSession>(session);
 
   useEffect(() => {
@@ -110,12 +108,10 @@ export function useAIChat({ context }: UseAIChatOptions): UseAIChatReturn {
       setSessions(ChatHistory.getAllSessions());
     } finally {
       setIsTyping(false);
-      aiClientRef.current = null;
     }
   }, [input, context]);
 
   const cancelRequest = useCallback(() => {
-    aiClientRef.current?.cancel();
     setIsCancelled(true);
   }, []);
 

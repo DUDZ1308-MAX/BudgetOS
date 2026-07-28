@@ -1,24 +1,21 @@
 import type { AiProvider, AiProviderName, AiMessage, AiResponse, AiProviderConfig } from '@/ai/types';
-import { AiClient, AiClientError } from '@/ai/services/aiClient';
+import { gatewayChat, gatewayStream, testGatewayConnection } from '@/ai/services/aiGateway';
 
-export { AiClient, AiClientError };
+export { AiGatewayError } from '@/ai/services/aiGateway';
 
 async function* streamChat(messages: AiMessage[], config: AiProviderConfig): AsyncIterable<AiResponse> {
-  const client = new AiClient(config);
-  yield* client.stream(messages);
+  yield* gatewayStream({ messages, provider: 'openai', model: config.model, temperature: config.temperature, maxTokens: config.maxTokens });
 }
 
-async function testConnection(config: AiProviderConfig): Promise<{ success: boolean; message: string }> {
-  const client = new AiClient(config);
-  return client.testConnection();
+async function testConnection(_config: AiProviderConfig): Promise<{ success: boolean; message: string }> {
+  return testGatewayConnection('openai');
 }
 
 export const OpenAIProvider: AiProvider = {
   name: 'openai' as AiProviderName,
 
   async chat(messages: AiMessage[], config: AiProviderConfig): Promise<AiResponse> {
-    const client = new AiClient(config);
-    return client.chat(messages);
+    return gatewayChat({ messages, provider: 'openai', model: config.model, temperature: config.temperature, maxTokens: config.maxTokens });
   },
 
   stream: streamChat,
