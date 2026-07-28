@@ -38,6 +38,8 @@ export const BudgetRepository = {
     const { year, month, rollover, ...rest } = data as any;
     const monthKey = year && month ? `${year}-${String(month).padStart(2, '0')}` : undefined;
     const payload: Record<string, unknown> = { user_id: userId, ...rest };
+    if (year !== undefined) payload.year = year;
+    if (month !== undefined) payload.month = month;
     if (monthKey) payload.month_key = monthKey;
     if (rollover !== undefined) payload.rollover_enabled = rollover;
     const { data: result, error } = await supabase

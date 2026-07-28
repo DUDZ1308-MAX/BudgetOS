@@ -289,6 +289,8 @@ export async function createBudget(client: SupabaseClient, userId: string, data:
   }
 
   const payload: Record<string, unknown> = { user_id: userId, ...rest };
+  if (year !== undefined) payload.year = year;
+  if (month !== undefined) payload.month = month;
   if (monthKey) payload.month_key = monthKey;
   if (rollover !== undefined) payload.rollover_enabled = rollover;
   return as<Budget>(

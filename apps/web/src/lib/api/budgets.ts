@@ -67,6 +67,8 @@ export const budgetsApi = {
     const payload: Record<string, unknown> = {
       user_id: userId,
       category_id: rest.category_id,
+      year,
+      month,
       amount: parsedAmount,
       month_key: monthKey,
     };
