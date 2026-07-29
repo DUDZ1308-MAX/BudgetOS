@@ -319,55 +319,55 @@ export function PlanningPage() {
         )}
 
         {hasData && activeTab === 'overview' && overviewData && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-3">
-              <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-2">
+              <div className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-900">
                 <div className="text-xs font-medium text-slate-500 dark:text-slate-400">Net Worth</div>
-                <div className="mt-1 text-xl font-bold text-slate-900 dark:text-slate-100">
+                <div className="mt-0.5 text-lg font-bold text-slate-900 dark:text-slate-100">
                   ${overviewData.netWorth.netWorth.toLocaleString()}
                 </div>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+              <div className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-900">
                 <div className="text-xs font-medium text-slate-500 dark:text-slate-400">Monthly Cash Flow</div>
-                <div className={`mt-1 text-xl font-bold ${overviewData.cashFlow.cashFlow >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                <div className={`mt-0.5 text-lg font-bold ${overviewData.cashFlow.cashFlow >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                   ${overviewData.cashFlow.cashFlow.toLocaleString()}
                 </div>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+              <div className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-900">
                 <div className="text-xs font-medium text-slate-500 dark:text-slate-400">Total Savings</div>
-                <div className="mt-1 text-xl font-bold text-slate-900 dark:text-slate-100">
+                <div className="mt-0.5 text-lg font-bold text-slate-900 dark:text-slate-100">
                   ${overviewData.savingsSnapshot.totalSaved.toLocaleString()}
                 </div>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+              <div className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-900">
                 <div className="text-xs font-medium text-slate-500 dark:text-slate-400">Health Score</div>
-                <div className="mt-1 text-xl font-bold text-slate-900 dark:text-slate-100">
+                <div className="mt-0.5 text-lg font-bold text-slate-900 dark:text-slate-100">
                   {overviewData.healthScore.overall?.score ?? 'N/A'}
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3">
-              <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+            <div className="grid grid-cols-1 gap-2">
+              <div className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-900">
                 <div className="text-xs font-medium text-slate-500 dark:text-slate-400">Total Debt</div>
-                <div className="mt-1 text-lg font-bold text-red-600">${overviewData.totalDebt.toLocaleString()}</div>
+                <div className="mt-0.5 text-base font-bold text-red-600">${overviewData.totalDebt.toLocaleString()}</div>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+              <div className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-900">
                 <div className="text-xs font-medium text-slate-500 dark:text-slate-400">Monthly Savings</div>
-                <div className="mt-1 text-lg font-bold text-emerald-600">${overviewData.monthlySavings.toLocaleString()}</div>
+                <div className="mt-0.5 text-base font-bold text-emerald-600">${overviewData.monthlySavings.toLocaleString()}</div>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+              <div className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-900">
                 <div className="text-xs font-medium text-slate-500 dark:text-slate-400">Savings Goals Target</div>
-                <div className="mt-1 text-lg font-bold text-slate-900 dark:text-slate-100">
+                <div className="mt-0.5 text-base font-bold text-slate-900 dark:text-slate-100">
                   ${overviewData.savingsGoal.toLocaleString()}
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3">
-              <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
-                <h3 className="mb-2 text-xs font-semibold text-slate-700 dark:text-slate-300">5-Year Projection</h3>
-                <div className="space-y-1.5">
+            <div className="grid grid-cols-1 gap-2">
+              <div className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-900">
+                <h3 className="mb-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300">5-Year Projection</h3>
+                <div className="space-y-1">
                   {(overviewData.projections.projections ?? []).slice(0, 5).map((p, i) => (
                     <div key={i} className="flex items-center justify-between text-xs">
                       <span className="text-slate-500 dark:text-slate-400">{p.label}</span>
@@ -376,22 +376,22 @@ export function PlanningPage() {
                   ))}
                 </div>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
-                <h3 className="mb-2 text-xs font-semibold text-slate-700 dark:text-slate-300">Quick Actions</h3>
-                <div className="space-y-1.5">
-                  <button onClick={() => setActiveTab('scenarios')} className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-left transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700">
+              <div className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-900">
+                <h3 className="mb-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300">Quick Actions</h3>
+                <div className="space-y-1">
+                  <button onClick={() => setActiveTab('scenarios')} className="w-full rounded-lg border border-slate-200 bg-white p-2 text-left transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700">
                     <div className="text-xs font-medium text-slate-900 dark:text-slate-100">Run Scenario Analysis</div>
                     <div className="text-[10px] text-slate-500 dark:text-slate-400">Compare financial scenarios</div>
                   </button>
-                  <button onClick={() => setActiveTab('forecasting')} className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-left transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700">
+                  <button onClick={() => setActiveTab('forecasting')} className="w-full rounded-lg border border-slate-200 bg-white p-2 text-left transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700">
                     <div className="text-xs font-medium text-slate-900 dark:text-slate-100">View Projections</div>
                     <div className="text-[10px] text-slate-500 dark:text-slate-400">Cash flow and net worth forecasts</div>
                   </button>
-                  <button onClick={() => setActiveTab('retirement')} className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-left transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700">
+                  <button onClick={() => setActiveTab('retirement')} className="w-full rounded-lg border border-slate-200 bg-white p-2 text-left transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700">
                     <div className="text-xs font-medium text-slate-900 dark:text-slate-100">Retirement Planner</div>
                     <div className="text-[10px] text-slate-500 dark:text-slate-400">Plan for retirement readiness</div>
                   </button>
-                  <button onClick={() => setActiveTab('assistant')} className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-left transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700">
+                  <button onClick={() => setActiveTab('assistant')} className="w-full rounded-lg border border-slate-200 bg-white p-2 text-left transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700">
                     <div className="text-xs font-medium text-slate-900 dark:text-slate-100">AI Planning Assistant</div>
                     <div className="text-[10px] text-slate-500 dark:text-slate-400">Get personalized financial insights</div>
                   </button>

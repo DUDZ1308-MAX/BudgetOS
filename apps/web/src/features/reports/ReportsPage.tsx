@@ -435,7 +435,7 @@ export function ReportsPage() {
                 <button
                   key={t.key}
                   onClick={() => setTab(t.key)}
-                  className={`flex items-center rounded-lg px-3 min-h-[44px] text-xs font-medium whitespace-nowrap transition-colors ${
+                  className={`flex items-center rounded-lg px-2.5 min-h-[44px] text-xs font-medium whitespace-nowrap transition-colors ${
                     filterState.tab === t.key ? 'text-white' : ''
                   }`}
                   style={{
@@ -452,20 +452,20 @@ export function ReportsPage() {
             <div>
               <button
                 onClick={() => setShowMobileFilters(!showMobileFilters)}
-                className="flex items-center justify-between w-full rounded-xl border px-4 py-3 text-sm font-medium"
+                className="flex items-center justify-between w-full rounded-xl border px-3 py-2.5 text-sm font-medium"
                 style={{ borderColor: 'var(--border-default)', background: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
               >
                 <span>Filters</span>
                 <span className={`transition-transform ${showMobileFilters ? 'rotate-180' : ''}`}>▼</span>
               </button>
               {showMobileFilters && (
-                <div className="mt-2 space-y-2">
-                  <div className="flex flex-wrap gap-2">
+                <div className="mt-1.5 space-y-1.5">
+                  <div className="flex flex-wrap gap-1.5">
                     {timeRanges.map((r) => (
                       <button
                         key={r.key}
                         onClick={() => setTimeRange(r.key)}
-                        className="rounded-lg px-3 min-h-[44px] text-xs font-medium"
+                        className="rounded-lg px-2 min-h-[44px] text-xs font-medium"
                         style={{
                           background: filterState.timeRange === r.key ? 'var(--accent-primary)' : 'var(--bg-elevated)',
                           color: filterState.timeRange === r.key ? 'white' : 'var(--text-secondary)',
@@ -476,12 +476,12 @@ export function ReportsPage() {
                       </button>
                     ))}
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5">
                     {(['all', 'income', 'expense'] as const).map((t) => (
                       <button
                         key={t}
                         onClick={() => setType(t)}
-                        className="rounded-lg px-3 min-h-[44px] text-xs font-medium"
+                        className="rounded-lg px-2 min-h-[44px] text-xs font-medium"
                         style={{
                           background: filterState.type === t ? 'var(--accent-primary)' : 'var(--bg-elevated)',
                           color: filterState.type === t ? 'white' : 'var(--text-secondary)',
@@ -498,9 +498,9 @@ export function ReportsPage() {
 
             {/* Single-column content */}
             {tabContent && (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <ReportMetricsRow metrics={tabContent.kpis} />
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {tabContent.charts.map((chart, i) => (
                     <ReportChart key={i} config={chart} />
                   ))}
