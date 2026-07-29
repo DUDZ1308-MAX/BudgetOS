@@ -195,7 +195,7 @@ export function GoalOptimizer({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 text-sm">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-4 text-sm">
                 <div>
                   <div className="text-slate-500 dark:text-slate-400">Current Monthly</div>
                   <div className="font-medium text-slate-900 dark:text-slate-100">${goal.monthly}/mo</div>

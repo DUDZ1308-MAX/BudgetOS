@@ -3,7 +3,7 @@ import type { KpiMetric } from '../reportTypes';
 export function ReportMetricsRow({ metrics }: { metrics: KpiMetric[] }) {
   if (metrics.length === 0) return null;
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-3 lg:gap-4 xl:grid-cols-5">
+    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-3 lg:gap-4 xl:grid-cols-5">
       {metrics.map((m) => (
         <div
           key={m.label}

@@ -134,7 +134,7 @@ export function ForecastingView({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 mb-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4 mb-6">
           <div className="rounded-xl bg-slate-50 p-4 dark:bg-slate-800">
             <div className="text-sm text-slate-500 dark:text-slate-400">Projected Net Worth</div>
             <div className="mt-1 text-xl font-bold text-slate-900 dark:text-slate-100">
@@ -163,7 +163,7 @@ export function ForecastingView({
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
-        <div className="flex gap-2 mb-6">
+        <div className="flex flex-wrap gap-2 mb-6">
           {[
             { key: 'networth', label: 'Net Worth' },
             { key: 'cashflow', label: 'Cash Flow' },

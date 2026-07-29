@@ -129,7 +129,7 @@ export function AiPage() {
   const pendingCount = sessions.filter((s) => s.id !== session.id).length;
 
   return (
-    <div className="flex h-[calc(100vh-6rem)] gap-4 overflow-hidden">
+    <div className="flex h-[calc(100dvh-6rem)] gap-4 overflow-hidden">
       <div className="flex flex-1 flex-col min-w-0">
         <div className="mb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div className="flex items-center gap-3 overflow-x-auto">
