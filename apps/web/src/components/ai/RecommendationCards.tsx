@@ -24,7 +24,7 @@ export function RecommendationCards({ recommendations }: RecommendationCardsProp
   return (
     <div className="space-y-2">
       <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Recommendations</h3>
-      <div className="space-y-2">
+      <div className="space-y-2 overflow-x-hidden">
         {recommendations.slice(0, 5).map((rec) => (
           <div
             key={rec.id}

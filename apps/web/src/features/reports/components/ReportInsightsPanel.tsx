@@ -31,7 +31,7 @@ export function ReportInsightsPanel({ insights }: { insights: ReportInsight[] })
   return (
     <div className="space-y-3">
       <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Report Insights</h3>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
         {insights.map((insight, i) => {
           const s = STYLES[insight.type] ?? STYLES.neutral;
           return (
@@ -42,7 +42,7 @@ export function ReportInsightsPanel({ insights }: { insights: ReportInsight[] })
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>{insight.title}</p>
-                  <p className="mt-0.5 text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{insight.message}</p>
+                  <p className="mt-0.5 text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{insight.message}</p>
                 </div>
               </div>
             </div>

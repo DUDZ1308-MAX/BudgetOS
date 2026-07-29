@@ -122,7 +122,7 @@ export function ForecastingView({
               <button
                 key={p.key}
                 onClick={() => setPeriod(p.key)}
-                className={`rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
+                className={`rounded-md px-3 min-h-[44px] text-sm font-medium transition-all ${
                   period === p.key
                     ? 'bg-white text-brand-600 shadow-sm dark:bg-slate-700 dark:text-brand-400'
                     : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
@@ -172,7 +172,7 @@ export function ForecastingView({
             <button
               key={ct.key}
               onClick={() => setChartType(ct.key as typeof chartType)}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
+              className={`rounded-lg px-3 min-h-[44px] text-sm font-medium transition-all ${
                 chartType === ct.key
                   ? 'bg-brand-500 text-white'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700'
@@ -183,7 +183,7 @@ export function ForecastingView({
           ))}
         </div>
 
-        <div className="h-80">
+        <div className="h-60 sm:h-72 md:h-80">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />

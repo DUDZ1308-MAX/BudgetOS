@@ -148,7 +148,7 @@ export function FinancialTimeline({ userId, className = '' }: FinancialTimelineP
         </div>
         <div className="flex flex-wrap gap-2">
           {categoryOptions.map((opt) => (
-            <button key={opt.key} onClick={() => { setVisibleCategories((prev) => (prev.includes(opt.key) ? prev.filter((c) => c !== opt.key) : [...prev, opt.key])); }} className={`px-2 py-1 rounded-full text-xs font-medium transition-all ${visibleCategories.includes(opt.key) ? 'text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}`} style={visibleCategories.includes(opt.key) ? { backgroundColor: opt.color } : undefined}>
+            <button key={opt.key} onClick={() => { setVisibleCategories((prev) => (prev.includes(opt.key) ? prev.filter((c) => c !== opt.key) : [...prev, opt.key])); }} className={`flex items-center min-h-[44px] px-3 py-1 rounded-full text-xs font-medium transition-all ${visibleCategories.includes(opt.key) ? 'text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}`} style={visibleCategories.includes(opt.key) ? { backgroundColor: opt.color } : undefined}>
               {opt.label}
             </button>
           ))}
@@ -156,13 +156,13 @@ export function FinancialTimeline({ userId, className = '' }: FinancialTimelineP
       </div>
       <div className="relative p-6">
         <div className="relative">
-          <div className="absolute left-0 right-0 top-0 bottom-0 pointer-events-none"><div className="h-full border-l-2 border-slate-200 dark:border-slate-700 ml-16" /></div>
+          <div className="absolute left-0 right-0 top-0 bottom-0 pointer-events-none"><div className="h-full border-l-2 border-slate-200 dark:border-slate-700 ml-10 sm:ml-16" /></div>
           <div className="space-y-4 relative">
             {filteredEvents.map((event, index) => (
               <motion.div key={event.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }} className="relative flex items-start group" onClick={() => setSelectedEvent(event)}>
-                <div className="absolute left-8 top-6 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700" />
-                <div className="relative z-10 flex-shrink-0 w-8 h-8 rounded-full border-4 border-white dark:border-slate-900 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform" style={{ backgroundColor: event.color }} />
-                <motion.div className="ml-6 flex-1 min-w-0 cursor-pointer" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <div className="absolute left-5 sm:left-8 top-6 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700" />
+                <div className="relative z-10 flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full border-4 border-white dark:border-slate-900 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform" style={{ backgroundColor: event.color }} />
+                <motion.div className="ml-3 sm:ml-6 flex-1 min-w-0 cursor-pointer" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 shadow-sm hover:shadow-md transition-all">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -190,10 +190,13 @@ export function FinancialTimeline({ userId, className = '' }: FinancialTimelineP
       </div>
       <AnimatePresence>
         {selectedEvent && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40 bg-black/30 sm:bg-transparent sm:pointer-events-none" onClick={() => setSelectedEvent(null)} />
+        )}
+        {selectedEvent && (
           <motion.div initial={{ opacity: 0, x: 100 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 100 }} className="fixed right-4 top-20 w-[calc(100vw-2rem)] max-w-80 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xl p-4 z-50">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold text-slate-900 dark:text-slate-100">{selectedEvent.title}</h3>
-              <button onClick={() => setSelectedEvent(null)} className="text-slate-400 hover:text-slate-600"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+              <button onClick={() => setSelectedEvent(null)} className="flex items-center justify-center min-h-[44px] min-w-[44px] text-slate-400 hover:text-slate-600"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
             </div>
             <div className="space-y-2 text-sm">
               <div className="text-slate-600 dark:text-slate-400"><strong>Date:</strong> {selectedEvent.date}</div>

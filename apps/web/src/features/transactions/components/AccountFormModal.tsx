@@ -94,7 +94,7 @@ export function AccountFormModal({ isPending, account, onCreate, onUpdate, onClo
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" aria-labelledby="account-modal-title">
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
       <FocusTrap active={true}>
-      <div className="relative w-full max-w-sm rounded-t-2xl bg-white p-6 shadow-xl sm:rounded-2xl dark:bg-slate-900">
+      <div className="relative w-full max-w-sm rounded-t-2xl bg-white p-6 shadow-xl sm:rounded-2xl dark:bg-slate-900 max-h-[90vh] overflow-y-auto">
         <div className="mb-1 flex items-center justify-between">
           <h2 id="account-modal-title" className="text-lg font-semibold text-slate-900 dark:text-white">
             {isEdit ? 'Edit Account' : 'Create Account'}
@@ -102,7 +102,7 @@ export function AccountFormModal({ isPending, account, onCreate, onUpdate, onClo
           <button
             type="button"
             onClick={onClose}
-            className="rounded p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+            className="flex items-center justify-center rounded-lg min-h-[44px] min-w-[44px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

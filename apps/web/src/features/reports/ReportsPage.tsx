@@ -295,7 +295,7 @@ export function ReportsPage() {
           <p className="mt-1 max-w-sm text-center text-sm" style={{ color: 'var(--text-muted)' }}>
             Add accounts, transactions, and budgets to see detailed reports with cash flow trends, category breakdowns, and savings projections.
           </p>
-          <div className="mt-5 flex gap-3">
+          <div className="mt-5 flex flex-col sm:flex-row gap-3">
             <button onClick={() => navigate('/accounts')} className="rounded-xl px-4 py-2 text-sm font-medium text-white" style={{ background: 'var(--accent-primary)' }}>
               Add Account
             </button>
@@ -309,7 +309,7 @@ export function ReportsPage() {
       {/* Tab bar */}
       {hasData && (
         <>
-          <div className="flex gap-1 overflow-x-auto rounded-xl border p-1 scrollbar-none" style={{ borderColor: 'var(--border-default)', background: 'var(--bg-elevated)' }}>
+          <div className="flex gap-1 overflow-x-auto rounded-xl border p-1 scrollbar-none" style={{ borderColor: 'var(--border-default)', background: 'var(--bg-elevated)', WebkitOverflowScrolling: 'touch' }}>
             {tabs.map((t) => (
               <button
                 key={t.key}
@@ -364,15 +364,15 @@ export function ReportsPage() {
 
           {/* Tab Content */}
           {tabContent && (
-    <div className="space-y-4 sm:space-y-5 lg:space-y-6">
+    <div className="space-y-4 sm:space-y-5 md:space-y-5 lg:space-y-6">
               <ReportMetricsRow metrics={tabContent.kpis} />
-              <div className="grid gap-4 sm:gap-5 lg:grid-cols-2 lg:gap-6">
+              <div className="grid gap-4 sm:gap-5 md:grid-cols-2 md:gap-6">
                 {tabContent.charts.slice(0, 2).map((chart, i) => (
                   <ReportChart key={i} config={chart} />
                 ))}
               </div>
               {tabContent.charts.length > 2 && (
-                <div className="grid gap-4 sm:gap-5 lg:grid-cols-2 lg:gap-6">
+                <div className="grid gap-4 sm:gap-5 md:grid-cols-2 md:gap-6">
                   {tabContent.charts.slice(2).map((chart, i) => (
                     <ReportChart key={i + 2} config={chart} />
                   ))}

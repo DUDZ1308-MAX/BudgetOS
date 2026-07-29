@@ -25,7 +25,7 @@ export function ReportExporter({ onExportCSV, onExportExcel, onExportPDF, disabl
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
           <div
-            className="absolute right-0 z-20 mt-1 w-36 rounded-xl border py-1 shadow-lg"
+            className="absolute right-0 z-20 mt-1 w-40 rounded-xl border py-1 shadow-lg sm:w-36"
             style={{ borderColor: 'var(--border-default)', background: 'var(--bg-primary)' }}
           >
             <button onClick={() => { setOpen(false); onExportCSV(); }} className="flex items-center w-full px-3 min-h-[44px] text-left text-xs hover:bg-black/5 dark:hover:bg-white/5" style={{ color: 'var(--text-secondary)' }}>

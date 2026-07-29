@@ -42,7 +42,7 @@ export function SuggestionChips({ onSelect, disabled }: SuggestionChipsProps) {
                 key={q}
                 onClick={() => onSelect(q)}
                 disabled={disabled}
-                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-600 transition-colors hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-indigo-600 dark:hover:bg-indigo-950/30 dark:hover:text-indigo-400"
+                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-left text-slate-600 transition-colors hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-indigo-600 dark:hover:bg-indigo-950/30 dark:hover:text-indigo-400 max-w-full"
               >
                 {q}
               </button>

@@ -129,17 +129,17 @@ export function AiPage() {
   const pendingCount = sessions.filter((s) => s.id !== session.id).length;
 
   return (
-    <div className="flex h-[calc(100vh-6rem)] gap-4">
-      <div className="flex flex-1 flex-col">
-        <div className="mb-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">AI Copilot</h1>
-            <div className="flex gap-1 rounded-lg bg-slate-100 p-0.5 dark:bg-slate-800">
+    <div className="flex h-[calc(100vh-6rem)] gap-4 overflow-hidden">
+      <div className="flex flex-1 flex-col min-w-0">
+        <div className="mb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="flex items-center gap-3 overflow-x-auto">
+            <h1 className="shrink-0 text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">AI Copilot</h1>
+            <div className="flex gap-1 rounded-lg bg-slate-100 p-0.5 dark:bg-slate-800 shrink-0">
               {(['chat', 'insights', 'forecasts', 'recommendations'] as AiTab[]).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
+                  className={`rounded-md px-3 min-h-[36px] text-xs font-medium capitalize whitespace-nowrap transition-colors ${
                     activeTab === tab
                       ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white'
                       : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
@@ -150,18 +150,18 @@ export function AiPage() {
               ))}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {activeTab === 'chat' && (
               <>
                 <button
                   onClick={() => setShowHistory(!showHistory)}
-                  className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300"
+                  className="rounded-lg border border-slate-300 px-3 min-h-[36px] text-xs text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300"
                 >
                   History ({pendingCount})
                 </button>
                 <button
                   onClick={handleNewChat}
-                  className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-700"
+                  className="rounded-lg bg-brand-600 px-3 min-h-[36px] text-xs font-medium text-white hover:bg-brand-700"
                 >
                   New Chat
                 </button>
@@ -169,7 +169,7 @@ export function AiPage() {
             )}
             <button
               onClick={() => setShowSettings(!showSettings)}
-              className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300"
+              className="rounded-lg border border-slate-300 px-3 min-h-[36px] text-xs text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300"
             >
               Settings
             </button>
@@ -250,7 +250,7 @@ export function AiPage() {
         ) : (
           <>
             {activeTab === 'chat' && (
-              <div className="flex flex-1 flex-col rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+              <div className="flex flex-1 flex-col rounded-xl border border-slate-200 bg-white min-h-0 dark:border-slate-800 dark:bg-slate-900">
                 <ChatWindow messages={session.messages} isTyping={isTyping} />
                 {session.messages.length === 0 && !isExhausted && (
                   <div className="border-t border-slate-100 dark:border-slate-800">
@@ -262,7 +262,7 @@ export function AiPage() {
                     <UpgradePrompt variant="banner" />
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 border-t border-slate-200 p-3 dark:border-slate-800">
+                  <div className="sticky bottom-0 flex items-center gap-2 border-t border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
                     <input
                       type="text"
                       value={input}
@@ -275,12 +275,12 @@ export function AiPage() {
                       }}
                       placeholder="Ask about your finances..."
                       disabled={isTyping || !context}
-                      className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                      className="flex-1 min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                     />
                     <button
                       onClick={() => handleSend()}
                       disabled={!input.trim() || isTyping || !context}
-                      className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
+                      className="shrink-0 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
                     >
                       Send
                     </button>

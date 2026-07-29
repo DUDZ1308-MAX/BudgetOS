@@ -209,7 +209,7 @@ export function ScenarioManager({
             <button
               key={scenario.id}
               onClick={() => toggleScenario(scenario.id)}
-              className={`rounded-full px-3 py-1.5 text-sm font-medium transition-all ${
+              className={`rounded-full px-4 min-h-[44px] text-sm font-medium transition-all ${
                 selectedScenarios.includes(scenario.id)
                   ? 'bg-brand-500 text-white'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700'

@@ -46,11 +46,11 @@ export function RetirementPlanner({ userId, className = '' }: RetirementPlannerP
               <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Readiness Score</span>
               <span className={`text-lg font-bold ${readiness.score >= 80 ? 'text-emerald-600' : readiness.score >= 60 ? 'text-amber-600' : 'text-red-600'}`}>{readiness.score}/100</span>
             </div>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="text-slate-600 dark:text-slate-400">Years to Retire: <span className="font-semibold text-slate-900 dark:text-slate-100">{readiness.yearsToRetire}</span></div>
-              <div className="text-slate-600 dark:text-slate-400">Projected Nest Egg: <span className="font-semibold text-slate-900 dark:text-slate-100">${readiness.projectedNestEgg.toLocaleString()}</span></div>
-              <div className="text-slate-600 dark:text-slate-400">Monthly Income: <span className="font-semibold text-slate-900 dark:text-slate-100">${readiness.monthlyIncome.toLocaleString()}</span></div>
-              <div className="text-slate-600 dark:text-slate-400">Income Target: <span className="font-semibold text-slate-900 dark:text-slate-100">${readiness.incomeTarget.toLocaleString()}</span></div>
+            <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+              <div className="min-w-0 text-slate-600 dark:text-slate-400">Years to Retire: <span className="font-semibold text-slate-900 dark:text-slate-100">{readiness.yearsToRetire}</span></div>
+              <div className="min-w-0 text-slate-600 dark:text-slate-400">Projected Nest Egg: <span className="font-semibold text-slate-900 dark:text-slate-100 truncate block">${readiness.projectedNestEgg.toLocaleString()}</span></div>
+              <div className="min-w-0 text-slate-600 dark:text-slate-400">Monthly Income: <span className="font-semibold text-slate-900 dark:text-slate-100 truncate block">${readiness.monthlyIncome.toLocaleString()}</span></div>
+              <div className="min-w-0 text-slate-600 dark:text-slate-400">Income Target: <span className="font-semibold text-slate-900 dark:text-slate-100 truncate block">${readiness.incomeTarget.toLocaleString()}</span></div>
             </div>
             <div className="mt-3 w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
               <div className="bg-emerald-500 h-2 rounded-full transition-all duration-500" style={{ width: `${readiness.score}%` }} />

@@ -44,8 +44,8 @@ export const TransactionRow = memo(function TransactionRow({
           <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
             <span>{categoryName ?? 'Uncategorized'}</span>
             {isRecurring && <span className="rounded-full bg-indigo-100 px-1.5 py-0.5 text-xs font-medium text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400">Recurring</span>}
-            <span className="hidden sm:inline">&middot;</span>
-            <span className="hidden sm:inline">{accountName ?? 'Unknown account'}</span>
+            <span>&middot;</span>
+            <span className="truncate max-w-[120px] sm:max-w-none">{accountName ?? 'Unknown account'}</span>
             <span>&middot;</span>
             <span>{new Date(transaction.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
           </div>
@@ -62,7 +62,7 @@ export const TransactionRow = memo(function TransactionRow({
         </span>
         <button
           onClick={() => onArchive(transaction.id)}
-          className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+          className="flex items-center justify-center rounded-lg min-h-[44px] min-w-[44px] text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
           title="Remove"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import type { Transaction } from '@budgetos/database';
 import { TransactionRow } from './TransactionRow';
 
-const ROW_HEIGHT = 64;
+const ROW_HEIGHT = 72;
 const OVERSCAN = 5;
 
 interface Props {
@@ -45,8 +45,8 @@ export function VirtualizedTransactionList({ transactions, accountsMap, categori
     <div
       ref={containerRef}
       onScroll={handleScroll}
-      className="overflow-auto"
-      style={{ height: '100%', minHeight: '400px' }}
+      className="overflow-auto overscroll-contain"
+      style={{ height: '100%', minHeight: 'min(400px, 60vh)' }}
       role="list"
       aria-label="Transactions"
     >

@@ -36,7 +36,7 @@ export function TransactionList({ transactions, accounts, categories, onArchive 
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 md:space-y-3">
       {transactions.map((txn) => {
         const category = txn.category_id ? categoryMap.get(txn.category_id) : undefined;
         return (
