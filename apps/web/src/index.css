@@ -1,6 +1,15 @@
 /* MyBudgetOS Design System — RC2 */
 
 @layer base {
+  html {
+    overflow-x: hidden;
+    width: 100%;
+  }
+
+  body {
+    overflow-x: hidden;
+    width: 100%;
+  }
   /* ===== HIDE SCROLLBAR (webkit/firefox) ===== */
   .scrollbar-none {
     scrollbar-width: none;

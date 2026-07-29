@@ -32,7 +32,7 @@ export function RecommendationCards({ recommendations }: RecommendationCardsProp
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <p className="text-sm font-medium text-slate-900 dark:text-white">{rec.title}</p>
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${priorityBadge[rec.priority]}`}>
                     {rec.priority}

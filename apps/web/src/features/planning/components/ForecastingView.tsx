@@ -183,7 +183,7 @@ export function ForecastingView({
           ))}
         </div>
 
-        <div className="h-60 sm:h-72 md:h-80">
+        <div className="overflow-hidden h-60 sm:h-72 md:h-80">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />

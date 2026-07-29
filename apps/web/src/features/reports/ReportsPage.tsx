@@ -366,13 +366,13 @@ export function ReportsPage() {
           {tabContent && (
     <div className="space-y-4 sm:space-y-5 md:space-y-5 lg:space-y-6">
               <ReportMetricsRow metrics={tabContent.kpis} />
-              <div className="grid gap-4 sm:gap-5 md:grid-cols-2 md:gap-6">
+              <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 md:gap-6">
                 {tabContent.charts.slice(0, 2).map((chart, i) => (
                   <ReportChart key={i} config={chart} />
                 ))}
               </div>
               {tabContent.charts.length > 2 && (
-                <div className="grid gap-4 sm:gap-5 md:grid-cols-2 md:gap-6">
+                <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 md:gap-6">
                   {tabContent.charts.slice(2).map((chart, i) => (
                     <ReportChart key={i + 2} config={chart} />
                   ))}

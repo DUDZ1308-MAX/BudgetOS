@@ -103,7 +103,7 @@ export function ReportChart({ config }: { config: ChartConfig }) {
   }, [data, type, series, xKey, height]);
 
   return (
-    <div className="rounded-xl border p-4 sm:p-5" style={{ borderColor: 'var(--border-default)', background: 'var(--bg-elevated)' }}>
+    <div className="overflow-hidden rounded-xl border p-4 sm:p-5" style={{ borderColor: 'var(--border-default)', background: 'var(--bg-elevated)' }}>
       <h3 className="mb-3 text-xs font-semibold sm:text-sm sm:mb-4" style={{ color: 'var(--text-primary)' }}>{title}</h3>
       {data.length === 0 ? (
         <p className="py-8 text-center text-sm" style={{ color: 'var(--text-muted)' }}>No data available for this period.</p>
