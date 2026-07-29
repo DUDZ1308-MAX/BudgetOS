@@ -1,6 +1,15 @@
 /* MyBudgetOS Design System — RC2 */
 
 @layer base {
+  /* ===== HIDE SCROLLBAR (webkit/firefox) ===== */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
   /* ===== TOUCH TARGETS ===== */
   .touch-target {
     @apply min-h-[44px] min-w-[44px] p-0;

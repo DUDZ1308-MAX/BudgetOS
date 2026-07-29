@@ -49,7 +49,7 @@ export function AppShell() {
         <DemoBanner />
         <AnnouncementBanner />
         <Header onMenuClick={() => setSidebarOpen(true)} />
-        <main id="main-content" role="main" className="flex-1 overflow-y-auto p-3 pb-20 sm:p-4 md:p-6 md:pb-6">
+        <main id="main-content" role="main" className="flex-1 overflow-y-auto overflow-x-hidden p-3 pb-20 sm:p-4 md:p-6 md:pb-6">
           <NetworkStatus />
           <div className="mx-auto max-w-[1400px] xl:max-w-[1600px] 2xl:max-w-[1800px]">
             <Outlet />

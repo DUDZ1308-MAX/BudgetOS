@@ -41,7 +41,7 @@ export const TransactionRow = memo(function TransactionRow({
           <p className="truncate text-sm font-medium text-slate-900 dark:text-white">
             {transaction.merchant || categoryName || 'Transaction'}
           </p>
-          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-slate-500 dark:text-slate-400">
             <span>{categoryName ?? 'Uncategorized'}</span>
             {isRecurring && <span className="rounded-full bg-indigo-100 px-1.5 py-0.5 text-xs font-medium text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400">Recurring</span>}
             <span>&middot;</span>
