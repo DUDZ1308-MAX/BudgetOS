@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth';
@@ -43,6 +43,7 @@ export function ReportsPage() {
   const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
   const { state: filterState, filters, tabs, setTab, setTimeRange, setType } = useReportFilters();
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const { data: accounts = [] } = useQuery({ queryKey: ['accounts', user?.id], queryFn: () => accountsApi.list(user!.id), enabled: !!user });
   const { data: allTxns = [] } = useQuery({ queryKey: ['transactions-all', user?.id], queryFn: () => transactionsApi.list(user!.id), enabled: !!user });
@@ -273,123 +274,249 @@ export function ReportsPage() {
   }, [tabContent, filterState.tab, budgetHealth]);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-lg font-bold sm:text-xl" style={{ color: 'var(--text-primary)' }}>Reports & Analytics</h1>
-          <p className="text-xs sm:text-sm" style={{ color: 'var(--text-muted)' }}>Comprehensive financial analysis</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <ReportExporter onExportCSV={handleExportCSV} onExportExcel={handleExportExcel} onExportPDF={handleExportPDF} disabled={!hasData} />
-        </div>
-      </div>
-
-      {/* Empty state */}
-      {!hasData && (
-        <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed py-10 sm:py-16" style={{ borderColor: 'var(--border-default)' }}>
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl" style={{ background: 'var(--accent-subtle)' }}>
-            <IconReports className="h-6 w-6" style={{ color: 'var(--accent-text)' }} />
+    <>
+      {/* Desktop/Tablet layout */}
+      <div className="hidden md:block space-y-6">
+        {/* Header */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-lg font-bold sm:text-xl" style={{ color: 'var(--text-primary)' }}>Reports & Analytics</h1>
+            <p className="text-xs sm:text-sm" style={{ color: 'var(--text-muted)' }}>Comprehensive financial analysis</p>
           </div>
-          <h2 className="mt-4 text-base font-semibold" style={{ color: 'var(--text-primary)' }}>No data to report on yet</h2>
-          <p className="mt-1 max-w-sm text-center text-sm" style={{ color: 'var(--text-muted)' }}>
-            Add accounts, transactions, and budgets to see detailed reports with cash flow trends, category breakdowns, and savings projections.
-          </p>
-          <div className="mt-5 flex flex-col sm:flex-row gap-3">
-            <button onClick={() => navigate('/accounts')} className="rounded-xl px-4 py-2 text-sm font-medium text-white" style={{ background: 'var(--accent-primary)' }}>
-              Add Account
-            </button>
-            <button onClick={() => navigate('/transactions/add')} className="rounded-xl border px-4 py-2 text-sm font-medium transition-colors" style={{ borderColor: 'var(--border-default)', color: 'var(--text-secondary)' }}>
-              Add Transaction
-            </button>
+          <div className="flex items-center gap-2">
+            <ReportExporter onExportCSV={handleExportCSV} onExportExcel={handleExportExcel} onExportPDF={handleExportPDF} disabled={!hasData} />
           </div>
         </div>
-      )}
 
-      {/* Tab bar */}
-      {hasData && (
-        <>
-          <div className="flex gap-1 overflow-x-auto rounded-xl border p-1 scrollbar-none" style={{ borderColor: 'var(--border-default)', background: 'var(--bg-elevated)', WebkitOverflowScrolling: 'touch' }}>
-            {tabs.map((t) => (
-              <button
-                key={t.key}
-                onClick={() => setTab(t.key)}
-                className={`flex items-center rounded-lg px-3 min-h-[44px] text-xs font-medium whitespace-nowrap transition-colors ${
-                  filterState.tab === t.key
-                    ? 'text-white'
-                    : ''
-                }`}
-                style={{
-                  background: filterState.tab === t.key ? 'var(--accent-primary)' : 'transparent',
-                  color: filterState.tab === t.key ? 'white' : 'var(--text-secondary)',
-                }}
-              >
-                {t.label}
+        {/* Empty state */}
+        {!hasData && (
+          <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed py-10 sm:py-16" style={{ borderColor: 'var(--border-default)' }}>
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl" style={{ background: 'var(--accent-subtle)' }}>
+              <IconReports className="h-6 w-6" style={{ color: 'var(--accent-text)' }} />
+            </div>
+            <h2 className="mt-4 text-base font-semibold" style={{ color: 'var(--text-primary)' }}>No data to report on yet</h2>
+            <p className="mt-1 max-w-sm text-center text-sm" style={{ color: 'var(--text-muted)' }}>
+              Add accounts, transactions, and budgets to see detailed reports with cash flow trends, category breakdowns, and savings projections.
+            </p>
+            <div className="mt-5 flex flex-col sm:flex-row gap-3">
+              <button onClick={() => navigate('/accounts')} className="rounded-xl px-4 py-2 text-sm font-medium text-white" style={{ background: 'var(--accent-primary)' }}>
+                Add Account
               </button>
-            ))}
+              <button onClick={() => navigate('/transactions/add')} className="rounded-xl border px-4 py-2 text-sm font-medium transition-colors" style={{ borderColor: 'var(--border-default)', color: 'var(--text-secondary)' }}>
+                Add Transaction
+              </button>
+            </div>
           </div>
+        )}
 
-          {/* Time Range + Type Filter */}
-          <div className="flex flex-wrap gap-2 items-center">
-            {timeRanges.map((r) => (
-              <button
-                key={r.key}
-                onClick={() => setTimeRange(r.key)}
-                className="flex items-center rounded-lg px-3 min-h-[44px] text-xs font-medium transition-colors"
-                style={{
-                  background: filterState.timeRange === r.key ? 'var(--accent-primary)' : 'var(--bg-elevated)',
-                  color: filterState.timeRange === r.key ? 'white' : 'var(--text-secondary)',
-                  border: `1px solid ${filterState.timeRange === r.key ? 'transparent' : 'var(--border-default)'}`,
-                }}
-              >
-                {r.label}
-              </button>
-            ))}
-            <div className="hidden sm:block w-px h-5" style={{ background: 'var(--border-default)' }} />
-            {(['all', 'income', 'expense'] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setType(t)}
-                className="flex items-center rounded-lg px-3 min-h-[44px] text-xs font-medium transition-colors"
-                style={{
-                  background: filterState.type === t ? 'var(--accent-primary)' : 'var(--bg-elevated)',
-                  color: filterState.type === t ? 'white' : 'var(--text-secondary)',
-                  border: `1px solid ${filterState.type === t ? 'transparent' : 'var(--border-default)'}`,
-                }}
-              >
-                {t === 'all' ? 'All' : t.charAt(0).toUpperCase() + t.slice(1)}
-              </button>
-            ))}
-          </div>
+        {/* Tab bar */}
+        {hasData && (
+          <>
+            <div className="flex gap-1 overflow-x-auto rounded-xl border p-1 scrollbar-none" style={{ borderColor: 'var(--border-default)', background: 'var(--bg-elevated)', WebkitOverflowScrolling: 'touch' }}>
+              {tabs.map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setTab(t.key)}
+                  className={`flex items-center rounded-lg px-3 min-h-[44px] text-xs font-medium whitespace-nowrap transition-colors ${
+                    filterState.tab === t.key
+                      ? 'text-white'
+                      : ''
+                  }`}
+                  style={{
+                    background: filterState.tab === t.key ? 'var(--accent-primary)' : 'transparent',
+                    color: filterState.tab === t.key ? 'white' : 'var(--text-secondary)',
+                  }}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
 
-          {/* Tab Content */}
-          {tabContent && (
-    <div className="space-y-4 sm:space-y-5 md:space-y-5 lg:space-y-6">
-              <ReportMetricsRow metrics={tabContent.kpis} />
-              <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 md:gap-6">
-                {tabContent.charts.slice(0, 2).map((chart, i) => (
-                  <ReportChart key={i} config={chart} />
-                ))}
-              </div>
-              {tabContent.charts.length > 2 && (
+            {/* Time Range + Type Filter */}
+            <div className="flex flex-wrap gap-2 items-center">
+              {timeRanges.map((r) => (
+                <button
+                  key={r.key}
+                  onClick={() => setTimeRange(r.key)}
+                  className="flex items-center rounded-lg px-3 min-h-[44px] text-xs font-medium transition-colors"
+                  style={{
+                    background: filterState.timeRange === r.key ? 'var(--accent-primary)' : 'var(--bg-elevated)',
+                    color: filterState.timeRange === r.key ? 'white' : 'var(--text-secondary)',
+                    border: `1px solid ${filterState.timeRange === r.key ? 'transparent' : 'var(--border-default)'}`,
+                  }}
+                >
+                  {r.label}
+                </button>
+              ))}
+              <div className="hidden sm:block w-px h-5" style={{ background: 'var(--border-default)' }} />
+              {(['all', 'income', 'expense'] as const).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setType(t)}
+                  className="flex items-center rounded-lg px-3 min-h-[44px] text-xs font-medium transition-colors"
+                  style={{
+                    background: filterState.type === t ? 'var(--accent-primary)' : 'var(--bg-elevated)',
+                    color: filterState.type === t ? 'white' : 'var(--text-secondary)',
+                    border: `1px solid ${filterState.type === t ? 'transparent' : 'var(--border-default)'}`,
+                  }}
+                >
+                  {t === 'all' ? 'All' : t.charAt(0).toUpperCase() + t.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            {/* Tab Content */}
+            {tabContent && (
+              <div className="space-y-4 sm:space-y-5 md:space-y-5 lg:space-y-6">
+                <ReportMetricsRow metrics={tabContent.kpis} />
                 <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 md:gap-6">
-                  {tabContent.charts.slice(2).map((chart, i) => (
-                    <ReportChart key={i + 2} config={chart} />
+                  {tabContent.charts.slice(0, 2).map((chart, i) => (
+                    <ReportChart key={i} config={chart} />
                   ))}
                 </div>
-              )}
-              <ReportInsightsPanel insights={tabContent.insights} />
-            </div>
-          )}
+                {tabContent.charts.length > 2 && (
+                  <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 md:gap-6">
+                    {tabContent.charts.slice(2).map((chart, i) => (
+                      <ReportChart key={i + 2} config={chart} />
+                    ))}
+                  </div>
+                )}
+                <ReportInsightsPanel insights={tabContent.insights} />
+              </div>
+            )}
 
-          {/* No data for this tab */}
-          {!tabContent && filterState.tab === 'mortgage' && (
-            <div className="rounded-xl border-2 border-dashed p-6 sm:p-12 text-center" style={{ borderColor: 'var(--border-default)' }}>
-              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No mortgage data. Add a mortgage to see reports.</p>
+            {/* No data for this tab */}
+            {!tabContent && filterState.tab === 'mortgage' && (
+              <div className="rounded-xl border-2 border-dashed p-6 sm:p-12 text-center" style={{ borderColor: 'var(--border-default)' }}>
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No mortgage data. Add a mortgage to see reports.</p>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Mobile layout */}
+      <div className="block md:hidden space-y-4">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>Reports & Analytics</h1>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Comprehensive financial analysis</p>
+          </div>
+          <ReportExporter onExportCSV={handleExportCSV} onExportExcel={handleExportExcel} onExportPDF={handleExportPDF} disabled={!hasData} />
+        </div>
+
+        {/* Empty state */}
+        {!hasData && (
+          <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed py-10" style={{ borderColor: 'var(--border-default)' }}>
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl" style={{ background: 'var(--accent-subtle)' }}>
+              <IconReports className="h-6 w-6" style={{ color: 'var(--accent-text)' }} />
             </div>
-          )}
-        </>
-      )}
-    </div>
+            <h2 className="mt-4 text-base font-semibold" style={{ color: 'var(--text-primary)' }}>No data to report on yet</h2>
+            <p className="mt-1 max-w-sm text-center text-sm" style={{ color: 'var(--text-muted)' }}>
+              Add accounts, transactions, and budgets to see detailed reports with cash flow trends, category breakdowns, and savings projections.
+            </p>
+            <div className="mt-5 flex flex-col gap-3">
+              <button onClick={() => navigate('/accounts')} className="rounded-xl px-4 py-2 text-sm font-medium text-white" style={{ background: 'var(--accent-primary)' }}>
+                Add Account
+              </button>
+              <button onClick={() => navigate('/transactions/add')} className="rounded-xl border px-4 py-2 text-sm font-medium transition-colors" style={{ borderColor: 'var(--border-default)', color: 'var(--text-secondary)' }}>
+                Add Transaction
+              </button>
+            </div>
+          </div>
+        )}
+
+        {hasData && (
+          <>
+            {/* Tab bar */}
+            <div className="flex gap-1 overflow-x-auto rounded-xl border p-1 scrollbar-none" style={{ borderColor: 'var(--border-default)', background: 'var(--bg-elevated)' }}>
+              {tabs.map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setTab(t.key)}
+                  className={`flex items-center rounded-lg px-3 min-h-[44px] text-xs font-medium whitespace-nowrap transition-colors ${
+                    filterState.tab === t.key ? 'text-white' : ''
+                  }`}
+                  style={{
+                    background: filterState.tab === t.key ? 'var(--accent-primary)' : 'transparent',
+                    color: filterState.tab === t.key ? 'white' : 'var(--text-secondary)',
+                  }}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Collapsible filters */}
+            <div>
+              <button
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className="flex items-center justify-between w-full rounded-xl border px-4 py-3 text-sm font-medium"
+                style={{ borderColor: 'var(--border-default)', background: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
+              >
+                <span>Filters</span>
+                <span className={`transition-transform ${showMobileFilters ? 'rotate-180' : ''}`}>▼</span>
+              </button>
+              {showMobileFilters && (
+                <div className="mt-2 space-y-2">
+                  <div className="flex flex-wrap gap-2">
+                    {timeRanges.map((r) => (
+                      <button
+                        key={r.key}
+                        onClick={() => setTimeRange(r.key)}
+                        className="rounded-lg px-3 min-h-[44px] text-xs font-medium"
+                        style={{
+                          background: filterState.timeRange === r.key ? 'var(--accent-primary)' : 'var(--bg-elevated)',
+                          color: filterState.timeRange === r.key ? 'white' : 'var(--text-secondary)',
+                          border: `1px solid ${filterState.timeRange === r.key ? 'transparent' : 'var(--border-default)'}`,
+                        }}
+                      >
+                        {r.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {(['all', 'income', 'expense'] as const).map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => setType(t)}
+                        className="rounded-lg px-3 min-h-[44px] text-xs font-medium"
+                        style={{
+                          background: filterState.type === t ? 'var(--accent-primary)' : 'var(--bg-elevated)',
+                          color: filterState.type === t ? 'white' : 'var(--text-secondary)',
+                          border: `1px solid ${filterState.type === t ? 'transparent' : 'var(--border-default)'}`,
+                        }}
+                      >
+                        {t === 'all' ? 'All' : t.charAt(0).toUpperCase() + t.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Single-column content */}
+            {tabContent && (
+              <div className="space-y-4">
+                <ReportMetricsRow metrics={tabContent.kpis} />
+                <div className="space-y-4">
+                  {tabContent.charts.map((chart, i) => (
+                    <ReportChart key={i} config={chart} />
+                  ))}
+                </div>
+                <ReportInsightsPanel insights={tabContent.insights} />
+              </div>
+            )}
+
+            {!tabContent && filterState.tab === 'mortgage' && (
+              <div className="rounded-xl border-2 border-dashed p-6 text-center" style={{ borderColor: 'var(--border-default)' }}>
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No mortgage data. Add a mortgage to see reports.</p>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </>
   );
 }
