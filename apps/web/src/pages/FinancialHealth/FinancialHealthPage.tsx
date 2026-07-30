@@ -5,12 +5,12 @@ import { computeFinancialHealth } from '@/intelligence/FinancialHealthEngine';
 import { analyzeTrends } from '@/intelligence/TrendAnalyzer';
 import { generateIntelligence } from '@/intelligence/RecommendationScheduler';
 import { FinancialEngine } from '@/services/FinancialEngine';
-import { accountsApi } from '@/lib/api/accounts';
 import { savingsApi } from '@/lib/api/savings';
 import { useSubscriptionStore } from '@/stores/subscription';
 import { FeatureGate } from '@/billing/billingGuard';
 import type { IntelligenceInput } from '@/intelligence/types';
 import { InfoTooltip } from '@/components/ui/InfoTooltip';
+import type { SubscoreResult, HealthScoreComponents } from '@budgetos/shared';
 
 function getHealthColor(score: number): string {
   if (score >= 80) return 'text-emerald-500';
@@ -35,11 +35,17 @@ function getFactorColor(score: number): string {
   return 'bg-red-500';
 }
 
+interface V2Score {
+  overall: SubscoreResult;
+  components: HealthScoreComponents;
+}
+
 export function FinancialHealthPage() {
   const { user } = useAuthStore();
   const { result, loading, setResult, setLoading, setError } = useHealthStore();
   const tier = useSubscriptionStore((s) => s.tier);
   const [trendData, setTrendData] = useState<number[]>([]);
+  const [v2Score, setV2Score] = useState<V2Score | null>(null);
 
   const compute = useCallback(async () => {
     if (!user) return;
@@ -50,6 +56,20 @@ export function FinancialHealthPage() {
       ]);
 
       const dashboardData = await FinancialEngine.getDashboardData(user.id);
+
+      const savingsRate = dashboardData.cashFlow.monthlyIncome > 0
+        ? ((dashboardData.cashFlow.monthlyIncome - dashboardData.cashFlow.monthlyExpenses) / dashboardData.cashFlow.monthlyIncome) * 100
+        : 0;
+
+      const v2 = FinancialEngine.getHealthScoreV2(
+        dashboardData.cashFlow,
+        dashboardData.netWorth,
+        dashboardData.budgetHealth,
+        savingsRate,
+        dashboardData.cashFlow.monthlyExpenses,
+        savingsGoalsRaw,
+      );
+      setV2Score({ overall: v2.overall, components: v2.components });
 
       const input: IntelligenceInput = {
         budgetSummary: {
@@ -77,7 +97,7 @@ export function FinancialHealthPage() {
             totalRemaining: dashboardData.budgetHealth.remaining,
           },
           accounts: { netWorth: dashboardData.netWorth.netWorth, remainingCash: 0, totalAssets: dashboardData.netWorth.totalAssets, totalLiabilities: dashboardData.netWorth.totalLiabilities, accountCount: dashboardData.netWorth.accounts.length },
-          savingsCapacity: { recommendedAmount: 0, savingsRate: 0, surplus: dashboardData.cashFlow.cashFlow },
+          savingsCapacity: { recommendedAmount: 0, savingsRate, surplus: dashboardData.cashFlow.cashFlow },
           alerts: [],
         },
         cashFlowSummary: {
@@ -122,6 +142,8 @@ export function FinancialHealthPage() {
     if (!result) compute();
   }, [compute, result]);
 
+  const displayScore = v2Score?.overall.score ?? result?.overallScore ?? 0;
+
   if (loading && !result) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -158,14 +180,14 @@ export function FinancialHealthPage() {
           <h2 className="text-xs font-medium uppercase tracking-wider text-slate-400">Overall Score</h2>
           <InfoTooltip content="A composite score from 0-100 based on cash flow, savings rate, budget adherence, debt levels, and emergency fund coverage" />
         </div>
-        <div className={`text-4xl font-bold sm:text-6xl ${getHealthColor(result.overallScore)}`}>
-          {result.overallScore}
+        <div className={`text-4xl font-bold sm:text-6xl ${getHealthColor(displayScore)}`}>
+          {displayScore}
         </div>
         <p className="mt-2 text-xs text-slate-500">out of 100</p>
         <div className="mx-auto mt-4 h-2 w-32 overflow-hidden rounded-full bg-slate-200 sm:w-48 dark:bg-slate-700">
           <div
-            className={`h-full rounded-full transition-all ${getHealthBg(result.overallScore)}`}
-            style={{ width: `${result.overallScore}%` }}
+            className={`h-full rounded-full transition-all ${getHealthBg(displayScore)}`}
+            style={{ width: `${displayScore}%` }}
           />
         </div>
         <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">{result.breakdown}</p>
@@ -173,21 +195,39 @@ export function FinancialHealthPage() {
 
       <h2 className="sr-only text-sm font-semibold text-slate-900 dark:text-white">Health Factors</h2>
       <div className="grid gap-4 md:grid-cols-2" role="list">
-        {result.factors.map((factor) => (
-          <div key={factor.factor} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-sm font-medium text-slate-900 dark:text-white">{factor.label}</span>
-              <span className={`text-sm font-bold ${getHealthColor(factor.score)}`}>{factor.score}</span>
-            </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-              <div
-                className={`h-full rounded-full ${getFactorColor(factor.score)}`}
-                style={{ width: `${factor.score}%` }}
-              />
-            </div>
-            <p className="mt-1 text-xs text-slate-400">{factor.description}</p>
-          </div>
-        ))}
+        {v2Score
+          ? Object.entries(v2Score.components).map(([key, component]) => (
+              <div key={key} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-sm font-medium capitalize text-slate-900 dark:text-white">
+                    {key.replace(/([A-Z])/g, ' $1').trim()}
+                  </span>
+                  <span className={`text-sm font-bold ${getHealthColor(component.score)}`}>{component.score}</span>
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                  <div
+                    className={`h-full rounded-full ${getFactorColor(component.score)}`}
+                    style={{ width: `${component.score}%` }}
+                  />
+                </div>
+                <p className="mt-1 text-xs text-slate-400">{component.explanation}</p>
+              </div>
+            ))
+          : result.factors.map((factor) => (
+              <div key={factor.factor} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-sm font-medium text-slate-900 dark:text-white">{factor.label}</span>
+                  <span className={`text-sm font-bold ${getHealthColor(factor.score)}`}>{factor.score}</span>
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                  <div
+                    className={`h-full rounded-full ${getFactorColor(factor.score)}`}
+                    style={{ width: `${factor.score}%` }}
+                  />
+                </div>
+                <p className="mt-1 text-xs text-slate-400">{factor.description}</p>
+              </div>
+            ))}
       </div>
 
       <FeatureGate feature="advanced_reports">

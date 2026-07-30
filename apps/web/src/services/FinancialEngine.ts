@@ -442,8 +442,6 @@ export const FinancialEngine = {
     monthlyExpenses: number,
     savings: SavingsGoal[],
   ): HealthScoreResult {
-    const totalDebtPaymentsMonthly = 0; // TODO: Track actual minimum payments from credit/loan accounts
-
     const creditCardBalances = netWorth.accounts
       .filter((a) => a.type === 'credit' || a.type === 'credit_card')
       .reduce((s, a) => s + Math.abs(Number(a.balance ?? 0)), 0);
@@ -451,6 +449,10 @@ export const FinancialEngine = {
     const mortgageBalance = netWorth.accounts
       .filter((a) => a.type === 'loan')
       .reduce((s, a) => s + Math.abs(Number(a.balance ?? 0)), 0);
+
+    const totalDebtPaymentsMonthly =
+      Math.round(creditCardBalances * 0.025) +
+      Math.round(mortgageBalance * 0.01);
 
     const totalCashAndInvestments = netWorth.accounts
       .filter((a) => a.type === 'checking' || a.type === 'savings' || a.type === 'investment')
