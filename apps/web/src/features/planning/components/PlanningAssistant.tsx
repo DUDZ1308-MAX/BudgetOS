@@ -140,28 +140,31 @@ export function PlanningAssistant({
       }
     });
 
+    const extraPaymentsMap = new Map<string, Array<{ amount: number; date: string; type?: string }>>();
     mortgages.forEach((m) => {
-      const principal = m.principal - m.down_payment;
-      const monthlyRate = m.annual_rate / 100 / 12;
-      const numPayments = m.term_years * 12;
-      const payment = monthlyRate > 0
-        ? principal * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / (Math.pow(1 + monthlyRate, numPayments) - 1)
-        : principal / numPayments;
-      const totalInterest = (payment + m.extra_payment) * numPayments - principal;
-
       if (m.extra_payment > 0) {
-        const savingsMonths = Math.round(numPayments - (Math.log((payment + m.extra_payment) / ((payment + m.extra_payment) - principal * monthlyRate)) / Math.log(1 + monthlyRate)));
-        const interestSaved = totalInterest - (payment + m.extra_payment) * savingsMonths;
-        result.push({
-          id: `mortgage-extra-${m.id}`,
-          type: 'mortgage',
-          title: `Extra Payment on "${m.name}"`,
-          description: `Your $${m.extra_payment}/mo extra payment saves ~${Math.round((numPayments - savingsMonths) / 12)} years and $${Math.round(interestSaved).toLocaleString()} in interest.`,
-          severity: 'positive',
-          metric: 'Interest Saved',
-          value: `$${Math.round(interestSaved).toLocaleString()}`,
-        });
+        extraPaymentsMap.set(m.id, [{
+          amount: m.extra_payment,
+          date: m.start_date ?? new Date().toISOString().slice(0, 10),
+          type: 'monthly_fixed',
+        }]);
       }
+    });
+    const mortgageResults = FinancialEngine.getMortgages(mortgages, extraPaymentsMap);
+
+    mortgageResults.forEach((mr) => {
+      const m = mortgages.find((x) => x.id === mr.id);
+      if (!m || mr.interestSaved <= 0) return;
+      const monthsSaved = (m.term_years * 12) - mr.payoffMonths;
+      result.push({
+        id: `mortgage-extra-${m.id}`,
+        type: 'mortgage',
+        title: `Extra Payment on "${m.name}"`,
+        description: `Your extra payments save ~${Math.round(monthsSaved / 12)} years and $${Math.round(mr.interestSaved).toLocaleString()} in interest.`,
+        severity: 'positive',
+        metric: 'Interest Saved',
+        value: `$${Math.round(mr.interestSaved).toLocaleString()}`,
+      });
     });
 
     if (totalDebt > 0) {

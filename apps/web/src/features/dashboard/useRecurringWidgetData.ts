@@ -22,7 +22,7 @@ async function fetchRecurringWidgetData(userId: string): Promise<RecurringWidget
     supabase.from('categories').select('id, name').eq('user_id', userId),
     supabase.from('recurring_transactions').select('*').eq('user_id', userId),
     supabase.from('savings_goals').select('id, name, monthly_contribution').eq('user_id', userId),
-    supabase.from('mortgages').select('id, name, monthly_payment, payment_frequency, is_active').eq('user_id', userId).eq('is_active', true),
+    supabase.from('mortgages').select('id, name, principal, annual_rate, term_years, amortization_years, start_date, payment_frequency, compound_semi_annual, extra_payments, down_payment, purchase_price, is_active').eq('user_id', userId).eq('is_active', true),
     supabase.from('transactions').select('id, amount, date, merchant, category_id, account_id, recurring_id, is_archived').eq('user_id', userId),
   ]);
 
@@ -32,10 +32,7 @@ async function fetchRecurringWidgetData(userId: string): Promise<RecurringWidget
   const morts = mortgages ?? [];
   const txns = transactions ?? [];
 
-  const mortgageResults = FinancialEngine.getMortgages(
-    morts.map((m: any) => ({ ...m, principal: m.principal ?? 0, annual_rate: m.annual_rate ?? 0, amortization_years: m.amortization_years ?? m.term_years, start_date: m.start_date ?? '', payment_frequency: m.payment_frequency ?? 'monthly' })),
-    new Map(),
-  );
+  const mortgageResults = FinancialEngine.getMortgages(morts as any[], new Map());
 
   const events = FinancialEngine.getCalendarEvents(
     recs.map((r: any) => ({ id: r.id, name: r.name, amount: r.amount, type: r.type, frequency: r.frequency, next_run: r.next_run, status: r.status })),

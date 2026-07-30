@@ -78,13 +78,14 @@ export function usePlanningEvents(userId: string, settings: PlanningSettings) {
         }));
 
       // 3. Mortgage payments
-      const mortgageEvents = mortgages.map((m: any) => {
-        const schedule = FinancialEngine.getMortgageSchedule(m);
+      const mortgageEngineResults = FinancialEngine.getMortgages(mortgages, new Map());
+      const mortgageEvents = mortgageEngineResults.map((m: any) => {
+        const schedule = FinancialEngine.getMortgageSchedule(mortgages.find((orig: any) => orig.id === m.id));
         return createPlanningEvent({
           type: 'mortgage',
           date: `2025-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`,
           title: `${m.name} Payment`,
-          amount: m.monthly_payment || 0,
+          amount: m.monthlyPayment,
           icon: '🏠',
           category: 'debt',
           source: 'deterministic',
@@ -271,7 +272,7 @@ export function usePlanningScenarios(userId: string) {
           monthlyIncome: FinancialEngine.getCashFlow(transactions, [], { start: '2025-01-01', end: '2025-12-31' }).monthlyIncome,
           monthlyExpenses: FinancialEngine.getCashFlow(transactions, [], { start: '2025-01-01', end: '2025-12-31' }).monthlyExpenses,
           monthlySavings: 500,
-          mortgagePayment: mortgages.reduce((s: number, m: any) => s + (m.monthly_payment || 0), 0),
+          mortgagePayment: FinancialEngine.getMortgages(mortgages, new Map()).reduce((s: number, m: any) => s + (m.monthlyPayment || 0), 0),
           extraPayments: [],
         },
         adjustments: [

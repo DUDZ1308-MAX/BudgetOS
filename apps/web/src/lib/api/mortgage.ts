@@ -19,7 +19,6 @@ export type MortgageInsert = {
   compound_semi_annual?: boolean;
   down_payment?: number;
   purchase_price?: number;
-  notes?: string | null;
   extra_payment?: number;
 };
 

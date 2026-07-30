@@ -33,7 +33,7 @@ const entityTableMap: Record<string, string> = {
   savings_goals: 'savings_goals',
   contributions: 'contributions',
   mortgages: 'mortgages',
-  extra_payments: 'extra_payments',
+  extra_payments: 'mortgage_extra_payments',
   report_preferences: 'report_preferences',
 };
 

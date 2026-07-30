@@ -172,7 +172,7 @@ export interface Database {
           name: string;
           description: string | null;
           amount: number;
-          frequency: 'one_time' | 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
+          frequency: 'one_time' | 'daily' | 'weekly' | 'biweekly' | 'semimonthly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
           interval_count: number;
           day_of_week: number | null;
           day_of_month: number | null;
@@ -195,7 +195,7 @@ export interface Database {
           name: string;
           description?: string | null;
           amount: number;
-          frequency: 'one_time' | 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
+          frequency: 'one_time' | 'daily' | 'weekly' | 'biweekly' | 'semimonthly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
           interval_count?: number;
           day_of_week?: number | null;
           day_of_month?: number | null;
@@ -214,7 +214,7 @@ export interface Database {
           name?: string;
           description?: string | null;
           amount?: number;
-          frequency?: 'one_time' | 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
+          frequency?: 'one_time' | 'daily' | 'weekly' | 'biweekly' | 'semimonthly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
           interval_count?: number;
           day_of_week?: number | null;
           day_of_month?: number | null;
@@ -358,14 +358,17 @@ export interface Database {
         Row: {
           id: string;
           mortgage_id: string;
+          user_id: string;
           amount: number;
           date: string;
           type: string;
           notes: string | null;
           created_at: string;
+          updated_at: string;
         };
         Insert: {
           mortgage_id: string;
+          user_id: string;
           amount: number;
           date: string;
           type?: string;
@@ -497,6 +500,65 @@ export interface Database {
         Update: {
           priorities?: string[];
           custom_rules?: Record<string, unknown>[];
+        };
+      };
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          description: string;
+          category: 'budget' | 'savings' | 'mortgage' | 'spending' | 'cashflow' | 'system' | 'achievement' | 'milestone';
+          priority: 'critical' | 'high' | 'medium' | 'low';
+          icon: string | null;
+          is_read: boolean;
+          is_archived: boolean;
+          metadata: Record<string, unknown> | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          title: string;
+          description: string;
+          category: 'budget' | 'savings' | 'mortgage' | 'spending' | 'cashflow' | 'system' | 'achievement' | 'milestone';
+          priority?: 'critical' | 'high' | 'medium' | 'low';
+          icon?: string | null;
+          metadata?: Record<string, unknown> | null;
+        };
+        Update: {
+          title?: string;
+          description?: string;
+          is_read?: boolean;
+          is_archived?: boolean;
+          priority?: 'critical' | 'high' | 'medium' | 'low';
+        };
+      };
+      planning_scenarios: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          description: string | null;
+          adjustments: Record<string, unknown>[];
+          is_active: boolean;
+          is_preset: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          name: string;
+          description?: string | null;
+          adjustments?: Record<string, unknown>[];
+          is_active?: boolean;
+          is_preset?: boolean;
+        };
+        Update: {
+          name?: string;
+          description?: string | null;
+          adjustments?: Record<string, unknown>[];
+          is_active?: boolean;
         };
       };
     };

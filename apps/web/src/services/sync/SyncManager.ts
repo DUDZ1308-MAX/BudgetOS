@@ -31,7 +31,7 @@ const entityTableMap: Record<string, string> = {
   savings_goal: 'savings_goals',
   contribution: 'contributions',
   mortgage: 'mortgages',
-  extra_payment: 'extra_payments',
+  extra_payment: 'mortgage_extra_payments',
 };
 
 const entityTableReverse: Record<string, string> = {};

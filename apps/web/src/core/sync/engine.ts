@@ -34,7 +34,7 @@ const entityTableMap: Record<string, TableInfo> = {
   savings_goal: { table: 'savings_goals', columns: 'id,user_id,name,target_amount,current_amount,target_date,monthly_contribution,category_id,is_completed,sort_order,priority,status,created_at,updated_at' },
   contribution: { table: 'contributions', columns: 'id,user_id,goal_id,amount,date,notes,created_at,updated_at' },
   mortgage: { table: 'mortgages', columns: 'id,user_id,name,principal,annual_rate,term_years,start_date,extra_payment,is_active,payment_frequency,amortization_years,compound_semi_annual,down_payment,purchase_price,extra_payments,created_at,updated_at' },
-  extra_payment: { table: 'mortgage_extra_payments', columns: 'id,mortgage_id,amount,date,type,notes,created_at' },
+  extra_payment: { table: 'mortgage_extra_payments', columns: 'id,mortgage_id,user_id,amount,date,type,notes,created_at,updated_at' },
 };
 
 async function uploadEntry(entry: { entity: SyncEntity; entityId: string; action: string; payload: Record<string, unknown> }): Promise<{ ok: boolean; error?: string }> {

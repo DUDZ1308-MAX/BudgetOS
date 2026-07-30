@@ -26,7 +26,7 @@ async function fetchCalendarData(userId: string, year: number, month: number, fo
     supabase.from('transactions').select('id, amount, date, merchant, category_id, account_id, recurring_id, is_archived').eq('user_id', userId),
     supabase.from('recurring_transactions').select('id, name, amount, type, frequency, next_run, status').eq('user_id', userId),
     supabase.from('savings_goals').select('id, name, monthly_contribution').eq('user_id', userId),
-    supabase.from('mortgages').select('id, name, monthly_payment, payment_frequency, is_active').eq('user_id', userId).eq('is_active', true),
+    supabase.from('mortgages').select('id, name, principal, annual_rate, term_years, amortization_years, start_date, payment_frequency, compound_semi_annual, extra_payments, down_payment, purchase_price, is_active').eq('user_id', userId).eq('is_active', true),
   ]);
 
   const accts = (accounts ?? []) as Account[];
@@ -36,6 +36,7 @@ async function fetchCalendarData(userId: string, year: number, month: number, fo
   const savs = savings ?? [];
   const morts = mortgages ?? [];
 
+  const mortgageResults = FinancialEngine.getMortgages(morts as any[], new Map());
   const events = FinancialEngine.getCalendarEvents(
     recs.map((r: any) => ({
       id: r.id,
@@ -46,11 +47,11 @@ async function fetchCalendarData(userId: string, year: number, month: number, fo
       next_run: r.next_run,
       status: r.status,
     })),
-    morts.map((m: any) => ({
+    mortgageResults.map((m) => ({
       id: m.id,
       name: m.name,
-      monthlyPayment: Number(m.monthly_payment),
-      paymentFrequency: m.payment_frequency,
+      monthlyPayment: m.monthlyPayment,
+      paymentFrequency: m.paymentFrequency,
     })),
     savs.map((g: any) => ({
       id: g.id,
