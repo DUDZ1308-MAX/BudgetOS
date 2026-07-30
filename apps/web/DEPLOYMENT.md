@@ -2,7 +2,45 @@
 
 ## Deployment Target
 
-MyBudgetOS is deployed to **Vercel** via GitHub Actions.
+MyBudgetOS is deployed to **Vercel** using Vercel's built-in GitHub integration.
+
+## How Deployments Work
+
+Vercel's GitHub App is connected to this repository and automatically deploys:
+
+- **Every push** to any branch creates a **Preview Deployment** with a unique URL
+- **Every merge to `main`** creates a **Production Deployment** at `https://budget-os-web.vercel.app`
+- Vercel posts preview URLs as PR comments automatically
+
+No long-lived deployment tokens or custom CI deployment steps are needed.
+
+## CI/CD Pipeline
+
+The CI pipeline is defined in `.github/workflows/ci.yml` and runs on every push and PR:
+
+1. **Lint** — TypeScript type checking
+2. **Typecheck** — TypeScript compilation check
+3. **Test** — Run engine tests
+4. **Test Web** — Run web tests
+5. **Build** — Production build verification
+
+All checks must pass before merging. Vercel's built-in Git integration handles the deployment independently — no `deploy` job runs in GitHub Actions.
+
+## Deployment Checks (Production Gating)
+
+To prevent broken builds from reaching production, configure **Deployment Checks** in Vercel:
+
+1. Go to [Vercel Dashboard → budget-os-web → Settings → Deployment Checks](https://vercel.com/dashboard)
+2. Click **Add Checks** → select **GitHub**
+3. Select which CI workflows must pass before promoting to production:
+   - `CI / Lint`
+   - `CI / TypeCheck`
+   - `CI / Test`
+   - `CI / Build`
+4. Enable **"Fail if checks are not passing"** for production
+5. Save
+
+This ensures production deploys only go live after CI passes, without needing a custom Actions deploy step.
 
 ## Build Command
 
@@ -14,7 +52,7 @@ Build output directory: `apps/web/dist`
 
 ## Environment Variables
 
-Required environment variables for production:
+Required environment variables for production (set in Vercel dashboard → Settings → Environment Variables):
 
 | Variable | Description |
 |----------|-------------|
@@ -27,22 +65,11 @@ Required environment variables for production:
 | `VITE_STRIPE_PRICE_PREMIUM_MONTH` | Stripe price ID for Premium monthly |
 | `VITE_STRIPE_PRICE_PREMIUM_YEAR` | Stripe price ID for Premium yearly |
 
-## CI/CD Pipeline
-
-The CI/CD pipeline is defined in `.github/workflows/ci.yml` and runs on pushes to `main`:
-
-1. **Lint** — TypeScript type checking
-2. **Typecheck** — TypeScript compilation check
-3. **Test** — Run engine and web tests
-4. **Build** — Production build
-5. **Deploy** — Deploy to Vercel (main branch only)
-
 ## Manual Deployment
 
-To deploy manually:
+To deploy manually from your local machine:
+
 ```bash
-npm run build
-cd apps/web
 npx vercel --prod
 ```
 
@@ -51,6 +78,7 @@ npx vercel --prod
 | Environment | Branch | URL |
 |-------------|--------|-----|
 | Development | local | http://localhost:5173 |
+| Preview | any branch | `https://budget-os-web-git-<branch>.vercel.app` |
 | Production | main | https://budget-os-web.vercel.app |
 
 ## Previous Domains
