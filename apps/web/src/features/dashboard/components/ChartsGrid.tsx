@@ -22,7 +22,7 @@ export const ChartsGrid = memo(function ChartsGrid({ cashFlowHistory, currentInc
 
       {/* Category Spending — simple bar list */}
       {topSpending.length > 0 && (
-        <div className="rounded-xl border p-4 sm:p-5" style={{ borderColor: 'var(--border-default)', background: 'var(--bg-elevated)' }}>
+        <div className="rounded-2xl border p-4 sm:p-5" style={{ borderColor: 'var(--border-default)', background: 'var(--bg-elevated)' }}>
           <h3 className="text-xs font-semibold mb-3 sm:text-sm sm:mb-4" style={{ color: 'var(--text-primary)' }}>Top Spending Categories</h3>
           <div className="space-y-2.5 sm:space-y-3">
             {topSpending.map((cat, i) => {

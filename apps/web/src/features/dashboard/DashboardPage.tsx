@@ -210,14 +210,16 @@ export function DashboardPage() {
         className="dashboard-grid"
         aria-label="Premium financial health"
       >
-        <PremiumHealthScoreCard
-          overallScore={d.financialHealth?.overallScore ?? 0}
-          letterGrade={d.financialHealth?.letterGrade}
-          tier={d.financialHealth?.tier}
-          subscores={d.financialHealth?.subscores}
-          isLoading={isLoading}
-          href="/health"
-        />
+        <div className="col-span-2">
+          <PremiumHealthScoreCard
+            overallScore={d.financialHealth?.overallScore ?? 0}
+            letterGrade={d.financialHealth?.letterGrade}
+            tier={d.financialHealth?.tier}
+            subscores={d.financialHealth?.subscores}
+            isLoading={isLoading}
+            href="/health"
+          />
+        </div>
         {d.financialHealth?.trends?.healthScore && (
           <PremiumTrendCard
             title="Health Score Trend"

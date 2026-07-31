@@ -54,7 +54,7 @@ const HeroMetric = memo(function HeroMetric({ label, value, isCurrency, isPercen
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="rounded-xl border p-3 sm:p-4"
+        className="rounded-2xl border p-3 sm:p-4"
         style={{ borderColor: 'var(--border-default)', background: 'var(--bg-elevated)' }}
       >
         <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>{label}</p>
