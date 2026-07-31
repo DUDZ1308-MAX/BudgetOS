@@ -87,11 +87,11 @@ export const mortgageApi = {
     return data ?? [];
   },
 
-  async addExtraPayment(mortgageId: string, data: { amount: number; date: string; type?: string; notes?: string }): Promise<ExtraPayment> {
+  async addExtraPayment(mortgageId: string, userId: string, data: { amount: number; date: string; type?: string; notes?: string }): Promise<ExtraPayment> {
     debug('addExtraPayment', mortgageId, data);
     const { data: result, error } = await supabase
       .from('mortgage_extra_payments')
-      .insert({ mortgage_id: mortgageId, ...data })
+      .insert({ mortgage_id: mortgageId, user_id: userId, ...data })
       .select('*')
       .single();
     if (error) { debug('addExtraPayment error', error); throw error; }

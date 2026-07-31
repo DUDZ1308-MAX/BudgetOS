@@ -66,11 +66,12 @@ export function useExtraPayments(mortgageId: string | undefined) {
 
 export function useAddExtraPayment() {
   const qc = useQueryClient();
+  const user = useAuthStore((s) => s.user);
   const toast = useToastStore((s) => s.addToast);
   return useMutation({
     mutationFn: async ({ mortgageId, amount, date, notes }: { mortgageId: string; amount: number; date: string; notes?: string }) => {
       try {
-        return await mortgageApi.addExtraPayment(mortgageId, { amount, date, notes });
+        return await mortgageApi.addExtraPayment(mortgageId, user?.id ?? '', { amount, date, notes });
       } catch (err: any) {
         if (err?.message?.includes('relation') || err?.code === '42P01') {
           throw new Error('Extra payments table not yet available. Please run the database migration.');
@@ -82,8 +83,8 @@ export function useAddExtraPayment() {
       qc.invalidateQueries({ queryKey: ['mortgage-extra-payments', vars.mortgageId] });
       toast('success', 'Extra payment added');
       if (created) {
-        useAuditStore.getState().addEntry({ action: 'create', entity: 'extra_payment', entityId: created.id, before: null, after: created as any, userId: null, description: `Added $${vars.amount.toFixed(2)} extra payment to mortgage` });
-        emitEntityEvent('extra_payment', created.id, 'created', null, created as any, null);
+        useAuditStore.getState().addEntry({ action: 'create', entity: 'extra_payment', entityId: created.id, before: null, after: created as any, userId: user?.id ?? null, description: `Added $${vars.amount.toFixed(2)} extra payment to mortgage` });
+        emitEntityEvent('extra_payment', created.id, 'created', null, created as any, user?.id ?? null);
       }
     },
     onError: (err: Error) => { toast('error', err.message); },

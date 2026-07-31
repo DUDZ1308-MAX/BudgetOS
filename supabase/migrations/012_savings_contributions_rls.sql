@@ -3,7 +3,24 @@
 -- Strategy: Safe, additive changes. Uses IF NOT EXISTS / DROP IF EXISTS patterns.
 
 -- ============================================================================
--- 1. Add missing goal_id foreign key if it was dropped
+-- 1. Clean up orphaned contributions (goal_id references deleted savings_goals)
+--    Required before adding the FK constraint, otherwise it fails to apply.
+-- ============================================================================
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'contributions' AND column_name = 'goal_id'
+  ) THEN
+    DELETE FROM public.contributions c
+    WHERE NOT EXISTS (
+      SELECT 1 FROM public.savings_goals g WHERE g.id = c.goal_id
+    );
+  END IF;
+END $$;
+
+-- ============================================================================
+-- 2. Add missing goal_id foreign key if it was dropped
 -- ============================================================================
 DO $$
 BEGIN
@@ -17,7 +34,7 @@ BEGIN
 END $$;
 
 -- ============================================================================
--- 2. Defense-in-depth: BEFORE INSERT trigger forces user_id = auth.uid()
+-- 3. Defense-in-depth: BEFORE INSERT trigger forces user_id = auth.uid()
 --    This ensures that even if the application sends the wrong user_id,
 --    the authenticated user's ID is used. RLS still validates access.
 -- ============================================================================
@@ -39,7 +56,7 @@ CREATE TRIGGER ensure_contribution_user_id
   EXECUTE FUNCTION public.set_contribution_user_id();
 
 -- ============================================================================
--- 3. Recreate all RLS policies for contributions (idempotent)
+-- 4. Recreate all RLS policies for contributions (idempotent)
 -- ============================================================================
 ALTER TABLE public.contributions ENABLE ROW LEVEL SECURITY;
 
@@ -60,7 +77,7 @@ CREATE POLICY "contributions_delete" ON public.contributions
   FOR DELETE USING (auth.uid() = user_id);
 
 -- ============================================================================
--- 4. Ensure RLS is enabled and policies exist for savings_goals
+-- 5. Ensure RLS is enabled and policies exist for savings_goals
 -- ============================================================================
 ALTER TABLE public.savings_goals ENABLE ROW LEVEL SECURITY;
 
