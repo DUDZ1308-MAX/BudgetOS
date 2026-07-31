@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { requireUserId } from '@/lib/auth';
 import { logger } from '@/core/logger';
 
 export interface BackupData {
@@ -39,6 +40,7 @@ const entityTableMap: Record<string, string> = {
 
 export class BackupRestore {
   async createBackup(userId: string): Promise<BackupMeta> {
+    requireUserId(userId);
     const tables: Array<keyof BackupData> = [
       'accounts', 'categories', 'transactions', 'budgets',
       'savings_goals', 'contributions', 'mortgages',
@@ -76,6 +78,7 @@ export class BackupRestore {
   }
 
   async restoreBackup(userId: string, backupId: string): Promise<{ restored: number; errors: string[] }> {
+    requireUserId(userId);
     const backup = this.getBackupData(backupId);
     if (!backup) throw new Error(`Backup ${backupId} not found`);
 

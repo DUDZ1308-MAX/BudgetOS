@@ -1,8 +1,10 @@
 import { supabase } from '@/lib/supabase';
+import { requireUserId } from '@/lib/auth';
 import type { Account, AccountInsert, AccountUpdate } from '@budgetos/database';
 
 export const AccountRepository = {
   async getAll(userId: string): Promise<Account[]> {
+    requireUserId(userId);
     const { data, error } = await supabase
       .from('accounts')
       .select('*')
@@ -23,6 +25,7 @@ export const AccountRepository = {
   },
 
   async create(userId: string, data: AccountInsert): Promise<Account> {
+    requireUserId(userId);
     const { data: result, error } = await supabase
       .from('accounts')
       .insert({ user_id: userId, ...data })

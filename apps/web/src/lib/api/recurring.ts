@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { requireUserId } from '@/lib/auth';
 import type { RecurringTransaction, RecurringTransactionInsert, RecurringTransactionUpdate } from '@budgetos/database';
 
 function debug(method: string, ...args: unknown[]) {
@@ -7,6 +8,7 @@ function debug(method: string, ...args: unknown[]) {
 
 export const recurringApi = {
   async list(userId: string): Promise<RecurringTransaction[]> {
+    requireUserId(userId);
     debug('list', userId);
     const { data, error } = await supabase
       .from('recurring_transactions')
@@ -29,6 +31,7 @@ export const recurringApi = {
   },
 
   async create(userId: string, data: RecurringTransactionInsert): Promise<RecurringTransaction> {
+    requireUserId(userId);
     debug('create', data);
     const { data: result, error } = await supabase
       .from('recurring_transactions')

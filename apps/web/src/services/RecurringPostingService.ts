@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { requireUserId } from '@/lib/auth';
 import { calculateNextRun, isDue, checkDuplicateOccurrence } from '@/engine/RecurringEngine';
 import { createTransaction, getDueRecurringTransactions, updateRecurringTransaction } from '@budgetos/database';
 import type { RecurringTransaction } from '@budgetos/database';
@@ -18,6 +19,7 @@ export interface PostingPreview {
 
 export class RecurringPostingService {
   static async getDue(userId: string, asOfDate?: string): Promise<RecurringTransaction[]> {
+    requireUserId(userId);
     const today = asOfDate ?? new Date().toISOString().split('T')[0] ?? '';
     const { data: dueRecurrings } = await getDueRecurringTransactions(supabase, userId, today);
     return dueRecurrings ?? [];

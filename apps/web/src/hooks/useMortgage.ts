@@ -4,6 +4,7 @@ import { useToastStore } from '@/stores/toast';
 import { useAuditStore } from '@/core/audit';
 import { emitEntityEvent } from '@/core/sync';
 import { mortgageApi } from '@/lib/api/mortgage';
+import { requireUserId } from '@/lib/auth';
 import type { MortgageInsert, MortgageUpdate } from '@/lib/api/mortgage';
 
 export function useMortgages() {
@@ -71,7 +72,7 @@ export function useAddExtraPayment() {
   return useMutation({
     mutationFn: async ({ mortgageId, amount, date, notes }: { mortgageId: string; amount: number; date: string; notes?: string }) => {
       try {
-        return await mortgageApi.addExtraPayment(mortgageId, user?.id ?? '', { amount, date, notes });
+        return await mortgageApi.addExtraPayment(mortgageId, requireUserId(user?.id), { amount, date, notes });
       } catch (err: any) {
         if (err?.message?.includes('relation') || err?.code === '42P01') {
           throw new Error('Extra payments table not yet available. Please run the database migration.');

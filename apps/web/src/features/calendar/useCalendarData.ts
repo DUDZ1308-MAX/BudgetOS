@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { requireUserId } from '@/lib/auth';
 import { FinancialEngine } from '@/services/FinancialEngine';
 import type { Account } from '@budgetos/database';
 import type { CalendarEvent, DailyForecast, MonthlyForecast } from '@/lib/dashboard/types';
@@ -13,6 +14,7 @@ interface CalendarData {
 }
 
 async function fetchCalendarData(userId: string, year: number, month: number, forecastDays: number = 60): Promise<CalendarData> {
+  requireUserId(userId);
   const [
     { data: accounts },
     { data: categories },

@@ -16,6 +16,8 @@ vi.mock('@/lib/supabase', () => ({
   },
 }));
 
+const TEST_USER_ID = '00000000-0000-0000-0000-000000000000';
+
 function createTestBackup(): BackupData {
   return {
     _meta: { id: 'test-1', name: 'test', createdAt: '2025-01-01', schemaVersion: '1.0', appVersion: '1.0.0' },
@@ -30,26 +32,26 @@ function createTestBackup(): BackupData {
 
 describe('RestoreManager', () => {
   it('previews restore with entity counts', async () => {
-    const preview = await restoreManager.preview(createTestBackup(), 'user1');
+    const preview = await restoreManager.preview(createTestBackup(), TEST_USER_ID);
     expect(preview.totalRecords).toBe(1);
     expect(preview.totalEntities).toBeGreaterThanOrEqual(1);
     expect(preview.byEntity.transactions).toBeDefined();
   });
 
   it('restores entities in correct order', async () => {
-    const result = await restoreManager.restore(createTestBackup(), 'user1', 'merge');
+    const result = await restoreManager.restore(createTestBackup(), TEST_USER_ID, 'merge');
     expect(result.success).toBe(true);
     expect(result.restored).toBeGreaterThan(0);
   });
 
   it('calls onProgress callback', async () => {
     const onProgress = vi.fn();
-    await restoreManager.restore(createTestBackup(), 'user1', 'merge', onProgress);
+    await restoreManager.restore(createTestBackup(), TEST_USER_ID, 'merge', onProgress);
     expect(onProgress).toHaveBeenCalled();
   });
 
   it('handles replace mode', async () => {
-    const result = await restoreManager.restore(createTestBackup(), 'user1', 'replace');
+    const result = await restoreManager.restore(createTestBackup(), TEST_USER_ID, 'replace');
     expect(result.success).toBe(true);
   });
 
@@ -63,7 +65,11 @@ describe('RestoreManager', () => {
       mortgages: [],
       accounts: [],
     };
-    const result = await restoreManager.restore(empty, 'user1', 'merge');
+    const result = await restoreManager.restore(empty, TEST_USER_ID, 'merge');
     expect(result.restored).toBe(0);
+  });
+
+  it('rejects a non-uuid user id', async () => {
+    await expect(restoreManager.preview(createTestBackup(), 'user1')).rejects.toThrow('Invalid user id');
   });
 });

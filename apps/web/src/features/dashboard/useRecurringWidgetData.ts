@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { requireUserId } from '@/lib/auth';
 import { FinancialEngine } from '@/services/FinancialEngine';
 import type { Account } from '@budgetos/database';
 
@@ -13,6 +14,7 @@ interface RecurringWidgetData {
 }
 
 async function fetchRecurringWidgetData(userId: string): Promise<RecurringWidgetData> {
+  requireUserId(userId);
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth();

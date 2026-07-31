@@ -1,8 +1,10 @@
 import { supabase } from '@/lib/supabase';
+import { requireUserId } from '@/lib/auth';
 import type { Category, CategoryInsert, CategoryUpdate } from '@budgetos/database';
 
 export const CategoryRepository = {
   async getAll(userId: string): Promise<Category[]> {
+    requireUserId(userId);
     const { data, error } = await supabase
       .from('categories')
       .select('*')
@@ -23,6 +25,7 @@ export const CategoryRepository = {
   },
 
   async create(userId: string, data: CategoryInsert): Promise<Category> {
+    requireUserId(userId);
     const { data: result, error } = await supabase
       .from('categories')
       .insert({ user_id: userId, ...data })

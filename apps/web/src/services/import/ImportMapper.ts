@@ -1,5 +1,6 @@
 import type { ColumnMapping, ImportedRow } from './CsvImporter';
 import { supabase } from '@/lib/supabase';
+import { requireUserId } from '@/lib/auth';
 
 export type ImportTargetEntity = 'transactions' | 'categories' | 'budgets' | 'savings_goals' | 'mortgages';
 
@@ -84,6 +85,7 @@ export class ImportMapper {
     entityType: string,
     mappings: ColumnMapping[],
   ): Promise<ImportResult> {
+    requireUserId(userId);
     const table = tableMap[entityType];
     if (!table) throw new Error(`Unknown entity type: ${entityType}`);
 
@@ -154,6 +156,7 @@ export class ImportMapper {
   }
 
   private async fetchValidIds(userId: string, table: string): Promise<Set<string>> {
+    requireUserId(userId);
     const { data } = await supabase
       .from(table)
       .select('id')

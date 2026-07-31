@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { requireUserId } from '@/lib/auth';
 import type { Mortgage } from '@budgetos/database';
 import type { PaymentFrequency } from '@/lib/finance';
 
@@ -36,6 +37,7 @@ export interface ExtraPayment {
 
 export const mortgageApi = {
   async list(userId: string): Promise<Mortgage[]> {
+    requireUserId(userId);
     debug('list', userId);
     const { data, error } = await supabase
       .from('mortgages')
@@ -47,6 +49,7 @@ export const mortgageApi = {
   },
 
   async create(userId: string, data: MortgageInsert): Promise<Mortgage> {
+    requireUserId(userId);
     debug('create', data);
     const { data: result, error } = await supabase
       .from('mortgages')
@@ -88,6 +91,7 @@ export const mortgageApi = {
   },
 
   async addExtraPayment(mortgageId: string, userId: string, data: { amount: number; date: string; type?: string; notes?: string }): Promise<ExtraPayment> {
+    requireUserId(userId);
     debug('addExtraPayment', mortgageId, data);
     const { data: result, error } = await supabase
       .from('mortgage_extra_payments')

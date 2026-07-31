@@ -1,5 +1,6 @@
 import type { PostgrestError } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { requireUserId } from '@/lib/auth';
 import { getQueue, removeFromQueue, incrementRetry, clearQueue } from './queue';
 import type { SyncStatus, ConflictLog, SyncEntity } from './types';
 
@@ -176,6 +177,7 @@ export async function downloadCloudData(
   userId: string,
   onProgress?: SyncProgressCallback,
 ): Promise<Record<string, unknown[]>> {
+  requireUserId(userId);
   const result: Record<string, unknown[]> = {};
 
   for (const [entity, info] of Object.entries(entityTableMap)) {
@@ -205,6 +207,7 @@ export async function runFullSync(
   localData: Record<string, unknown[]>,
   onProgress?: SyncProgressCallback,
 ): Promise<{ cloudData: Record<string, unknown[]>; conflicts: ConflictLog[] }> {
+  requireUserId(userId);
   onProgress?.('syncing');
 
   await uploadLocalChanges(onProgress);

@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { requireUserId } from '@/lib/auth';
 import type { Category, CategoryInsert, CategoryUpdate } from '@budgetos/database';
 
 // TODO: In production, validate all inputs with Zod schemas before sending to Supabase.
@@ -9,6 +10,7 @@ function debug(method: string, ...args: unknown[]) {
 
 export const categoriesApi = {
   async list(userId: string): Promise<Category[]> {
+    requireUserId(userId);
     debug('list', userId);
     const { data, error } = await supabase
       .from('categories')
@@ -24,6 +26,7 @@ export const categoriesApi = {
   },
 
   async create(userId: string, data: CategoryInsert): Promise<Category> {
+    requireUserId(userId);
     debug('create', data);
     const { data: result, error } = await supabase
       .from('categories')

@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { requireUserId } from '@/lib/auth';
 import type { Budget, BudgetInsert, BudgetUpdate } from '@budgetos/database';
 
 // TODO: In production, validate all inputs with Zod schemas before sending to Supabase.
@@ -9,6 +10,7 @@ function debug(method: string, ...args: unknown[]) {
 
 export const budgetsApi = {
   async list(userId: string, year?: number, month?: number): Promise<Budget[]> {
+    requireUserId(userId);
     debug('list', userId, year, month);
     let query = supabase
       .from('budgets')
@@ -35,6 +37,7 @@ export const budgetsApi = {
   },
 
   async create(userId: string, data: BudgetInsert): Promise<Budget> {
+    requireUserId(userId);
     const { year, month, rollover, ...rest } = data as any;
     const monthKey = year && month ? `${year}-${String(month).padStart(2, '0')}` : undefined;
 

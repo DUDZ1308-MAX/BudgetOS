@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { requireUserId } from '@/lib/auth';
 import type { Account, AccountInsert, AccountUpdate } from '@budgetos/database';
 
 // TODO: In production, validate all inputs with Zod schemas before sending to Supabase.
@@ -9,6 +10,7 @@ function debug(method: string, ...args: unknown[]) {
 
 export const accountsApi = {
   async list(userId: string): Promise<Account[]> {
+    requireUserId(userId);
     debug('list', userId);
     const { data, error } = await supabase
       .from('accounts')
@@ -23,6 +25,7 @@ export const accountsApi = {
   },
 
   async create(userId: string, data: AccountInsert): Promise<Account> {
+    requireUserId(userId);
     debug('create', data);
     const { data: result, error } = await supabase
       .from('accounts')

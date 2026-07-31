@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { requireUserId } from '@/lib/auth';
 import type { Transaction, TransactionInsert, TransactionUpdate } from '@budgetos/database';
 
 export const TransactionRepository = {
@@ -6,6 +7,7 @@ export const TransactionRepository = {
     userId: string,
     options?: { fromDate?: string; toDate?: string; limit?: number },
   ): Promise<Transaction[]> {
+    requireUserId(userId);
     let query = supabase
       .from('transactions')
       .select('*')
@@ -40,6 +42,7 @@ export const TransactionRepository = {
   },
 
   async create(userId: string, data: TransactionInsert): Promise<Transaction> {
+    requireUserId(userId);
     if (data.account_id) {
       const { data: acct } = await supabase
         .from('accounts')

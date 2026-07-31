@@ -1,8 +1,10 @@
 import { supabase } from '@/lib/supabase';
+import { requireUserId } from '@/lib/auth';
 import type { SavingsGoal } from '@budgetos/database';
 
 export const SavingsRepository = {
   async getAll(userId: string): Promise<SavingsGoal[]> {
+    requireUserId(userId);
     const { data, error } = await supabase
       .from('savings_goals')
       .select('*')

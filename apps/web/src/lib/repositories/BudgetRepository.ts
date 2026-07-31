@@ -1,8 +1,10 @@
 import { supabase } from '@/lib/supabase';
+import { requireUserId } from '@/lib/auth';
 import type { Budget, BudgetInsert, BudgetUpdate } from '@budgetos/database';
 
 export const BudgetRepository = {
   async getAll(userId: string, year?: number, month?: number): Promise<Budget[]> {
+    requireUserId(userId);
     let query = supabase
       .from('budgets')
       .select('*')
@@ -35,6 +37,7 @@ export const BudgetRepository = {
   },
 
   async create(userId: string, data: BudgetInsert): Promise<Budget> {
+    requireUserId(userId);
     const { year, month, rollover, ...rest } = data as any;
     const monthKey = year && month ? `${year}-${String(month).padStart(2, '0')}` : undefined;
     const payload: Record<string, unknown> = { user_id: userId, ...rest };

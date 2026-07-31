@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { requireUserId } from '@/lib/auth';
 import { logger } from '@/core/logger';
 
 export interface BackupMetadata {
@@ -188,6 +189,7 @@ export class BackupManager {
   }
 
   async createBackup(userId: string, name: string): Promise<BackupData> {
+    requireUserId(userId);
     const [transactions, categories, budgets, savingsGoals, mortgages, accounts] =
       await Promise.all([
         supabase.from('transactions').select('*').eq('user_id', userId),

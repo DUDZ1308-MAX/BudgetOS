@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { requireUserId } from '@/lib/auth';
 import type { Transaction, TransactionInsert, TransactionUpdate, TransactionFilters } from '@budgetos/database';
 
 // TODO: In production, validate all inputs with Zod schemas before sending to Supabase.
@@ -9,6 +10,7 @@ function debug(method: string, ...args: unknown[]) {
 
 export const transactionsApi = {
   async list(userId: string, filters?: TransactionFilters): Promise<Transaction[]> {
+    requireUserId(userId);
     debug('list', userId, filters);
     let query = supabase
       .from('transactions')
@@ -34,6 +36,7 @@ export const transactionsApi = {
   },
 
   async create(userId: string, data: TransactionInsert): Promise<Transaction> {
+    requireUserId(userId);
     debug('create', data);
     const { data: result, error } = await supabase
       .from('transactions')

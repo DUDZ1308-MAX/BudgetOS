@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { requireUserId } from '@/lib/auth';
 import type { BackupData } from './BackupManager';
 
 export interface RestorePreview {
@@ -19,6 +20,7 @@ export type RestoreMode = 'replace' | 'merge';
 
 export class RestoreManager {
   async preview(backup: BackupData, userId: string): Promise<RestorePreview> {
+    requireUserId(userId);
     const existing = await this.fetchExistingCounts(userId);
     const byEntity: Record<string, { incoming: number; existing: number }> = {};
     let totalRecords = 0;
@@ -50,6 +52,7 @@ export class RestoreManager {
     mode: RestoreMode = 'merge',
     onProgress?: (current: number, total: number) => void,
   ): Promise<RestoreResult> {
+    requireUserId(userId);
     const entityOrder = ['categories', 'accounts', 'transactions', 'budgets', 'savings_goals', 'mortgages'];
     let restored = 0;
     let skipped = 0;
@@ -109,6 +112,7 @@ export class RestoreManager {
   }
 
   private async fetchExistingCounts(userId: string): Promise<Record<string, number>> {
+    requireUserId(userId);
     const tables = ['transactions', 'categories', 'budgets', 'savings_goals', 'mortgages', 'accounts'];
     const entries = await Promise.all(
       tables.map(async (t) => {

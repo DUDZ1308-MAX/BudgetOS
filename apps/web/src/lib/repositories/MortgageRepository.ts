@@ -1,8 +1,10 @@
 import { supabase } from '@/lib/supabase';
+import { requireUserId } from '@/lib/auth';
 import type { Mortgage } from '@budgetos/database';
 
 export const MortgageRepository = {
   async getAll(userId: string): Promise<Mortgage[]> {
+    requireUserId(userId);
     const { data, error } = await supabase
       .from('mortgages')
       .select('*')

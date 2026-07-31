@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { requireUserId } from '@/lib/auth';
 import type { SavingsGoal } from '@budgetos/database';
 
 // TODO: In production, validate all inputs with Zod schemas before sending to Supabase.
@@ -34,6 +35,7 @@ export interface SavingsContribution {
 
 export const savingsApi = {
   async list(userId: string): Promise<SavingsGoal[]> {
+    requireUserId(userId);
     debug('list', userId);
     const { data, error } = await supabase
       .from('savings_goals')
@@ -45,6 +47,7 @@ export const savingsApi = {
   },
 
   async create(userId: string, data: SavingsGoalInsert): Promise<SavingsGoal> {
+    requireUserId(userId);
     debug('create', data);
     const { data: result, error } = await supabase
       .from('savings_goals')
@@ -80,6 +83,7 @@ export const savingsApi = {
 
   // Contributions
   async listContributions(userId: string, goalId: string): Promise<SavingsContribution[]> {
+    requireUserId(userId);
     debug('listContributions', userId, goalId);
     const { data, error } = await supabase
       .from('contributions')
@@ -92,6 +96,7 @@ export const savingsApi = {
   },
 
   async addContribution(userId: string, goalId: string, data: { amount: number; date: string; notes?: string }): Promise<SavingsContribution> {
+    requireUserId(userId);
     debug('addContribution', userId, goalId, data);
     const { data: result, error } = await supabase
       .from('contributions')
@@ -103,6 +108,7 @@ export const savingsApi = {
   },
 
   async updateContribution(id: string, userId: string, data: { amount?: number; date?: string; notes?: string }): Promise<SavingsContribution> {
+    requireUserId(userId);
     debug('updateContribution', id, data);
     const { data: result, error } = await supabase
       .from('contributions')
@@ -116,6 +122,7 @@ export const savingsApi = {
   },
 
   async removeContribution(id: string, userId: string): Promise<void> {
+    requireUserId(userId);
     debug('removeContribution', id);
     const { error } = await supabase.from('contributions').delete().eq('id', id).eq('user_id', userId);
     if (error) { debug('removeContribution error', error); throw error; }

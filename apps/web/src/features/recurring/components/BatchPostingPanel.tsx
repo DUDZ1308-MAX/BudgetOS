@@ -4,10 +4,11 @@ import { supabase } from '@/lib/supabase';
 import { RecurringPostingService } from '@/services/RecurringPostingService';
 import { useAuthStore } from '@/stores/auth';
 import { useToastStore } from '@/stores/toast';
+import { requireUserId, isAuthError } from '@/lib/auth';
 import type { PostingPreview } from '@/services/RecurringPostingService';
 
 interface Props {
-  userId: string;
+  userId?: string;
   onComplete: () => void;
 }
 
@@ -23,13 +24,14 @@ export function BatchPostingPanel({ userId, onComplete }: Props) {
   const loadPreview = useCallback(async () => {
     setLoading(true);
     try {
-      const items = await RecurringPostingService.previewDue(userId);
+      const uid = requireUserId(userId);
+      const items = await RecurringPostingService.previewDue(uid);
       setPreviews(items);
       setSelectedIds(new Set(items.filter((i) => !i.skipped).map((i) => i.recurringId)));
       setShowPreview(true);
       setResult(null);
     } catch (err) {
-      addToast('error', 'Failed to load due transactions');
+      addToast('error', isAuthError(err) ? (err as Error).message : 'Failed to load due transactions');
     } finally {
       setLoading(false);
     }
@@ -59,13 +61,14 @@ export function BatchPostingPanel({ userId, onComplete }: Props) {
     }
     setPosting(true);
     try {
-      const res = await RecurringPostingService.processDue(userId, [...selectedIds]);
+      const uid = requireUserId(userId);
+      const res = await RecurringPostingService.processDue(uid, [...selectedIds]);
       setResult(res);
       addToast('success', `Posted ${res.posted} transaction${res.posted !== 1 ? 's' : ''}${res.skipped > 0 ? ` (${res.skipped} skipped)` : ''}`);
       if (res.posted > 0) onComplete();
       loadPreview();
     } catch (err) {
-      addToast('error', 'Failed to post transactions');
+      addToast('error', isAuthError(err) ? (err as Error).message : 'Failed to post transactions');
     } finally {
       setPosting(false);
     }
@@ -76,13 +79,14 @@ export function BatchPostingPanel({ userId, onComplete }: Props) {
     setSelectedIds(new Set(allIds));
     setPosting(true);
     try {
-      const res = await RecurringPostingService.processDue(userId, allIds);
+      const uid = requireUserId(userId);
+      const res = await RecurringPostingService.processDue(uid, allIds);
       setResult(res);
       addToast('success', `Posted ${res.posted} transaction${res.posted !== 1 ? 's' : ''}${res.skipped > 0 ? ` (${res.skipped} skipped)` : ''}`);
       if (res.posted > 0) onComplete();
       loadPreview();
     } catch (err) {
-      addToast('error', 'Failed to post transactions');
+      addToast('error', isAuthError(err) ? (err as Error).message : 'Failed to post transactions');
     } finally {
       setPosting(false);
     }
