@@ -905,3 +905,209 @@ describe('Scenario G: Retirement Planning', () => {
     expect(result.passedRetirementAge).toBe(true);
   });
 });
+
+// ============================================================================
+// Scenario H: Financial Calendar — events, daily forecast, monthly forecast
+// ============================================================================
+
+function toDateKeyLocal(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+describe('getCalendarEvents', () => {
+  const year = 2026;
+  const month = 7; // August
+
+  it('includes active recurring transactions within the month', () => {
+    const events = FinancialEngine.getCalendarEvents(
+      [
+        { id: 'r1', name: 'Salary', amount: 4000, type: 'income', frequency: 'monthly', next_run: '2026-08-15', status: 'active' },
+        { id: 'r2', name: 'Rent', amount: -1500, type: 'expense', frequency: 'monthly', next_run: '2026-08-01', status: 'active' },
+      ],
+      [], [], [], year, month, [], [], false,
+    );
+
+    expect(events).toHaveLength(2);
+    const income = events.find((e) => e.id === 'rec-r1');
+    const expense = events.find((e) => e.id === 'rec-r2');
+    expect(income).toMatchObject({ date: '2026-08-15', amount: 4000, type: 'income', source: 'recurring' });
+    expect(expense).toMatchObject({ date: '2026-08-01', amount: 1500, type: 'expense', source: 'recurring' });
+  });
+
+  it('excludes inactive and out-of-month recurring transactions', () => {
+    const events = FinancialEngine.getCalendarEvents(
+      [
+        { id: 'r1', name: 'Paused Bill', amount: 100, type: 'expense', frequency: 'monthly', next_run: '2026-08-10', status: 'paused' },
+        { id: 'r2', name: 'Next Month Bill', amount: 100, type: 'expense', frequency: 'monthly', next_run: '2026-09-10', status: 'active' },
+      ],
+      [], [], [], year, month, [], [], false,
+    );
+
+    expect(events).toHaveLength(0);
+  });
+
+  it('creates one mortgage payment event on the 1st of the month', () => {
+    const events = FinancialEngine.getCalendarEvents(
+      [],
+      [{ id: 'm1', name: 'Home', monthlyPayment: 1892.5, paymentFrequency: 'monthly' }],
+      [], [], year, month, [], [], false,
+    );
+
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      id: `mort-m1-${year}-${month}`,
+      date: '2026-08-01',
+      amount: 1892.5,
+      type: 'mortgage',
+      source: 'mortgage',
+    });
+  });
+
+  it('creates savings contribution events on the 1st of the month', () => {
+    const events = FinancialEngine.getCalendarEvents(
+      [],
+      [],
+      [{ id: 'g1', name: 'Emergency Fund', monthlyContribution: 500 }],
+      [], year, month, [], [], false,
+    );
+
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      id: `sav-g1-${year}-${month}`,
+      date: '2026-08-01',
+      amount: 500,
+      type: 'contribution',
+      source: 'savings',
+    });
+  });
+
+  it('skips savings goals with no contribution', () => {
+    const events = FinancialEngine.getCalendarEvents(
+      [],
+      [],
+      [{ id: 'g1', name: 'Paused Goal', monthlyContribution: 0 }],
+      [], year, month, [], [], false,
+    );
+    expect(events).toHaveLength(0);
+  });
+
+  it('includes in-month transactions, resolves category names, and skips archived', () => {
+    const events = FinancialEngine.getCalendarEvents(
+      [], [], [],
+      [
+        { id: 't1', amount: 75.5, date: '2026-08-20', merchant: 'Groceries', category_id: 'c1', account_id: 'a1', recurring_id: null, is_archived: false },
+        { id: 't2', amount: -40, date: '2026-07-31', merchant: 'Old Txn', category_id: null, account_id: 'a1', recurring_id: null, is_archived: false },
+        { id: 't3', amount: -10, date: '2026-08-05', merchant: 'Archived', category_id: null, account_id: 'a1', recurring_id: null, is_archived: true },
+      ],
+      year, month,
+      [{ id: 'a1', name: 'Checking' }],
+      [{ id: 'c1', name: 'Food & Dining' }],
+      true,
+    );
+
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      id: 'txn-t1',
+      date: '2026-08-20',
+      amount: 75.5,
+      type: 'income',
+      category: 'Food & Dining',
+      accountName: 'Checking',
+    });
+  });
+
+  it('sorts events chronologically', () => {
+    const events = FinancialEngine.getCalendarEvents(
+      [
+        { id: 'r1', name: 'Mid Bill', amount: 100, type: 'expense', frequency: 'monthly', next_run: '2026-08-15', status: 'active' },
+        { id: 'r2', name: 'Early Bill', amount: 100, type: 'expense', frequency: 'monthly', next_run: '2026-08-03', status: 'active' },
+      ],
+      [{ id: 'm1', name: 'Home', monthlyPayment: 500, paymentFrequency: 'monthly' }],
+      [], [], year, month, [], [], false,
+    );
+
+    expect(events.map((e) => e.date)).toEqual(['2026-08-01', '2026-08-03', '2026-08-15']);
+  });
+});
+
+describe('getMonthlyForecast', () => {
+  it('sums income, expenses, mortgage, and savings for the month', () => {
+    const events = [
+      { id: 'e1', title: 'Paycheck', date: '2026-08-15', amount: 4000, type: 'income', category: 'recurring', source: 'recurring' },
+      { id: 'e2', title: 'Mortgage Payment', date: '2026-08-01', amount: 1892.5, type: 'mortgage', category: 'mortgage', source: 'mortgage' },
+      { id: 'e3', title: 'Savings Contribution', date: '2026-08-01', amount: 500, type: 'contribution', category: 'savings', source: 'savings' },
+      { id: 'e4', title: 'Credit Card Payment', date: '2026-08-25', amount: 300, type: 'expense', category: 'credit', source: 'recurring' },
+    ];
+
+    const result = FinancialEngine.getMonthlyForecast(events as never, 10000, 2500, 2026, 7);
+
+    expect(result.income).toBe(4000);
+    expect(result.expenses).toBe(2692.5);
+    expect(result.mortgage).toBe(1892.5);
+    expect(result.savings).toBe(500);
+    expect(result.debtPayments).toBe(300);
+    expect(result.netCashFlow).toBe(1307.5);
+    expect(result.budgetRemaining).toBe(1307.5);
+    expect(result.projectedNetWorthChange).toBe(1307.5);
+  });
+
+  it('tracks lowest and highest running balance across event dates', () => {
+    const events = [
+      { id: 'e1', title: 'Big Expense', date: '2026-08-02', amount: 3000, type: 'expense', category: 'misc', source: 'transaction' },
+      { id: 'e2', title: 'Income', date: '2026-08-10', amount: 5000, type: 'income', category: 'recurring', source: 'recurring' },
+    ];
+
+    const result = FinancialEngine.getMonthlyForecast(events as never, 10000, 1000, 2026, 7);
+
+    expect(result.highestBalance).toBe(3000);
+    expect(result.lowestBalance).toBe(-2000);
+  });
+
+  it('excludes events outside the month', () => {
+    const events = [
+      { id: 'e1', title: 'Last Month', date: '2026-07-31', amount: 999, type: 'expense', category: 'misc', source: 'transaction' },
+      { id: 'e2', title: 'Next Month', date: '2026-09-01', amount: 999, type: 'expense', category: 'misc', source: 'transaction' },
+      { id: 'e3', title: 'In Month', date: '2026-08-31', amount: 100, type: 'income', category: 'recurring', source: 'recurring' },
+    ];
+
+    const result = FinancialEngine.getMonthlyForecast(events as never, 10000, 1000, 2026, 7);
+
+    expect(result.income).toBe(100);
+    expect(result.expenses).toBe(0);
+  });
+});
+
+describe('getDailyForecast', () => {
+  it('projects the requested number of days starting from the current balance', () => {
+    const forecast = FinancialEngine.getDailyForecast([], 1000, 5);
+    expect(forecast).toHaveLength(5);
+    for (let i = 0; i < 5; i++) {
+      expect(forecast[i]?.openingBalance).toBe(1000);
+      expect(forecast[i]?.moneyIn).toBe(0);
+      expect(forecast[i]?.moneyOut).toBe(0);
+      expect(forecast[i]?.endingBalance).toBe(1000);
+    }
+  });
+
+  it('applies income and expense events on their local calendar day', () => {
+    const todayKey = toDateKeyLocal(new Date());
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowKey = toDateKeyLocal(tomorrow);
+
+    const events = [
+      { id: 'e1', title: 'Income Today', date: todayKey, amount: 500, type: 'income', category: 'recurring', source: 'recurring' },
+      { id: 'e2', title: 'Expense Tomorrow', date: tomorrowKey, amount: 200, type: 'expense', category: 'misc', source: 'transaction' },
+    ];
+
+    const forecast = FinancialEngine.getDailyForecast(events as never, 1000, 2);
+
+    expect(forecast[0]?.moneyIn).toBe(500);
+    expect(forecast[0]?.endingBalance).toBe(1500);
+    expect(forecast[1]?.moneyOut).toBe(200);
+    expect(forecast[1]?.endingBalance).toBe(1300);
+  });
+});

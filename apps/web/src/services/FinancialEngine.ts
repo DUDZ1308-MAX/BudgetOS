@@ -57,6 +57,13 @@ function formatCurrencyFn(amount: number): string {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
 }
 
+function toDateKey(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -1021,8 +1028,7 @@ export const FinancialEngine = {
     // Recurring transactions scheduled within this month
     for (const r of recurrings) {
       if (r.status !== 'active') continue;
-      const nextDate = new Date(r.next_run);
-      if (nextDate >= monthStart && nextDate <= monthEnd) {
+      if (r.next_run >= toDateKey(monthStart) && r.next_run <= toDateKey(monthEnd)) {
         events.push({
           id: `rec-${r.id}`,
           title: r.name,
@@ -1045,7 +1051,7 @@ export const FinancialEngine = {
         events.push({
           id: `mort-${m.id}-${year}-${month}`,
           title: `${m.name} Payment`,
-          date: date.toISOString().slice(0, 10),
+          date: toDateKey(date),
           amount: m.monthlyPayment,
           type: 'mortgage' as const,
           category: 'mortgage',
@@ -1065,7 +1071,7 @@ export const FinancialEngine = {
         events.push({
           id: `sav-${g.id}-${year}-${month}`,
           title: `${g.name} Contribution`,
-          date: contributionDate.toISOString().slice(0, 10),
+          date: toDateKey(contributionDate),
           amount: g.monthlyContribution,
           type: 'contribution' as const,
           category: 'savings',
@@ -1079,8 +1085,7 @@ export const FinancialEngine = {
     if (includeTransactions) {
       for (const t of transactions) {
         if (t.is_archived) continue;
-        const txnDate = new Date(t.date);
-        if (txnDate >= monthStart && txnDate <= monthEnd) {
+        if (t.date >= toDateKey(monthStart) && t.date <= toDateKey(monthEnd)) {
           events.push({
             id: `txn-${t.id}`,
             title: t.merchant ?? 'Transaction',
@@ -1114,7 +1119,7 @@ export const FinancialEngine = {
     const now = new Date();
     for (let i = 0; i < days; i++) {
       const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
-      const dateStr = date.toISOString().slice(0, 10);
+      const dateStr = toDateKey(date);
 
       const dayEvents = events.filter((e) => e.date === dateStr);
       let moneyIn = 0;
@@ -1154,8 +1159,8 @@ export const FinancialEngine = {
     year: number,
     month: number,
   ): MonthlyForecast {
-    const monthStart = new Date(year, month, 1).toISOString().slice(0, 10);
-    const monthEnd = new Date(year, month + 1, 0).toISOString().slice(0, 10);
+    const monthStart = toDateKey(new Date(year, month, 1));
+    const monthEnd = toDateKey(new Date(year, month + 1, 0));
 
     const monthEvents = events.filter((e) => e.date >= monthStart && e.date <= monthEnd);
 
