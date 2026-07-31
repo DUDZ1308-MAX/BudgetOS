@@ -141,7 +141,7 @@ export const InterestSaved = memo(function InterestSaved({
         </div>
 
         {/* Stats row */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {[
             { label: 'Original Interest', value: formatCurrency(totalInterest + interestSaved) },
             { label: 'New Interest', value: formatCurrency(totalInterest) },

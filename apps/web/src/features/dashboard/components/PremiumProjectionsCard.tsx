@@ -58,7 +58,7 @@ export function PremiumProjectionsCard({ projections, isLoading, href }: Props) 
                   {proj.label}
                 </span>
               </div>
-              <div className="grid grid-cols-3 gap-3 text-xs">
+              <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-3">
                 <div>
                   <div className="text-[10px] font-medium uppercase tracking-wider mb-0.5" style={{ color: 'var(--text-muted)' }}>Net Worth</div>
                   <div className="text-sm font-bold tabular-nums" style={{ color: 'var(--text-primary)' }}>

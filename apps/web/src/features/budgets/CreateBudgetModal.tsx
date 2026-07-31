@@ -80,7 +80,7 @@ export function CreateBudgetModal({ categories, isPending, budget, onCreate, onU
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" aria-labelledby="budget-modal-title">
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative w-full max-w-sm rounded-t-2xl bg-white p-6 shadow-xl sm:rounded-2xl dark:bg-slate-900">
+      <div className="relative w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-t-2xl bg-white p-6 shadow-xl sm:rounded-2xl dark:bg-slate-900">
         <div className="mb-1 flex items-center justify-between">
           <h2 id="budget-modal-title" className="text-lg font-semibold text-slate-900 dark:text-white">
             {isEdit ? 'Edit Budget' : 'Create Budget'}
