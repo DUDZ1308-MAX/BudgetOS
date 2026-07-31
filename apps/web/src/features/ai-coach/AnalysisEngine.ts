@@ -798,7 +798,7 @@ function generateSavingsOpportunities(d: DashboardSummaryData, summary: AiFinanc
       estimatedImpact: `${fmt(surplusAllocation * 12)} more savings per year`,
       confidence: 80,
       actionLabel: 'Set up auto-transfer',
-      reasoning: `Your surplus is闲置 potential. Earning even 4% APY on ${fmt(surplusAllocation)}/mo adds ${fmt(Math.round(surplusAllocation * 12 * 0.04))} in interest.`,
+        reasoning: `Your surplus is unallocated potential. Earning even 4% APY on ${fmt(surplusAllocation)}/mo adds ${fmt(Math.round(surplusAllocation * 12 * 0.04))} in interest.`,
       dismissed: false,
       applied: false,
       createdAt: now,
