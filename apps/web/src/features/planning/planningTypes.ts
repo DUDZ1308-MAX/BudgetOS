@@ -127,7 +127,9 @@ export interface PlanningDashboard {
 }
 
 export interface RetirementReadiness {
+  currentAge: number;
   ageToRetire: number;
+  estimatedRetirementYear: number;
   currentSavings: number;
   targetSavings: number;
   annualContribution: number;

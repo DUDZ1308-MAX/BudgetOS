@@ -860,3 +860,48 @@ describe('Recurring Engine Methods', () => {
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// Scenario G: Retirement Planning
+// ---------------------------------------------------------------------------
+describe('Scenario G: Retirement Planning', () => {
+  it('computes years until retirement and estimated retirement year', () => {
+    const result = FinancialEngine.getRetirementPlan({
+      currentAge: 38,
+      retirementAge: 65,
+      currentYear: 2026,
+      monthlyContribution: 500,
+      annualReturnRate: 0.07,
+      inflationRate: 0.03,
+    });
+    expect(result.yearsUntilRetirement).toBe(27);
+    expect(result.estimatedRetirementYear).toBe(2053);
+    expect(result.projectedNestEgg).toBeGreaterThan(0);
+    expect(result.readinessScore).toBeGreaterThanOrEqual(0);
+    expect(result.readinessScore).toBeLessThanOrEqual(100);
+  });
+
+  it('defaults currentYear to the calendar year when not provided', () => {
+    const result = FinancialEngine.getRetirementPlan({
+      currentAge: 30,
+      retirementAge: 65,
+      monthlyContribution: 500,
+      annualReturnRate: 0.07,
+      inflationRate: 0.03,
+    });
+    expect(result.estimatedRetirementYear).toBe(new Date().getFullYear() + 35);
+  });
+
+  it('flags passed retirement age for current age above retirement age', () => {
+    const result = FinancialEngine.getRetirementPlan({
+      currentAge: 70,
+      retirementAge: 65,
+      currentYear: 2026,
+      monthlyContribution: 500,
+      annualReturnRate: 0.07,
+      inflationRate: 0.03,
+    });
+    expect(result.yearsUntilRetirement).toBe(-5);
+    expect(result.passedRetirementAge).toBe(true);
+  });
+});

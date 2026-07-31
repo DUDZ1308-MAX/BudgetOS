@@ -185,7 +185,9 @@ export function usePlanningDashboard(userId: string) {
 
           const dashboard: PlanningDashboard = {
          retirement: {
+           currentAge: 30,
            ageToRetire: 65,
+           estimatedRetirementYear: new Date().getFullYear() + 35,
            currentSavings: savingsSnapshot.totalSaved,
            targetSavings: 1000000,
            annualContribution: monthlySavings * 12,
@@ -193,7 +195,7 @@ export function usePlanningDashboard(userId: string) {
            inflationRate: 0.03,
            retirementIncomeTarget: 50000,
             readinessScore: (healthScore.overall?.score ?? 50) > 80 ? 85 : (healthScore.overall?.score ?? 50) > 60 ? 65 : 40,
-           yearsToRetire: 65 - new Date().getFullYear(),
+           yearsToRetire: 35,
          },
         
         investments: {

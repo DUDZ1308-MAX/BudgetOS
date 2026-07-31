@@ -309,6 +309,28 @@ export interface InsightResult {
   date: string;
 }
 
+export interface RetirementPlanInput {
+  currentAge: number;
+  retirementAge: number;
+  currentYear: number;
+  monthlyContribution: number;
+  annualReturnRate: number;
+  inflationRate: number;
+}
+
+export interface RetirementPlanResult {
+  currentAge: number;
+  retirementAge: number;
+  yearsUntilRetirement: number;
+  estimatedRetirementYear: number;
+  projectedNestEgg: number;
+  monthlyIncome: number;
+  incomeTarget: number;
+  readinessScore: number;
+  isAtRetirementAge: boolean;
+  passedRetirementAge: boolean;
+}
+
 export interface ProjectionRequest {
   currentNetWorth: number;
   currentSavings: number;

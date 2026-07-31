@@ -24,4 +24,6 @@ export * from './health-score-v2';
 
 export { evaluateCoachRules } from './coach/engine';
 
+export * from './retirement';
+
 export * from './forecast';

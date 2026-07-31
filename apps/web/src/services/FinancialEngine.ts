@@ -21,12 +21,13 @@ import {
   computeSavingsForecast,
   computeMortgageForecast,
   computeScenarioComparison,
+  calculateRetirementPlan,
 } from '@budgetos/engine';
 import {
   computeMortgage as computeMortgageEngine,
   computeMortgageDashboard as computeMortgageDashboardEngine,
 } from '@/engine/MortgageEngine';
-import type { RecurringFrequency, FHSRequest, CategoryBudget, TransactionSummary, HealthScoreResult, TrendAnalysisResult, RecommendationResult, InsightResult, ProjectionResult, CashFlowForecastResult, NetWorthForecastResult, DebtForecastResult, DebtForecastInput, SavingsForecastResult, MortgageForecastResult, ScenarioComparisonResult, ScenarioAdjustment, ForecastDashboardData, ForecastMilestone } from '@budgetos/shared';
+import type { RecurringFrequency, FHSRequest, CategoryBudget, TransactionSummary, HealthScoreResult, TrendAnalysisResult, RecommendationResult, InsightResult, ProjectionResult, CashFlowForecastResult, NetWorthForecastResult, DebtForecastResult, DebtForecastInput, SavingsForecastResult, MortgageForecastResult, ScenarioComparisonResult, ScenarioAdjustment, ForecastDashboardData, ForecastMilestone, RetirementPlanInput, RetirementPlanResult } from '@budgetos/shared';
 import type { Account, Category, Budget, Transaction, SavingsGoal, Mortgage } from '@budgetos/database';
 import type { DashboardInsight, DashboardUpcomingItem, CalendarEvent, DailyForecast, MonthlyForecast } from '@/lib/dashboard/types';
 
@@ -1694,5 +1695,17 @@ export const FinancialEngine = {
       insights,
       errors,
     };
+  },
+
+  // -------------------------------------------------------------------------
+  // Retirement Planning — delegates to @budgetos/engine
+  // -------------------------------------------------------------------------
+  getRetirementPlan(
+    input: Omit<RetirementPlanInput, 'currentYear'> & { currentYear?: number },
+  ): RetirementPlanResult {
+    return calculateRetirementPlan({
+      currentYear: input.currentYear ?? new Date().getFullYear(),
+      ...input,
+    });
   },
 };
