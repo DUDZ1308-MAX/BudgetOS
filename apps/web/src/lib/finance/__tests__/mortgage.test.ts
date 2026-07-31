@@ -677,9 +677,10 @@ describe('Regression: Remaining Balance Zero Bug', () => {
   });
 
   it('remaining balance after 1 payment is less than principal', () => {
-    const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - 1);
-    const result = computeMortgage({ ...REGRESSION_INPUT, startDate: startDate.toISOString().slice(0, 10) });
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const startStr = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-01`;
+    const result = computeMortgage({ ...REGRESSION_INPUT, startDate: startStr });
     expect(result).not.toBeNull();
     const dashboard = computeMortgageDashboard(result!);
     expect(dashboard.remainingBalance).toBeGreaterThan(0);
