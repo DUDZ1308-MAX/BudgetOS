@@ -86,7 +86,7 @@ export class BackupManager {
     };
 
     try {
-      const backupData = { version: 1, exportedAt: entry.timestamp, appVersion: '1.0.0', data };
+      const backupData = { version: 1, exportedAt: entry.timestamp, appVersion: '1.0.2', data };
       localStorage.setItem(`${this.localStorageBackupPrefix}${entry.id}`, JSON.stringify(backupData));
     } catch (err) {
       logger.error('Failed to save local backup', 'BackupManager', err);
@@ -206,7 +206,7 @@ export class BackupManager {
         name,
         createdAt: new Date().toISOString(),
         schemaVersion: '1.0',
-        appVersion: '1.0.0',
+        appVersion: '1.0.2',
       },
       transactions: transactions.data ?? [],
       categories: categories.data ?? [],
@@ -306,7 +306,7 @@ export class BackupManager {
         name,
         createdAt: new Date().toISOString(),
         schemaVersion: '1.0',
-        appVersion: '1.0.0',
+        appVersion: '1.0.2',
       },
       transactions,
       categories,

@@ -9,7 +9,7 @@ interface SidebarProps {
   onClose: () => void;
 }
 
-const APP_VERSION = releaseHistory[0]?.version ?? '1.0.0';
+const APP_VERSION = releaseHistory[0]?.version ?? '1.0.2';
 
 const navGroups = [
   {

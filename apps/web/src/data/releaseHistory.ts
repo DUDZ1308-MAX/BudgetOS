@@ -11,6 +11,24 @@ export interface ReleaseNote {
 
 export const releaseHistory: ReleaseNote[] = [
   {
+    version: '1.0.2',
+    date: '2026-07-31',
+    title: 'Stable Release',
+    description: 'Production stabilization: authentication hardening, Supabase schema reconciliation, and financial engine validation.',
+    type: 'minor',
+    highlights: [
+      'Hardened authentication: all Supabase queries require an authenticated user UUID',
+      'Reconciled application schema with production Supabase',
+      'Validated Financial Engine calculations across dashboard, mortgage, savings, and retirement',
+      'Dashboard polish and full mobile responsiveness',
+    ],
+    fixes: [
+      'Eliminated 22P02 UUID errors from unauthenticated test calls',
+      'Removed all queries referencing the non-existent mortgages.monthly_payment column',
+      'Fixed mortgage extra-payment user scoping',
+    ],
+  },
+  {
     version: '1.0.0',
     date: '2026-07-09',
     title: 'Public Beta Launch',

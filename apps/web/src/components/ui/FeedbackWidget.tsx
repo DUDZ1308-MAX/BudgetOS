@@ -47,7 +47,7 @@ export function FeedbackWidget() {
       description,
       screenshot,
       metadata: {
-        appVersion: '1.0.0',
+        appVersion: '1.0.2',
         browser: navigator.userAgent,
         os: navigator.platform,
         route: window.location.pathname,
