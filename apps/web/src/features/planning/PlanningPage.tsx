@@ -90,8 +90,6 @@ export function PlanningPage() {
     };
   }, [accounts, allTxns, budgets, savingsGoals, mortgages, recurrings, categories, hasData]);
 
-  if (!user) return null;
-
   return (
     <>
       {/* Desktop/Tablet layout */}
