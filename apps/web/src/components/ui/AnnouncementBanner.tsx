@@ -30,7 +30,7 @@ export function AnnouncementBanner() {
       </div>
       <button
         onClick={() => markRead(latest.id)}
-        className="shrink-0 rounded-lg p-1 text-indigo-400 hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
+        className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-lg p-1 text-indigo-400 hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
         aria-label="Dismiss announcement"
       >
         <IconX className="h-4 w-4" />

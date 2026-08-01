@@ -332,7 +332,7 @@ export function LandingPage() {
         <div className="mx-auto max-w-6xl px-4">
           <div className="grid items-center gap-12 md:grid-cols-2">
             <div className="order-2 md:order-1 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {[
                   { icon: IconShieldCheck, label: 'Encryption', desc: 'TLS 1.3 + AES-256' },
                   { icon: IconShield, label: 'Privacy', desc: 'Zero data sharing' },

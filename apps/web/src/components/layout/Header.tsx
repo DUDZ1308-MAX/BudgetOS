@@ -52,7 +52,7 @@ export function Header({ onMenuClick }: HeaderProps) {
       <div className="flex items-center gap-4">
         <button
           onClick={onMenuClick}
-          className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 md:hidden"
+          className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 md:hidden"
           aria-label="Open sidebar"
         >
           <IconMenu className="h-5 w-5" />
@@ -76,7 +76,7 @@ export function Header({ onMenuClick }: HeaderProps) {
         <div className="relative">
           <button
             onClick={() => setShowNotifications(!showNotifications)}
-            className="relative rounded-xl p-2 text-slate-500 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+            className="relative flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl p-2 text-slate-500 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
             aria-label="Notifications"
           >
             <IconBell className="h-5 w-5" />
@@ -102,7 +102,7 @@ export function Header({ onMenuClick }: HeaderProps) {
           onClick={() => {
             signOut();
           }}
-          className="ml-1 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 hidden sm:inline-flex"
+          className="ml-1 hidden min-h-[44px] items-center rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 sm:inline-flex"
           aria-label="Sign out"
         >
           Sign Out

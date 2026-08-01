@@ -36,12 +36,12 @@ export function AppShell() {
   }, [user, isDemo]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
+    <div className="flex h-screen overflow-hidden supports-[height:100dvh]:h-dvh bg-slate-50 dark:bg-slate-950">
       <SkipNav />
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-[65] bg-black/40 backdrop-blur-sm md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -49,7 +49,7 @@ export function AppShell() {
         <DemoBanner />
         <AnnouncementBanner />
         <Header onMenuClick={() => setSidebarOpen(true)} />
-        <main id="main-content" role="main" className="flex-1 overflow-y-auto overflow-x-hidden p-3 pb-20 sm:p-4 md:p-6 md:pb-6">
+        <main id="main-content" role="main" className="flex-1 overflow-y-auto overflow-x-hidden p-3 pb-24 sm:p-4 md:p-6 md:pb-6">
           <NetworkStatus />
           <div className="mx-auto max-w-[1400px] xl:max-w-[1600px] 2xl:max-w-[1800px]">
             <Outlet />

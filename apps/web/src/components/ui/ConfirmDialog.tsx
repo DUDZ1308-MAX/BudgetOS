@@ -48,7 +48,7 @@ useEffect(() => {
       aria-labelledby="confirm-title"
       aria-describedby="confirm-message"
     >
-      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-900">
+      <div className="w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-900">
         <h3 id="confirm-title" className="text-lg font-bold text-slate-900 dark:text-white">{title}</h3>
         <p id="confirm-message" className="mt-2 text-sm text-slate-500 dark:text-slate-400">{message}</p>
         <div className="mt-6 flex justify-end gap-3">

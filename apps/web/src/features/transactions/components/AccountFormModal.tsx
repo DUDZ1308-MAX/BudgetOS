@@ -102,6 +102,7 @@ export function AccountFormModal({ isPending, account, onCreate, onUpdate, onClo
           <button
             type="button"
             onClick={onClose}
+            aria-label="Close"
             className="flex items-center justify-center rounded-lg min-h-[44px] min-w-[44px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

@@ -48,8 +48,8 @@ export function OnboardingWizard() {
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-        <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+      <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+        <div className="w-full max-w-lg max-h-[90dvh] overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
           <div className="flex items-center justify-center gap-2 px-6 pt-5 pb-2">
             <img src="/logo.png" alt="MyBudgetOS" className="h-7 w-7 rounded-lg object-contain" />
             <span className="text-sm font-bold text-slate-900 dark:text-white">MyBudgetOS</span>
@@ -66,7 +66,7 @@ export function OnboardingWizard() {
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 max-w-sm">{step.description}</p>
           </div>
 
-          <div className="flex items-center justify-between border-t border-slate-200 px-6 py-4 dark:border-slate-800">
+            <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3 sm:px-6 sm:py-4 dark:border-slate-800">
             <div className="flex gap-1">
               {STEP_ORDER.map((s, i) => (
                 <div key={s} className={`h-1.5 w-4 rounded-full transition-colors ${
@@ -78,7 +78,7 @@ export function OnboardingWizard() {
               {!isLast && (
                 <button
                   onClick={skip}
-                  className="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  className="flex min-h-[44px] items-center rounded-lg px-3 py-1.5 text-sm font-medium text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 >
                   Skip
                 </button>
@@ -86,14 +86,14 @@ export function OnboardingWizard() {
               {currentIndex > 0 && !isLast && (
                 <button
                   onClick={prevStep}
-                  className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
+                  className="flex min-h-[44px] items-center rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
                 >
                   Back
                 </button>
               )}
               <button
                 onClick={isLast ? complete : nextStep}
-                className="rounded-lg bg-brand-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700 transition-colors"
+                className="flex min-h-[44px] items-center rounded-lg bg-brand-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700 transition-colors"
               >
                 {isLast ? 'Get Started' : 'Continue'}
               </button>

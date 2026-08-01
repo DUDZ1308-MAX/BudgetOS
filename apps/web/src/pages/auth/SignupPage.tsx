@@ -79,7 +79,7 @@ export function SignupPage() {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+          className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm min-h-[44px] focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
           placeholder="you@example.com"
         />
       </div>
@@ -94,7 +94,7 @@ export function SignupPage() {
           required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+          className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm min-h-[44px] focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
         />
       </div>
 
@@ -108,17 +108,17 @@ export function SignupPage() {
           required
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
-          className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+          className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm min-h-[44px] focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
         />
       </div>
 
-      <div className="flex items-start gap-2">
+      <div className="flex min-h-[44px] items-start gap-2.5">
         <input
           id="accept-terms"
           type="checkbox"
           checked={acceptedTerms}
           onChange={(e) => setAcceptedTerms(e.target.checked)}
-          className="mt-1 h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 dark:border-slate-600"
+          className="mt-1 h-5 w-5 shrink-0 rounded border-slate-300 text-brand-600 focus:ring-brand-500 dark:border-slate-600"
         />
         <label htmlFor="accept-terms" className="text-xs text-slate-600 dark:text-slate-400">
           I agree to the{' '}

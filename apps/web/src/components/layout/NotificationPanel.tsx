@@ -119,7 +119,7 @@ export function NotificationPanel({ open, onClose }: NotificationPanelProps) {
           </button>
         </div>
 
-        <div className="max-h-80 overflow-y-auto overscroll-contain">
+        <div className="max-h-[min(20rem,calc(100dvh-6rem))] overflow-y-auto overscroll-contain">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">

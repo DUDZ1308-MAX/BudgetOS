@@ -30,7 +30,7 @@ export function WhatsNewModal() {
     <div id="whats-new-modal">
       <dialog
         id="whats-new-dialog"
-        className="fixed inset-0 z-50 m-auto w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-0 shadow-2xl backdrop:bg-black/40 backdrop:backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900"
+        className="fixed inset-0 z-50 m-auto w-full max-w-lg max-h-[90dvh] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-0 shadow-2xl backdrop:bg-black/40 backdrop:backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900"
         onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
       >
         <div className="p-6">

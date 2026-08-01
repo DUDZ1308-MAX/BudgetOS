@@ -194,21 +194,21 @@ export function AiCoachCard() {
         {/* Quick Stats */}
         {summary && (
           <div className="mt-auto grid grid-cols-3 gap-2 pt-3 border-t" style={{ borderColor: 'var(--border-default)' }}>
-            <div className="text-center">
+            <div className="min-w-0 text-center">
               <div className="text-xs" style={{ color: 'var(--text-muted)' }}>Cash Flow</div>
-              <div className="text-xs font-bold tabular-nums" style={{ color: summary.cashFlow >= 0 ? 'var(--status-success)' : 'var(--status-error)' }}>
+              <div className="truncate text-xs font-bold tabular-nums" style={{ color: summary.cashFlow >= 0 ? 'var(--status-success)' : 'var(--status-error)' }}>
                 {fmt(summary.cashFlow)}
               </div>
             </div>
-            <div className="text-center">
+            <div className="min-w-0 text-center">
               <div className="text-xs" style={{ color: 'var(--text-muted)' }}>Goals</div>
-              <div className="text-xs font-bold tabular-nums" style={{ color: 'var(--text-primary)' }}>
+              <div className="truncate text-xs font-bold tabular-nums" style={{ color: 'var(--text-primary)' }}>
                 {summary.activeGoals}
               </div>
             </div>
-            <div className="text-center">
+            <div className="min-w-0 text-center">
               <div className="text-xs" style={{ color: 'var(--text-muted)' }}>Alerts</div>
-              <div className="text-xs font-bold tabular-nums" style={{ color: coach.warnings.length > 0 ? 'var(--status-warning)' : 'var(--status-success)' }}>
+              <div className="truncate text-xs font-bold tabular-nums" style={{ color: coach.warnings.length > 0 ? 'var(--status-warning)' : 'var(--status-success)' }}>
                 {coach.warnings.length}
               </div>
             </div>

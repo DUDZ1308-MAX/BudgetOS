@@ -73,6 +73,19 @@ export const RecurringRow = memo(function RecurringRow({
               <span className="hidden sm:inline">&middot;</span>
               <span className="hidden sm:inline">{accountName}</span>
             </div>
+            <div className="mt-1 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 sm:hidden">
+              <span className="font-medium text-slate-700 dark:text-slate-300">Next</span>
+              <span>{new Date(recurring.next_run).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+              {recurring.last_run && (
+                <>
+                  <span>&middot;</span>
+                  <span className="font-medium text-slate-700 dark:text-slate-300">Last</span>
+                  <span>{new Date(recurring.last_run).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                </>
+              )}
+              <span>&middot;</span>
+              <span>Auto: {recurring.auto_post ? 'Yes' : 'No'}</span>
+            </div>
           </div>
 
           <div className="hidden sm:flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">

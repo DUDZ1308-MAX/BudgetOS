@@ -93,7 +93,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   );
 
   const footerContent = (
-    <div className="space-y-1 border-t border-slate-200 p-3 dark:border-slate-800">
+    <div className="space-y-1 border-t border-slate-200 p-3 dark:border-slate-800" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.75rem)' }}>
       <button
         onClick={toggle}
         aria-label="Toggle dark mode"
@@ -123,7 +123,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       </aside>
       {/* Mobile drawer */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex h-full w-64 flex-col overflow-hidden border-r border-slate-200 bg-white shadow-2xl transition-transform duration-300 ease-out dark:border-slate-800 dark:bg-slate-900 md:hidden ${
+        className={`fixed inset-y-0 left-0 z-[70] flex h-full w-64 flex-col overflow-hidden border-r border-slate-200 bg-white shadow-2xl transition-transform duration-300 ease-out dark:border-slate-800 dark:bg-slate-900 md:hidden ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >

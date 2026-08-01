@@ -76,7 +76,7 @@ export function FeedbackWidget() {
     <>
       <button
         onClick={() => setOpen(!isOpen)}
-        className="fixed right-4 bottom-20 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-brand-600 text-white shadow-lg hover:bg-brand-700 transition-all hover:scale-105"
+        className="fixed bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-brand-600 text-white shadow-lg hover:bg-brand-700 transition-all hover:scale-105 md:bottom-6"
         aria-label="Open feedback"
       >
         <IconFeedback className="h-5 w-5" />
@@ -85,12 +85,12 @@ export function FeedbackWidget() {
       {isOpen && (
         <>
           <div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm" onClick={() => setOpen(false)} />
-          <div className="fixed bottom-24 right-4 z-50 w-96 max-w-[calc(100vw-2rem)] rounded-2xl border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900">
+          <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] right-4 z-50 w-96 max-w-[calc(100vw-2rem)] max-h-[calc(100dvh-6rem)] overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900 md:bottom-24">
             <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
               <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
                 {submitted ? 'Thanks!' : 'Send Feedback'}
               </h3>
-              <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+              <button onClick={() => setOpen(false)} aria-label="Close feedback" className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300">
                 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
               </button>
             </div>

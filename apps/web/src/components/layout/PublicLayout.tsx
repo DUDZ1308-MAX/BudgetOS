@@ -6,7 +6,7 @@ export function PublicLayout() {
       <nav className="fixed top-0 z-40 flex h-16 w-full items-center justify-between border-b border-slate-200 bg-white/80 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/80 px-4 md:px-8">
         <Link to="/" className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
           <img src="/logo.png" alt="MyBudgetOS" className="h-6 w-6 rounded-md object-contain" />
-          MyBudgetOS
+          <span className="hidden sm:inline">MyBudgetOS</span>
         </Link>
         <div className="flex items-center gap-4">
           <Link to="/auth/login" className="text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">
