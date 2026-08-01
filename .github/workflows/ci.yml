@@ -60,10 +60,10 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
       - run: npm ci
+      - name: Create test env from example
+        working-directory: apps/web
+        run: cp .env.example .env
       - run: npm run test -w @budgetos/web
-        env:
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || '' }}
-          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY || '' }}
 
   build:
     name: Build
