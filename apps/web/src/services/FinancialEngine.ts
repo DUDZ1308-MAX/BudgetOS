@@ -1037,6 +1037,9 @@ export const FinancialEngine = {
           type: r.type === 'income' ? 'income' : 'expense',
           category: 'recurring',
           source: 'recurring',
+          status: 'projected',
+          isForecast: true,
+          sourceId: r.id,
           frequency: r.frequency,
         });
       }
@@ -1056,6 +1059,9 @@ export const FinancialEngine = {
           type: 'mortgage' as const,
           category: 'mortgage',
           source: 'mortgage',
+          status: 'projected',
+          isForecast: true,
+          sourceId: m.id,
           frequency: m.paymentFrequency,
           mortgageId: m.id,
         });
@@ -1076,6 +1082,9 @@ export const FinancialEngine = {
           type: 'contribution' as const,
           category: 'savings',
           source: 'savings',
+          status: 'projected',
+          isForecast: true,
+          sourceId: g.id,
           goalId: g.id,
         });
       }
@@ -1094,6 +1103,9 @@ export const FinancialEngine = {
             type: Number(t.amount) >= 0 ? 'income' : 'expense',
             category: categoryMap.get(t.category_id ?? '') ?? 'Uncategorized',
             source: t.recurring_id ? 'recurring' : 'transaction',
+            status: 'actual',
+            isForecast: false,
+            sourceId: t.id,
             accountName: accountMap.get(t.account_id ?? '') ?? undefined,
             categoryId: t.category_id ?? undefined,
           });

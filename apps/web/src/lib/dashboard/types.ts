@@ -129,6 +129,9 @@ export interface CalendarEvent {
   type: 'income' | 'expense' | 'mortgage' | 'contribution' | 'transfer' | 'bill' | 'payment';
   category: string;
   source: 'recurring' | 'mortgage' | 'savings' | 'transaction' | 'manual';
+  status?: 'actual' | 'projected';
+  isForecast?: boolean;
+  sourceId?: string;
   frequency?: string;
   notes?: string;
   accountName?: string;

@@ -24,7 +24,9 @@ import { PremiumRecommendationsCard } from './components/PremiumRecommendationsC
 import { PremiumProjectionsCard } from './components/PremiumProjectionsCard';
 import { PremiumInsightsCard } from './components/PremiumInsightsCard';
 import { RecentTransactionsCard } from './components/RecentTransactionsCard';
+import { CashFlowForecastCard } from './components/CashFlowForecastCard';
 import { AiCoachCard } from '@/features/ai-coach/components/AiCoachCard';
+import { AICoachInsightsCard } from '@/features/ai-coach/components/AICoachInsightsCard';
 import type { DashboardInsight, DashboardUpcomingItem } from '@/lib/dashboard/types';
 
 function getGreeting(): string {
@@ -240,6 +242,7 @@ export function DashboardPage() {
           href="/reports"
         />
         <AiCoachCard />
+        <AICoachInsightsCard />
       </motion.div>
 
       {/* Section 1c: Insights */}
@@ -287,7 +290,10 @@ export function DashboardPage() {
         <div className="lg:col-span-2">
           <UpcomingSection items={d.upcoming} isLoading={isLoading} onItemClick={handleUpcomingItemClick} />
         </div>
-        <QuickActionsPanel />
+        <div className="flex flex-col gap-4 sm:gap-5 lg:gap-6">
+          <CashFlowForecastCard />
+          <QuickActionsPanel />
+        </div>
       </motion.div>
 
       {/* Section 4b: Recent Transactions */}

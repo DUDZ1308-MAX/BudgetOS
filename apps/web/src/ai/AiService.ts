@@ -1,6 +1,8 @@
 import type { AiProviderName, AiProviderConfig, AiContext, AiMessage, ChatSession } from '@/ai/types';
 import { getAiProvider } from '@/ai/AiProvider';
 import { buildSystemPrompt, buildUserPrompt, buildConversationContext, buildInitialPrompt } from '@/ai/PromptBuilder';
+import { buildCoachSystemPrompt, buildCoachUserPrompt } from '@/services/ai/coach/prompt';
+import type { CoachRequest } from '@/services/ai/coach/types';
 import { ChatHistory } from '@/ai/ChatHistory';
 
 export class AiService {
@@ -25,6 +27,61 @@ export class AiService {
   ): Promise<string> {
     const systemPrompt = buildSystemPrompt(context);
     const userPrompt = buildUserPrompt(userMessage, context);
+
+    const provider = getAiProvider(this.providerName);
+
+    session.messages.push({ role: 'user', content: userMessage });
+    ChatHistory.addMessage(session.id, { role: 'user', content: userMessage });
+
+    const messages: AiMessage[] = [
+      { role: 'system', content: systemPrompt },
+      ...buildConversationContext(session).slice(-30),
+      { role: 'user', content: userPrompt },
+    ];
+
+    if (this.config.streaming && provider.stream) {
+      let fullContent = '';
+      const stream = provider.stream(messages, this.config);
+
+      for await (const chunk of stream) {
+        fullContent += chunk.content;
+        onStream?.(chunk.content);
+      }
+
+      session.messages.push({ role: 'assistant', content: fullContent });
+      ChatHistory.addMessage(session.id, { role: 'assistant', content: fullContent });
+
+      if (session.title === 'New Chat' && fullContent.length > 0) {
+        const title = userMessage.length > 50 ? userMessage.slice(0, 50) + '...' : userMessage;
+        ChatHistory.updateTitle(session.id, title);
+        session.title = title;
+      }
+
+      return fullContent;
+    }
+
+    const response = await provider.chat(messages, this.config);
+
+    session.messages.push({ role: 'assistant', content: response.content });
+    ChatHistory.addMessage(session.id, { role: 'assistant', content: response.content });
+
+    if (session.title === 'New Chat' && response.content.length > 0) {
+      const title = userMessage.length > 50 ? userMessage.slice(0, 50) + '...' : userMessage;
+      ChatHistory.updateTitle(session.id, title);
+      session.title = title;
+    }
+
+    return response.content;
+  }
+
+  async sendCoachMessage(
+    session: ChatSession,
+    userMessage: string,
+    request: CoachRequest,
+    onStream?: (chunk: string) => void,
+  ): Promise<string> {
+    const systemPrompt = buildCoachSystemPrompt(request.context, request.unavailableSources);
+    const userPrompt = buildCoachUserPrompt(request);
 
     const provider = getAiProvider(this.providerName);
 

@@ -9,6 +9,7 @@ import { generateEnhancedInsights, computeCashFlowForecast } from '@/ai/InsightE
 import { generateRecommendations } from '@/ai/RecommendationEngine';
 import { generateForecasts } from '@/ai/ForecastEngine';
 import { buildAiContext } from '@/services/ai/FinanceContext';
+import { buildCoachRequest } from '@/services/ai/coach/service';
 import { ChatWindow } from '@/components/ai/ChatWindow';
 import { SuggestionChips } from '@/components/ai/SuggestionChips';
 import { InsightCards } from '@/components/ai/InsightCards';
@@ -66,7 +67,8 @@ export function AiPage() {
 
   const handleSend = useCallback(async (message?: string) => {
     const text = (message ?? input).trim();
-    if (!text || !context || !aiServiceRef.current) return;
+    if (!text || !aiServiceRef.current) return;
+    if (!user && !context) return;
 
     if (isExhausted) return;
 
@@ -75,9 +77,18 @@ export function AiPage() {
     track('ai_request');
 
     try {
-      await aiServiceRef.current.sendMessage(session, text, context, (_chunk) => {
-        // streaming - could update as we go
-      });
+      if (user) {
+        // AI Financial Coach: deterministic intent + tiered snapshot + engine
+        // computed what-if, then the provider formats an accurate answer.
+        const { request } = await buildCoachRequest(user.id, text);
+        await aiServiceRef.current.sendCoachMessage(session, text, request, (_chunk) => {
+          // streaming — ChatWindow reflects messages after completion
+        });
+      } else if (context) {
+        await aiServiceRef.current.sendMessage(session, text, context, (_chunk) => {
+          // streaming — ChatWindow reflects messages after completion
+        });
+      }
       setSession({ ...session });
       setSessions(ChatHistory.getAllSessions());
     } catch (err) {
@@ -88,7 +99,7 @@ export function AiPage() {
     } finally {
       setIsTyping(false);
     }
-  }, [input, context, session, isExhausted, track]);
+  }, [input, context, session, isExhausted, track, user]);
 
   const handleNewChat = useCallback(() => {
     const newSession = ChatHistory.createSession();
@@ -275,12 +286,12 @@ export function AiPage() {
                         }
                       }}
                       placeholder="Ask about your finances..."
-                      disabled={isTyping || !context}
+                      disabled={isTyping || (!user && !context)}
                       className="flex-1 min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                     />
                     <button
                       onClick={() => handleSend()}
-                      disabled={!input.trim() || isTyping || !context}
+                      disabled={!input.trim() || isTyping || (!user && !context)}
                       className="shrink-0 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
                     >
                       Send
@@ -456,12 +467,12 @@ export function AiPage() {
                         }
                       }}
                       placeholder="Ask about your finances..."
-                      disabled={isTyping || !context}
+                      disabled={isTyping || (!user && !context)}
                       className="flex-1 min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                     />
                     <button
                       onClick={() => handleSend()}
-                      disabled={!input.trim() || isTyping || !context}
+                      disabled={!input.trim() || isTyping || (!user && !context)}
                       className="shrink-0 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
                     >
                       Send

@@ -12,12 +12,15 @@ const typeColors: Record<string, string> = {
 
 export function EventChip({ event, compact }: { event: CalendarEvent; compact?: boolean }) {
   const colors = typeColors[event.type] ?? 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+  const projected = event.status === 'projected';
 
   if (compact) {
     return (
       <div
-        className={`truncate rounded px-1 py-0.5 text-[10px] font-medium border ${colors} cursor-pointer hover:opacity-80 transition-opacity`}
-        title={`${event.title}: $${event.amount.toFixed(2)}`}
+        className={`truncate rounded px-1 py-0.5 text-[10px] font-medium border ${colors} ${
+          projected ? 'border-dashed opacity-80' : ''
+        } cursor-pointer hover:opacity-80 transition-opacity`}
+        title={`${event.title}: $${event.amount.toFixed(2)}${projected ? ' (projected)' : ''}`}
       >
         {event.title}
       </div>
@@ -26,10 +29,19 @@ export function EventChip({ event, compact }: { event: CalendarEvent; compact?: 
 
   return (
     <div
-      className={`flex items-center justify-between rounded-md px-2 py-1.5 text-xs border ${colors} cursor-pointer hover:opacity-80 transition-opacity`}
-      title={`${event.title}: $${event.amount.toFixed(2)}`}
+      className={`flex items-center justify-between rounded-md px-2 py-1.5 text-xs border ${colors} ${
+        projected ? 'border-dashed opacity-90' : ''
+      } cursor-pointer hover:opacity-80 transition-opacity`}
+      title={`${event.title}: $${event.amount.toFixed(2)}${projected ? ' (projected)' : ''}`}
     >
-      <span className="truncate font-medium">{event.title}</span>
+      <span className="truncate font-medium">
+        {event.title}
+        {projected && (
+          <span className="ml-1.5 rounded bg-white/10 px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-gray-300">
+            projected
+          </span>
+        )}
+      </span>
       <span className="tabular-nums ml-2 font-semibold">${event.amount.toFixed(0)}</span>
     </div>
   );

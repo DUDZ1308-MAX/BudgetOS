@@ -11,6 +11,7 @@ const suggestionGroups = [
     label: 'Planning',
     items: [
       'Can I afford a $2,000 vacation?',
+      'Will I run out of money in the next 60 days?',
       'How long until I reach my savings goal?',
       'What happens if I pay an extra $250 toward my mortgage?',
     ],
@@ -19,7 +20,8 @@ const suggestionGroups = [
     label: 'Insights',
     items: [
       'Why is my budget health score low?',
-      'Generate a monthly financial summary',
+      'Am I on track for retirement?',
+      'What is my financial health score?',
     ],
   },
 ];
