@@ -45,11 +45,11 @@ export function AppShell() {
           onClick={() => setSidebarOpen(false)}
         />
       )}
-      <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col min-w-0">
         <DemoBanner />
         <AnnouncementBanner />
         <Header onMenuClick={() => setSidebarOpen(true)} />
-        <main id="main-content" role="main" className="flex-1 overflow-y-auto overflow-x-hidden p-3 pb-24 sm:p-4 md:p-6 md:pb-6">
+        <main id="main-content" role="main" className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-3 pb-24 sm:p-4 md:p-6 md:pb-6">
           <NetworkStatus />
           <div className="mx-auto max-w-[1400px] xl:max-w-[1600px] 2xl:max-w-[1800px]">
             <Outlet />

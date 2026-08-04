@@ -10,10 +10,10 @@ export function AnnouncementBanner() {
   const latest = unread[0]!;
 
   return (
-    <div className="flex items-center justify-between gap-3 bg-indigo-500/10 px-4 py-2 text-sm border-b border-indigo-500/20">
+    <div className="flex items-center justify-between gap-3 bg-indigo-500/10 px-4 py-2 text-sm border-b border-indigo-500/20 min-w-0">
       <div className="flex items-center gap-2 min-w-0">
         <IconMegaphone className="h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
-        <span className="truncate text-indigo-700 dark:text-indigo-300">
+        <span className="truncate min-w-0 text-indigo-700 dark:text-indigo-300">
           {latest.title}
         </span>
         <span className="hidden sm:inline truncate text-indigo-500 dark:text-indigo-400">
