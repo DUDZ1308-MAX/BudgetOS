@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth';
 import { useAiSettingsStore } from '@/stores/aiSettings';
 import { useUsageStore } from '@/stores/usage';
@@ -23,7 +24,7 @@ import { logger } from '@/core/logger';
 type AiTab = 'chat' | 'insights' | 'forecasts' | 'recommendations';
 
 export function AiPage() {
-  const { user } = useAuthStore();
+  const { user, isLoading: authLoading } = useAuthStore();
   const { provider, config, initialized, load } = useAiSettingsStore();
   const track = useUsageStore((s) => s.track);
   const { isExhausted, remaining, aiUsage, aiLimit } = useAiUsageGuard();
@@ -138,6 +139,36 @@ export function AiPage() {
   const recommendations = context ? generateRecommendations(context) : [];
 
   const pendingCount = sessions.filter((s) => s.id !== session.id).length;
+
+  if (!authLoading && !user) {
+    return (
+      <div className="flex h-[calc(100dvh-6rem)] items-center justify-center p-4">
+        <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-slate-900">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-900/30">
+            <span className="text-xl">💬</span>
+          </div>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">AI Financial Coach</h2>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            Sign in to get personalized financial insights, spending analysis, and budget recommendations powered by AI.
+          </p>
+          <div className="mt-6 flex justify-center gap-3">
+            <Link
+              to="/auth/login"
+              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
+            >
+              Sign In
+            </Link>
+            <Link
+              to="/auth/signup"
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
+            >
+              Create Account
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
