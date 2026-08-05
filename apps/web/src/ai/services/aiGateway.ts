@@ -1,7 +1,7 @@
 import type { AiMessage, AiProviderName, AiResponse } from '@/ai/types';
 import { supabase } from '@/lib/supabase';
 
-export type GatewayProvider = 'openai' | 'deepseek' | 'gemini';
+export type GatewayProvider = 'openai' | 'deepseek' | 'gemini' | 'groq';
 
 interface GatewayChatRequest {
   messages: AiMessage[];
@@ -12,21 +12,71 @@ interface GatewayChatRequest {
   stream?: boolean;
 }
 
+export const GATEWAY_REQUEST_TIMEOUT_MS = 60_000;
+
+const NETWORK_ERROR_MESSAGE = 'Unable to reach the AI service. Please check your connection and try again.';
+const TIMEOUT_ERROR_MESSAGE = 'The AI service took too long to respond. Please try again.';
+
 export class AiGatewayError extends Error {
   code: string;
   status?: number;
+  retryAfter?: number;
 
-  constructor(message: string, code: string, status?: number) {
+  constructor(message: string, code: string, status?: number, retryAfter?: number) {
     super(message);
     this.name = 'AiGatewayError';
     this.code = code;
     this.status = status;
+    this.retryAfter = retryAfter;
   }
+}
+
+const RATE_LIMIT_MESSAGE = 'AI Copilot is temporarily rate-limited. Please try again shortly.';
+const AUTH_MESSAGE = 'Not authenticated. Please sign in.';
+
+interface GatewayErrorBody {
+  message: string;
+  retryAfter?: number;
+}
+
+async function readGatewayError(response: Response): Promise<GatewayErrorBody> {
+  const data = (await response
+    .json()
+    .catch(() => null)) as { error?: string; message?: string; retryAfter?: number } | null;
+  const retryAfter =
+    typeof data?.retryAfter === 'number' && data.retryAfter >= 0 ? data.retryAfter : undefined;
+  const message = data?.error ?? data?.message ?? `Gateway error: ${response.status}`;
+  return { message, retryAfter };
+}
+
+function toGatewayError(response: Response, body: GatewayErrorBody): AiGatewayError {
+  if (response.status === 429) {
+    return new AiGatewayError(RATE_LIMIT_MESSAGE, 'RATE_LIMIT', 429, body.retryAfter);
+  }
+  if (response.status === 401) {
+    return new AiGatewayError(AUTH_MESSAGE, 'AUTH', 401);
+  }
+  return new AiGatewayError(body.message || `Gateway error: ${response.status}`, 'GATEWAY', response.status);
 }
 
 function getGatewayUrl(): string {
   const baseUrl = import.meta.env.VITE_SUPABASE_URL;
   return `${baseUrl}/functions/v1/ai-gateway`;
+}
+
+async function fetchWithTimeout(input: string, init: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), GATEWAY_REQUEST_TIMEOUT_MS);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } catch (err) {
+    if (controller.signal.aborted) {
+      throw new AiGatewayError(TIMEOUT_ERROR_MESSAGE, 'TIMEOUT');
+    }
+    throw new AiGatewayError(NETWORK_ERROR_MESSAGE, 'NETWORK');
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
@@ -66,19 +116,14 @@ export async function gatewayChat(request: GatewayChatRequest): Promise<AiRespon
     stream: false,
   };
 
-  const response = await fetch(getGatewayUrl(), {
+  const response = await fetchWithTimeout(getGatewayUrl(), {
     method: 'POST',
     headers,
     body: JSON.stringify(body),
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
-    throw new AiGatewayError(
-      error.error ?? `Gateway error: ${response.status}`,
-      'GATEWAY',
-      response.status,
-    );
+    throw toGatewayError(response, await readGatewayError(response));
   }
 
   const data = await response.json();
@@ -105,19 +150,14 @@ export async function* gatewayStream(
     stream: true,
   };
 
-  const response = await fetch(getGatewayUrl(), {
+  const response = await fetchWithTimeout(getGatewayUrl(), {
     method: 'POST',
     headers,
     body: JSON.stringify(body),
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
-    throw new AiGatewayError(
-      error.error ?? `Gateway error: ${response.status}`,
-      'GATEWAY',
-      response.status,
-    );
+    throw toGatewayError(response, await readGatewayError(response));
   }
 
   const reader = response.body?.getReader();
@@ -129,10 +169,15 @@ export async function* gatewayStream(
 
   try {
     while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+      let chunk: ReadableStreamReadResult<Uint8Array>;
+      try {
+        chunk = await reader.read();
+      } catch {
+        throw new AiGatewayError(NETWORK_ERROR_MESSAGE, 'NETWORK');
+      }
+      if (chunk.done) break;
 
-      buffer += decoder.decode(value, { stream: true });
+      buffer += decoder.decode(chunk.value, { stream: true });
       const lines = buffer.split('\n');
       buffer = lines.pop() ?? '';
 
@@ -178,7 +223,7 @@ export async function testGatewayConnection(
         return { success: false, message: 'Not authenticated. Please sign in.' };
       }
       if (err.status === 429) {
-        return { success: false, message: 'Rate limited. Please wait and try again.' };
+        return { success: false, message: RATE_LIMIT_MESSAGE };
       }
       return { success: false, message: err.message };
     }

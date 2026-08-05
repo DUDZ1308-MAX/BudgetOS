@@ -10,6 +10,7 @@ const STORAGE_KEY_MODELS = 'budgetos_ai_models';
 const GATEWAY_URL = 'https://lhkytairslljxlkguhsp.supabase.co/functions/v1/ai-gateway';
 
 const DEFAULT_PROVIDER_SETUPS: Record<AiProviderName, ProviderSetup> = {
+  groq: { model: 'llama-3.3-70b-versatile', baseUrl: GATEWAY_URL },
   gemini: { model: 'gemini-2.0-flash', baseUrl: GATEWAY_URL },
   openai: { model: 'gpt-4o-mini', baseUrl: GATEWAY_URL },
   deepseek: { model: 'deepseek-chat', baseUrl: GATEWAY_URL },
@@ -56,14 +57,14 @@ interface AiSettingsState {
 }
 
 export const useAiSettingsStore = create<AiSettingsState>((set, get) => ({
-  provider: 'gemini',
-  config: getDefaultConfig('gemini'),
+  provider: 'groq',
+  config: getDefaultConfig('groq'),
   providers: getSupportedProviders(),
   initialized: false,
 
   providerSetups: { ...DEFAULT_PROVIDER_SETUPS },
-  connectionStatus: { gemini: 'unknown', openai: 'unknown', deepseek: 'unknown', ollama: 'unknown' },
-  lastTested: { gemini: null, openai: null, deepseek: null, ollama: null },
+  connectionStatus: { groq: 'unknown', gemini: 'unknown', openai: 'unknown', deepseek: 'unknown', ollama: 'unknown' },
+  lastTested: { groq: null, gemini: null, openai: null, deepseek: null, ollama: null },
   testingProvider: null,
 
   setProvider: (name) => {
@@ -142,16 +143,16 @@ export const useAiSettingsStore = create<AiSettingsState>((set, get) => ({
   },
 
   load: () => {
-    const activeProvider = loadFromStorage<AiProviderName>(STORAGE_KEY_ACTIVE, 'gemini');
+    const activeProvider = loadFromStorage<AiProviderName>(STORAGE_KEY_ACTIVE, 'groq');
     const savedStatus = loadFromStorage<Record<AiProviderName, ConnectionStatus>>(STORAGE_KEY_STATUS, {
-      gemini: 'unknown', openai: 'unknown', deepseek: 'unknown', ollama: 'unknown',
+      groq: 'unknown', gemini: 'unknown', openai: 'unknown', deepseek: 'unknown', ollama: 'unknown',
     });
     const savedTested = loadFromStorage<Record<AiProviderName, string | null>>(STORAGE_KEY_TESTED, {
-      gemini: null, openai: null, deepseek: null, ollama: null,
+      groq: null, gemini: null, openai: null, deepseek: null, ollama: null,
     });
     const savedModels = loadFromStorage<Record<string, string>>(STORAGE_KEY_MODELS, {});
 
-    const provider = getSupportedProviders().includes(activeProvider) ? activeProvider : 'gemini';
+    const provider = getSupportedProviders().includes(activeProvider) ? activeProvider : 'groq';
 
     const setups = { ...DEFAULT_PROVIDER_SETUPS };
     for (const [key, model] of Object.entries(savedModels)) {
@@ -188,11 +189,11 @@ export const useAiSettingsStore = create<AiSettingsState>((set, get) => ({
       // ignore
     }
     set({
-      provider: 'gemini',
-      config: getDefaultConfig('gemini'),
+      provider: 'groq',
+      config: getDefaultConfig('groq'),
       providerSetups: { ...DEFAULT_PROVIDER_SETUPS },
-      connectionStatus: { gemini: 'unknown', openai: 'unknown', deepseek: 'unknown', ollama: 'unknown' },
-      lastTested: { gemini: null, openai: null, deepseek: null, ollama: null },
+      connectionStatus: { groq: 'unknown', gemini: 'unknown', openai: 'unknown', deepseek: 'unknown', ollama: 'unknown' },
+      lastTested: { groq: null, gemini: null, openai: null, deepseek: null, ollama: null },
     });
   },
 }));

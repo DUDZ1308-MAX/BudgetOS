@@ -6,6 +6,7 @@ import { useUsageStore } from '@/stores/usage';
 import { useAiUsageGuard } from '@/hooks/useUsageLimits';
 import { useSubscriptionStore } from '@/stores/subscription';
 import { AiService, ChatHistory } from '@/ai/AiService';
+import { AiGatewayError } from '@/ai/services/aiGateway';
 import { generateEnhancedInsights, computeCashFlowForecast } from '@/ai/InsightEngine';
 import { generateRecommendations } from '@/ai/RecommendationEngine';
 import { generateForecasts } from '@/ai/ForecastEngine';
@@ -67,6 +68,7 @@ export function AiPage() {
   }, [user]);
 
   const handleSend = useCallback(async (message?: string) => {
+    if (isTyping) return;
     const text = (message ?? input).trim();
     if (!text || !aiServiceRef.current) return;
     if (!user && !context) return;
@@ -94,13 +96,15 @@ export function AiPage() {
       setSessions(ChatHistory.getAllSessions());
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to get response';
-      session.messages.push({ role: 'assistant', content: `Error: ${errorMsg}` });
-      ChatHistory.addMessage(session.id, { role: 'assistant', content: `Error: ${errorMsg}` });
+      const isRateLimited = err instanceof AiGatewayError && err.code === 'RATE_LIMIT';
+      const content = isRateLimited ? errorMsg : `Error: ${errorMsg}`;
+      session.messages.push({ role: 'assistant', content });
+      ChatHistory.addMessage(session.id, { role: 'assistant', content });
       setSession({ ...session });
     } finally {
       setIsTyping(false);
     }
-  }, [input, context, session, isExhausted, track, user]);
+  }, [input, context, session, isExhausted, track, user, isTyping]);
 
   const handleNewChat = useCallback(() => {
     const newSession = ChatHistory.createSession();

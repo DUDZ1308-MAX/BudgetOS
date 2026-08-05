@@ -3,8 +3,10 @@ import { OpenAIProvider } from '@/ai/providers/OpenAIProvider';
 import { OllamaProvider } from '@/ai/providers/OllamaProvider';
 import { DeepSeekProvider } from '@/ai/providers/DeepSeekProvider';
 import { GeminiProvider } from '@/ai/providers/GeminiProvider';
+import { GroqProvider } from '@/ai/providers/GroqProvider';
 
 const providers: Record<AiProviderName, AiProvider> = {
+  groq: GroqProvider,
   gemini: GeminiProvider,
   openai: OpenAIProvider,
   ollama: OllamaProvider,
@@ -12,6 +14,7 @@ const providers: Record<AiProviderName, AiProvider> = {
 };
 
 const defaultConfigs: Record<AiProviderName, AiProviderConfig> = {
+  groq: { model: 'llama-3.3-70b-versatile', temperature: 0.7, maxTokens: 2048, streaming: true },
   gemini: { model: 'gemini-2.0-flash', temperature: 0.7, maxTokens: 2048, streaming: true },
   openai: { model: 'gpt-4o-mini', temperature: 0.7, maxTokens: 2048, streaming: true },
   ollama: { model: 'llama3', temperature: 0.7, maxTokens: 2048, streaming: true },

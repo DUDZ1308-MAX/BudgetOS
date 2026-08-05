@@ -7,13 +7,14 @@ interface AiSettingsPanelProps {
 }
 
 const PROVIDER_META: Record<AiProviderName, { name: string; icon: string; description: string; requiresKey: boolean }> = {
+  groq: { name: 'Groq', icon: '⚡', description: 'Fast, capable cloud AI — Llama 3.3 70B Versatile', requiresKey: true },
   gemini: { name: 'Google Gemini', icon: '✦', description: 'Fast, capable cloud AI — Gemini 2.0 Flash', requiresKey: true },
   openai: { name: 'OpenAI', icon: '⚡', description: 'Premium cloud AI — GPT-4o and more', requiresKey: true },
   deepseek: { name: 'DeepSeek', icon: '🔍', description: 'Low-cost cloud AI — competitive quality', requiresKey: true },
   ollama: { name: 'Ollama', icon: '🦙', description: 'Free & private — runs 100% locally', requiresKey: false },
 };
 
-const PROVIDER_RECOMMENDATIONS: AiProviderName[] = ['gemini', 'ollama', 'deepseek', 'openai'];
+const PROVIDER_RECOMMENDATIONS: AiProviderName[] = ['groq', 'gemini', 'ollama', 'deepseek', 'openai'];
 
 function formatTimestamp(iso: string | null): string {
   if (!iso) return '';
@@ -135,7 +136,7 @@ export function AiSettingsPanel({ onClose }: AiSettingsPanelProps) {
                     type="text"
                     value={setup.model}
                     onChange={(e) => updateProviderModel(name, e.target.value)}
-                    placeholder={name === 'gemini' ? 'gemini-2.0-flash' : name === 'openai' ? 'gpt-4o-mini' : name === 'deepseek' ? 'deepseek-chat' : 'llama3'}
+                    placeholder={name === 'groq' ? 'llama-3.3-70b-versatile' : name === 'gemini' ? 'gemini-2.0-flash' : name === 'openai' ? 'gpt-4o-mini' : name === 'deepseek' ? 'deepseek-chat' : 'llama3'}
                     className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                   />
                 </div>

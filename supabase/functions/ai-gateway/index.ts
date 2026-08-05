@@ -15,7 +15,81 @@ const PROVIDER_MODELS: Record<string, string> = {
   gemini: "gemini-2.0-flash",
   openai: "gpt-4o-mini",
   deepseek: "deepseek-chat",
+  groq: "llama-3.3-70b-versatile",
 };
+
+const PROVIDER_RATE_LIMIT_MESSAGE = "AI Copilot is temporarily rate-limited. Please try again shortly.";
+const PROVIDER_ERROR_MESSAGE = "The AI provider is temporarily unavailable. Please try again shortly.";
+
+// Bounded upstream retry for provider rate limits (429). We never retry more
+// than once and we never retry any other status. A repeated 429 is surfaced
+// to the client as-is so the user can wait and try again.
+const GEMINI_RATE_LIMIT_RETRIES = 1;
+const DEFAULT_RETRY_DELAY_MS = 2_000;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function parseRetryAfterSeconds(
+  response: Response,
+  errorBody: string,
+): number | undefined {
+  const header = response.headers.get("retry-after");
+  if (header) {
+    const seconds = parseInt(header, 10);
+    if (!Number.isNaN(seconds) && seconds >= 0) return seconds;
+  }
+
+  try {
+    const data = JSON.parse(errorBody) as {
+      error?: { details?: { "@type"?: string; retryDelay?: string }[] };
+    };
+    const retryDelay = data.error?.details?.find((d) => d.retryDelay)?.retryDelay;
+    if (retryDelay) {
+      const match = /(\d+(?:\.\d+)?)s/.exec(retryDelay);
+      if (match) {
+        const seconds = parseFloat(match[1]);
+        if (!Number.isNaN(seconds)) return Math.ceil(seconds);
+      }
+    }
+  } catch {
+    // ignore malformed provider error bodies
+  }
+
+  return undefined;
+}
+
+async function fetchGeminiWithRetry(
+  endpoint: string,
+  body: Record<string, unknown>,
+): Promise<{ response: Response; retryAfter?: number }> {
+  const doFetch = (): Promise<Response> =>
+    fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+  let response = await doFetch();
+  let retryAfter: number | undefined;
+
+  for (let attempt = 0; attempt < GEMINI_RATE_LIMIT_RETRIES && !response.ok && response.status === 429; attempt++) {
+    retryAfter = parseRetryAfterSeconds(response, await response.text().catch(() => ""));
+    await sleep(retryAfter ? retryAfter * 1_000 : DEFAULT_RETRY_DELAY_MS);
+    response = await doFetch();
+  }
+
+  if (!response.ok) {
+    if (response.status === 429) {
+      retryAfter = parseRetryAfterSeconds(response, await response.text().catch(() => ""));
+    } else {
+      await response.text().catch(() => undefined);
+    }
+  }
+
+  return { response, retryAfter };
+}
 
 interface GeminiMessage {
   role: string;
@@ -128,7 +202,10 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     if (!checkRateLimit(user.id)) {
-      return jsonResponse({ error: "Rate limit exceeded. Try again later." }, 429);
+      return jsonResponse(
+        { error: "Rate limit exceeded. Try again later.", code: "RATE_LIMIT" },
+        429,
+      );
     }
 
     const body = await req.json();
@@ -186,18 +263,16 @@ async function handleGemini(
     ? `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`
     : `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-  const upstreamResponse = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(geminiBody),
-  });
+  const { response: upstreamResponse, retryAfter } = await fetchGeminiWithRetry(endpoint, geminiBody);
 
   if (!upstreamResponse.ok) {
-    const errorBody = await upstreamResponse.text();
+    const isRateLimit = upstreamResponse.status === 429;
     return jsonResponse(
-      { error: `Gemini API error: ${upstreamResponse.status}`, details: errorBody },
+      {
+        error: isRateLimit ? PROVIDER_RATE_LIMIT_MESSAGE : PROVIDER_ERROR_MESSAGE,
+        code: isRateLimit ? "PROVIDER_RATE_LIMIT" : "PROVIDER_ERROR",
+        retryAfter: isRateLimit ? retryAfter : undefined,
+      },
       upstreamResponse.status,
     );
   }
@@ -268,6 +343,7 @@ async function handleOpenAICompatible(
   const urls: Record<string, string> = {
     openai: "https://api.openai.com/v1/chat/completions",
     deepseek: "https://api.deepseek.com/v1/chat/completions",
+    groq: "https://api.groq.com/openai/v1/chat/completions",
   };
 
   const url = urls[provider];
@@ -293,9 +369,12 @@ async function handleOpenAICompatible(
   });
 
   if (!upstreamResponse.ok) {
-    const errorBody = await upstreamResponse.text();
+    await upstreamResponse.text().catch(() => undefined);
     return jsonResponse(
-      { error: `Upstream API error: ${upstreamResponse.status}`, details: errorBody },
+      {
+        error: upstreamResponse.status === 429 ? PROVIDER_RATE_LIMIT_MESSAGE : PROVIDER_ERROR_MESSAGE,
+        code: upstreamResponse.status === 429 ? "PROVIDER_RATE_LIMIT" : "PROVIDER_ERROR",
+      },
       upstreamResponse.status,
     );
   }
