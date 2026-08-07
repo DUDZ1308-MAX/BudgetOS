@@ -60,10 +60,8 @@ Required environment variables for production (set in Vercel dashboard → Setti
 | `VITE_SUPABASE_ANON_KEY` | Supabase anonymous key |
 | `VITE_APP_URL` | Production URL (`https://budget-os-web.vercel.app`) |
 | `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key |
-| `VITE_STRIPE_PRICE_PRO_MONTH` | Stripe price ID for Pro monthly |
-| `VITE_STRIPE_PRICE_PRO_YEAR` | Stripe price ID for Pro yearly |
-| `VITE_STRIPE_PRICE_PREMIUM_MONTH` | Stripe price ID for Premium monthly |
-| `VITE_STRIPE_PRICE_PREMIUM_YEAR` | Stripe price ID for Premium yearly |
+
+Stripe secret keys, webhook secret, and Stripe Price IDs are NOT set on Vercel. They live in Supabase Edge Function secrets. See `docs/STRIPE_BILLING.md` for the full Stripe setup and deployment order.
 
 ## Manual Deployment
 

@@ -1,15 +1,14 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createAdminClient } from "../_shared/supabase.ts";
+import { decideAiRequest, type ConsumeUsageResult } from "../_shared/aiEntitlement.ts";
+import { SlidingWindowRateLimiter } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
-
-const RATE_LIMIT = parseInt(Deno.env.get("AI_RATE_LIMIT") ?? "30");
-const RATE_WINDOW_MS = 60_000;
-const requestCounts = new Map<string, { count: number; resetAt: number }>();
 
 const PROVIDER_MODELS: Record<string, string> = {
   gemini: "gemini-2.0-flash",
@@ -161,18 +160,39 @@ function jsonResponse(data: unknown, status = 200): Response {
   });
 }
 
-function checkRateLimit(userId: string): boolean {
-  const now = Date.now();
-  const entry = requestCounts.get(userId);
+// Additional protection: per-user per-minute cap, independent of the
+// monthly plan limit enforced below.
+const rateLimiter = new SlidingWindowRateLimiter(
+  parseInt(Deno.env.get("AI_RATE_LIMIT") ?? "30"),
+  60_000,
+);
 
-  if (!entry || now > entry.resetAt) {
-    requestCounts.set(userId, { count: 1, resetAt: now + RATE_WINDOW_MS });
-    return true;
-  }
+function normalizeUsageRow(data: unknown): ConsumeUsageResult | null {
+  const rows = Array.isArray(data) ? data : data ? [data] : [];
+  const row = rows[0];
+  if (!row || typeof row !== "object") return null;
+  const r = row as Record<string, unknown>;
+  return {
+    allowed: typeof r.allowed === "boolean" ? r.allowed : undefined,
+    request_count: typeof r.request_count === "number" ? r.request_count : null,
+    request_limit: typeof r.request_limit === "number" ? r.request_limit : null,
+    tier: typeof r.tier === "string" ? r.tier : null,
+  };
+}
 
-  if (entry.count >= RATE_LIMIT) return false;
-  entry.count++;
-  return true;
+function geminiTokenCount(data: Record<string, unknown>): number {
+  const usage = data.usageMetadata as
+    | { promptTokenCount?: number; candidatesTokenCount?: number }
+    | undefined;
+  return (usage?.promptTokenCount ?? 0) + (usage?.candidatesTokenCount ?? 0);
+}
+
+function openAiTokenCount(data: Record<string, unknown>): number {
+  const usage = data.usage as
+    | { total_tokens?: number; prompt_tokens?: number; completion_tokens?: number }
+    | undefined;
+  if (typeof usage?.total_tokens === "number") return usage.total_tokens;
+  return (usage?.prompt_tokens ?? 0) + (usage?.completion_tokens ?? 0);
 }
 
 serve(async (req: Request): Promise<Response> => {
@@ -201,7 +221,7 @@ serve(async (req: Request): Promise<Response> => {
       return jsonResponse({ error: "Unauthorized" }, 401);
     }
 
-    if (!checkRateLimit(user.id)) {
+    if (!rateLimiter.allow(user.id)) {
       return jsonResponse(
         { error: "Rate limit exceeded. Try again later.", code: "RATE_LIMIT" },
         429,
@@ -224,11 +244,51 @@ serve(async (req: Request): Promise<Response> => {
     const temperature = body.temperature ?? 0.7;
     const maxTokens = body.maxTokens ?? 2048;
 
-    if (provider === "gemini") {
-      return await handleGemini(messages, apiKey, resolvedModel, temperature, maxTokens, stream);
+    // Server-authoritative monthly entitlement. The tier and limit come
+    // exclusively from the database (consume_ai_usage() resolves
+    // public.user_subscriptions and atomically check-increments the
+    // ai_usage row). Client-provided tiers and usage values are never
+    // read, so a forged tier or a localStorage reset cannot grant quota.
+    const admin = createAdminClient();
+    const { data: rpcData, error: rpcError } = await admin.rpc(
+      "consume_ai_usage",
+      { p_user_id: user.id },
+    );
+
+    const decision = decideAiRequest(normalizeUsageRow(rpcData), !!rpcError);
+    if (decision.action === "deny-error") {
+      console.error("ai-gateway usage verification failed", rpcError?.message ?? "");
+      return jsonResponse(
+        { error: "AI usage could not be verified. Please try again shortly.", code: "USAGE_VERIFY_FAILED" },
+        503,
+      );
+    }
+    if (decision.action === "deny-limit") {
+      return jsonResponse(
+        {
+          error: `You've reached your monthly AI request limit (${decision.requestLimit}).`,
+          code: "AI_USAGE_LIMIT",
+          limit: decision.requestLimit,
+        },
+        429,
+      );
     }
 
-    return await handleOpenAICompatible(provider, messages, apiKey, resolvedModel, temperature, maxTokens, stream);
+    // Best-effort token accounting after a successful non-stream
+    // provider response. Informational only; never used to enforce.
+    const recordTokens = (tokenCount: number): void => {
+      if (!tokenCount || !Number.isFinite(tokenCount)) return;
+      admin.rpc("add_ai_usage_tokens", {
+        p_user_id: user.id,
+        p_tokens: Math.round(tokenCount),
+      }).catch(() => {});
+    };
+
+    if (provider === "gemini") {
+      return await handleGemini(messages, apiKey, resolvedModel, temperature, maxTokens, stream, recordTokens);
+    }
+
+    return await handleOpenAICompatible(provider, messages, apiKey, resolvedModel, temperature, maxTokens, stream, recordTokens);
   } catch (err) {
     return jsonResponse(
       { error: err instanceof Error ? err.message : "Internal server error" },
@@ -244,6 +304,7 @@ async function handleGemini(
   temperature: number,
   maxTokens: number,
   stream: boolean,
+  recordTokens: (tokenCount: number) => void,
 ): Promise<Response> {
   const { systemInstruction, contents } = convertToGeminiMessages(messages);
 
@@ -328,6 +389,7 @@ async function handleGemini(
   }
 
   const data = await upstreamResponse.json();
+  recordTokens(geminiTokenCount(data));
   return jsonResponse(geminiResponseToOpenAI(data, model));
 }
 
@@ -339,6 +401,7 @@ async function handleOpenAICompatible(
   temperature: number,
   maxTokens: number,
   stream: boolean,
+  recordTokens: (tokenCount: number) => void,
 ): Promise<Response> {
   const urls: Record<string, string> = {
     openai: "https://api.openai.com/v1/chat/completions",
@@ -392,5 +455,6 @@ async function handleOpenAICompatible(
   }
 
   const data = await upstreamResponse.json();
+  recordTokens(openAiTokenCount(data));
   return jsonResponse(data);
 }

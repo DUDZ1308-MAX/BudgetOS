@@ -1,10 +1,17 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useSubscriptionStore } from '@/stores/subscription';
 import { useUsageStore } from '@/stores/usage';
 import { getPlan } from '@/billing/pricingPlans';
 import { SubscriptionService } from '@/billing/subscriptionService';
 import { getUsageByAction } from '@/billing/usageTracker';
+import { canProcessPayments } from '@/billing/stripe/stripeSafety';
+import { checkoutConfirmationForTier } from '@/billing/stripe/checkoutConfirmation';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+
+type CheckoutStatus = null | 'processing' | 'success' | 'canceled' | 'confirming';
+
+const CHECKOUT_CONFIRM_ATTEMPTS = 6;
+const CHECKOUT_CONFIRM_DELAY_MS = 3000;
 
 export function BillingPage() {
   const { tier, status, interval, cancelAtPeriodEnd, currentPeriodEnd, trialEnd } = useSubscriptionStore();
@@ -13,16 +20,60 @@ export function BillingPage() {
   const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [checkoutStatus, setCheckoutStatus] = useState<CheckoutStatus>(null);
+
+  const paymentsAvailable = canProcessPayments().allowed;
+  const checkoutParam = searchParams.get('checkout');
+
+  // After returning from Stripe Checkout, only show the success message
+  // once the server confirms a paid tier (webhook-driven entitlement).
+  // Until then, show a neutral confirmation message and never claim the
+  // subscription is active.
+  const confirmCheckout = useCallback(async () => {
+    for (let attempt = 0; attempt < CHECKOUT_CONFIRM_ATTEMPTS; attempt++) {
+      try {
+        await SubscriptionService.refreshFromServer();
+      } catch {
+        // sync failures already fail the store to FREE; keep retrying
+      }
+      if (
+        checkoutConfirmationForTier(useSubscriptionStore.getState().tier) === 'active'
+      ) {
+        setCheckoutStatus('success');
+        return;
+      }
+      if (attempt < CHECKOUT_CONFIRM_ATTEMPTS - 1) {
+        await new Promise((resolve) => setTimeout(resolve, CHECKOUT_CONFIRM_DELAY_MS));
+      }
+    }
+    setCheckoutStatus('confirming');
+  }, []);
+
+  useEffect(() => {
+    if (checkoutParam === 'success') {
+      setCheckoutStatus('processing');
+      confirmCheckout();
+    } else if (checkoutParam === 'canceled') {
+      setCheckoutStatus('canceled');
+    }
+  }, [checkoutParam, confirmCheckout]);
+
+  // If the entitlement lands after the retry window (periodic sync),
+  // flip the banner to active without claiming access before then.
+  useEffect(() => {
+    if (checkoutStatus === 'confirming' && tier !== 'free') {
+      setCheckoutStatus('success');
+    }
+  }, [checkoutStatus, tier]);
 
   const plan = getPlan(tier);
   const usage = userId ? getUsageByAction(userId) : { ai_request: 0, export_csv: 0, export_pdf_excel: 0, export_json: 0 };
   const aiUsagePercent = plan.features.find((f) => f.key === 'ai_copilot')?.limit
     ? Math.min(100, Math.round((usage.ai_request / (plan.features.find((f) => f.key === 'ai_copilot')?.limit ?? 1)) * 100))
     : 0;
-  const checkoutResult = searchParams.get('checkout');
 
   const handleUpgrade = useCallback(async () => {
+    if (!paymentsAvailable) return;
     setIsLoading(true);
     setError(null);
     try {
@@ -35,9 +86,10 @@ export function BillingPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [interval]);
+  }, [interval, paymentsAvailable]);
 
   const handleManageSubscription = useCallback(async () => {
+    if (!paymentsAvailable) return;
     setIsLoading(true);
     setError(null);
     try {
@@ -50,12 +102,7 @@ export function BillingPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
-
-  const handleCancel = useCallback(async () => {
-    SubscriptionService.cancelSubscription();
-    setShowCancelConfirm(false);
-  }, []);
+  }, [paymentsAvailable]);
 
   const priceDisplay = interval === 'month'
     ? `$${plan.monthlyPrice}/mo`
@@ -73,7 +120,15 @@ export function BillingPage() {
         </button>
       </div>
 
-      {checkoutResult === 'success' && (
+      {checkoutStatus === 'processing' && (
+        <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/30">
+          <p className="text-sm font-medium text-blue-800 dark:text-blue-300">
+            Verifying your subscription…
+          </p>
+        </div>
+      )}
+
+      {checkoutStatus === 'success' && (
         <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-800 dark:bg-emerald-950/30">
           <p className="text-sm font-medium text-emerald-800 dark:text-emerald-300">
             Payment successful! Your subscription is now active.
@@ -81,9 +136,25 @@ export function BillingPage() {
         </div>
       )}
 
-      {checkoutResult === 'canceled' && (
+      {checkoutStatus === 'confirming' && (
+        <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/30">
+          <p className="text-sm font-medium text-blue-800 dark:text-blue-300">
+            Checkout completed. We&apos;re confirming your subscription…
+          </p>
+        </div>
+      )}
+
+      {checkoutStatus === 'canceled' && checkoutParam === 'canceled' && (
         <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/50">
           <p className="text-sm text-slate-600 dark:text-slate-400">Checkout was canceled. No charges were made.</p>
+        </div>
+      )}
+
+      {!paymentsAvailable && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/30">
+          <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+            Payments are currently unavailable.
+          </p>
         </div>
       )}
 
@@ -183,7 +254,7 @@ export function BillingPage() {
             </p>
             <button
               onClick={handleUpgrade}
-              disabled={isLoading}
+              disabled={isLoading || !paymentsAvailable}
               className="rounded-lg bg-brand-600 px-6 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
             >
               {isLoading ? 'Processing...' : 'Upgrade to Pro'}
@@ -193,7 +264,7 @@ export function BillingPage() {
           <div className="flex flex-col gap-2">
             <button
               onClick={handleManageSubscription}
-              disabled={isLoading}
+              disabled={isLoading || !paymentsAvailable}
               className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:text-slate-300"
             >
               {isLoading ? 'Loading...' : 'Manage Subscription'}
@@ -201,47 +272,27 @@ export function BillingPage() {
 
             {!cancelAtPeriodEnd ? (
               <button
-                onClick={() => setShowCancelConfirm(true)}
+                onClick={handleManageSubscription}
+                disabled={isLoading || !paymentsAvailable}
                 className="rounded-lg border border-red-200 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400"
               >
                 Cancel Subscription
               </button>
             ) : (
               <button
-                onClick={handleCancel}
+                onClick={handleManageSubscription}
+                disabled={isLoading || !paymentsAvailable}
                 className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300"
               >
                 Resume Subscription
               </button>
             )}
+            <p className="text-center text-xs text-slate-400">
+              Cancel or resume is managed securely through the Stripe billing portal.
+            </p>
           </div>
         )}
       </div>
-
-      {showCancelConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm" onClick={() => setShowCancelConfirm(false)}>
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
-            <h3 className="mb-2 text-lg font-bold text-slate-900 dark:text-white">Cancel Subscription?</h3>
-            <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
-              Your plan will remain active until the end of the current billing period, then you'll be downgraded to Free.
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowCancelConfirm(false)}
-                className="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300"
-              >
-                Keep Plan
-              </button>
-              <button
-                onClick={handleCancel}
-                className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

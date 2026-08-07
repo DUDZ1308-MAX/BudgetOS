@@ -44,3 +44,18 @@ file_size_limit = "50MiB"
 
 [functions.ai-gateway]
 verify_jwt = true
+
+[functions.stripe-create-checkout-session]
+verify_jwt = true
+
+[functions.stripe-customer-portal]
+verify_jwt = true
+
+[functions.stripe-get-subscription]
+verify_jwt = true
+
+# Stripe signs webhook requests itself; no user JWT is present.
+# Security is enforced by STRIPE_WEBHOOK_SECRET signature verification
+# inside the function.
+[functions.stripe-webhook]
+verify_jwt = false

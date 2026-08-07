@@ -1,4 +1,3 @@
-export { routeWebhookEvent } from './webhookHandlers';
 export type {
   StripeWebhookEvent,
   WebhookPayload,

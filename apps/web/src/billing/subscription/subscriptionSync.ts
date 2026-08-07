@@ -1,59 +1,68 @@
+import { supabase } from '@/lib/supabase';
 import { useSubscriptionStore } from '@/stores/subscription';
-import {
-  getCachedSubscription,
-  setCachedSubscription,
-  clearCachedSubscription,
-  isCacheExpired,
-  defaultSubscription,
-} from './subscriptionCache';
-import { hasStripeConfig } from '@/billing/stripe/stripeConfig';
+import type { SubscriptionStatus } from '@/stores/subscription';
+import type { SubscriptionTier, BillingInterval } from '@/billing/pricingPlans';
+
+const SYNC_INTERVAL_MS = 5 * 60 * 1000;
+
+interface ServerSubscription {
+  tier?: string;
+  interval?: string;
+  status?: string;
+  currentPeriodEnd?: string | null;
+  trialEnd?: string | null;
+  cancelAtPeriodEnd?: boolean;
+  stripeCustomerId?: string | null;
+}
+
+function freeState() {
+  return {
+    tier: 'free' as const,
+    interval: 'month' as const,
+    status: 'active' as const,
+    currentPeriodEnd: null,
+    trialEnd: null,
+    cancelAtPeriodEnd: false,
+    stripeCustomerId: null,
+  };
+}
 
 export class SubscriptionSync {
   private syncIntervalId: ReturnType<typeof setInterval> | null = null;
+  private enabled = false;
 
   init(): void {
-    const cached = getCachedSubscription();
-
-    if (cached && !isCacheExpired(cached)) {
-      useSubscriptionStore.getState().setSubscription({
-        tier: cached.tier,
-        interval: cached.interval,
-        status: cached.status,
-        currentPeriodEnd: cached.currentPeriodEnd,
-        trialEnd: cached.trialEnd,
-        cancelAtPeriodEnd: cached.cancelAtPeriodEnd,
-        stripeCustomerId: cached.stripeCustomerId,
-      });
-    } else if (cached && isCacheExpired(cached)) {
-      this.syncFromServer().catch(() => {
-        useSubscriptionStore.getState().setSubscription(defaultSubscription());
-      });
-    } else {
-      useSubscriptionStore.getState().setSubscription(defaultSubscription());
-    }
-
     useSubscriptionStore.getState().setInitialized(true);
     this.startPeriodicSync();
   }
 
+  setEnabled(enabled: boolean): void {
+    this.enabled = enabled;
+    if (enabled) {
+      this.startPeriodicSync();
+    } else {
+      this.stopPeriodicSync();
+    }
+  }
+
   async syncFromServer(): Promise<void> {
-    if (!hasStripeConfig()) return;
-
+    useSubscriptionStore.getState().setLoading(true);
     try {
-      const response = await fetch('/api/stripe/subscription', {
-        credentials: 'include',
-      });
+      const { data, error } = await supabase.functions.invoke<ServerSubscription>(
+        'stripe-get-subscription',
+      );
 
-      if (!response.ok) {
-        throw new Error(`Sync failed: ${response.status}`);
+      if (error) {
+        throw new Error(error.message);
+      }
+      if (!data) {
+        throw new Error('Empty subscription response');
       }
 
-      const data = await response.json();
-
       const sub = {
-        tier: data.tier ?? 'free',
-        interval: data.interval ?? 'month',
-        status: data.status ?? 'active',
+        tier: (data.tier ?? 'free') as SubscriptionTier,
+        interval: (data.interval ?? 'month') as BillingInterval,
+        status: (data.status ?? 'active') as SubscriptionStatus,
         currentPeriodEnd: data.currentPeriodEnd ?? null,
         trialEnd: data.trialEnd ?? null,
         cancelAtPeriodEnd: data.cancelAtPeriodEnd ?? false,
@@ -61,36 +70,25 @@ export class SubscriptionSync {
       };
 
       useSubscriptionStore.getState().setSubscription(sub);
-      setCachedSubscription(sub);
     } catch {
-      const cached = getCachedSubscription();
-      if (cached) {
-        useSubscriptionStore.getState().setSubscription({
-          tier: cached.tier,
-          interval: cached.interval,
-          status: cached.status,
-          currentPeriodEnd: cached.currentPeriodEnd,
-          trialEnd: cached.trialEnd,
-          cancelAtPeriodEnd: cached.cancelAtPeriodEnd,
-          stripeCustomerId: cached.stripeCustomerId,
-        });
-      }
+      // Fail safely to FREE. A failed lookup must never leave a user
+      // with an unverified paid tier.
+      useSubscriptionStore.getState().setSubscription(freeState());
       throw new Error('Failed to sync subscription from server');
+    } finally {
+      useSubscriptionStore.getState().setLoading(false);
     }
-  }
-
-  clearSync(): void {
-    clearCachedSubscription();
-    useSubscriptionStore.getState().setSubscription(defaultSubscription());
   }
 
   private startPeriodicSync(): void {
     this.stopPeriodicSync();
+    if (!this.enabled) return;
     this.syncIntervalId = setInterval(() => {
       this.syncFromServer().catch(() => {
-        // silent fail — cache or default is used
+        // silent fail — the store was already reset to FREE by the
+        // sync failure path.
       });
-    }, 5 * 60 * 1000);
+    }, SYNC_INTERVAL_MS);
   }
 
   stopPeriodicSync(): void {

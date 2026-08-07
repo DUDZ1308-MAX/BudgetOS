@@ -15,46 +15,26 @@ export function isStripeLive(): boolean {
   return getStripeMode() === 'live';
 }
 
-export function isStripeTest(): boolean {
-  return getStripeMode() === 'test';
-}
-
-export function isStripeDisabled(): boolean {
-  return getStripeMode() === 'disabled';
-}
-
-export function assertStripeMode(expected: StripeMode): void {
-  const actual = getStripeMode();
-  if (actual !== expected) {
-    logger.warn(
-      `Stripe mode mismatch: expected ${expected}, actual ${actual}`,
-      'StripeSafety',
-    );
-  }
-}
-
-export function canProcessPayments(): { allowed: boolean; reason?: string } {
+export function canProcessPayments(): { allowed: boolean; reason?: string; devHint?: string } {
   const mode = getStripeMode();
   if (mode === 'disabled') {
-    return { allowed: false, reason: 'Stripe is not configured. Add VITE_STRIPE_PUBLISHABLE_KEY to your .env file.' };
+    return {
+      allowed: false,
+      reason: 'Payments are currently unavailable.',
+      devHint: env.isDev ? 'Add VITE_STRIPE_PUBLISHABLE_KEY to your .env file.' : undefined,
+    };
   }
   if (mode === 'test' && env.isProd) {
-    return { allowed: false, reason: 'Stripe is in test mode but the app is running in production. Set a live publishable key.' };
+    return {
+      allowed: false,
+      reason: 'Payments are currently unavailable.',
+      devHint: env.isDev ? 'Stripe is in test mode but the app is running in production.' : undefined,
+    };
   }
   if (mode === 'live' && env.isDev) {
     logger.warn('Stripe is in live mode in a development environment. Be careful!', 'StripeSafety');
   }
   return { allowed: true };
-}
-
-export function getCheckoutEnvironment(): { mode: StripeMode; label: string } {
-  const mode = getStripeMode();
-  const labels: Record<StripeMode, string> = {
-    live: 'Production (Live)',
-    test: 'Test Mode',
-    disabled: 'Disabled',
-  };
-  return { mode, label: labels[mode] };
 }
 
 export function requireStripeLive(): void {

@@ -21,10 +21,8 @@ npm run dev
 | Variable | Description |
 |----------|-------------|
 | `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key (pk_test_ or pk_live_) |
-| `VITE_STRIPE_PRICE_PRO_MONTH` | Pro monthly price ID |
-| `VITE_STRIPE_PRICE_PRO_YEAR` | Pro yearly price ID |
-| `VITE_STRIPE_PRICE_PREMIUM_MONTH` | Premium monthly price ID |
-| `VITE_STRIPE_PRICE_PREMIUM_YEAR` | Premium yearly price ID |
+
+All other Stripe configuration (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, Price IDs, `APP_URL`) lives in Supabase Edge Function secrets, never in the browser. See `docs/STRIPE_BILLING.md`.
 
 ## Optional Variables
 

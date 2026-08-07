@@ -13,15 +13,6 @@ export const env = {
   },
   stripe: {
     publishableKey: import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? '',
-    prices: {
-      proMonth: import.meta.env.VITE_STRIPE_PRICE_PRO_MONTH ?? '',
-      proYear: import.meta.env.VITE_STRIPE_PRICE_PRO_YEAR ?? '',
-      premiumMonth: import.meta.env.VITE_STRIPE_PRICE_PREMIUM_MONTH ?? '',
-      premiumYear: import.meta.env.VITE_STRIPE_PRICE_PREMIUM_YEAR ?? '',
-    },
-    checkoutUrl: import.meta.env.VITE_STRIPE_CHECKOUT_URL ?? '/api/stripe/create-checkout',
-    portalUrl: import.meta.env.VITE_STRIPE_PORTAL_URL ?? '/api/stripe/customer-portal',
-    webhookEndpoint: import.meta.env.VITE_STRIPE_WEBHOOK_ENDPOINT ?? '/api/stripe/webhook',
   },
   app: {
     name: 'MyBudgetOS',

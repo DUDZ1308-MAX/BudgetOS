@@ -4,6 +4,8 @@ import { useSubscriptionStore } from '@/stores/subscription';
 import { SubscriptionService } from '@/billing/subscriptionService';
 import { PLANS } from '@/billing/pricingPlans';
 import type { PricingPlan, BillingInterval } from '@/billing/pricingPlans';
+import { canProcessPayments } from '@/billing/stripe/stripeSafety';
+import { resolvePlanAction } from '@/billing/planActions';
 
 export function PricingPage() {
   const tier = useSubscriptionStore((s) => s.tier);
@@ -11,16 +13,33 @@ export function PricingPage() {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const paymentsAvailable = canProcessPayments().allowed;
 
   const handleSelectPlan = async (plan: PricingPlan) => {
-    if (plan.id === tier) {
+    const action = resolvePlanAction(tier, plan);
+
+    if (action === 'current') {
       navigate('/billing');
       return;
     }
 
-    if (plan.id === 'free') {
-      await SubscriptionService.downgradeToFree();
-      navigate('/billing');
+    // Plan changes and cancellations always happen through the Stripe
+    // Customer Portal. Stripe remains authoritative and entitlement
+    // stays active until the subscription period actually ends.
+    if (action === 'portal') {
+      const result = await SubscriptionService.manageSubscription();
+      if (!result.success && result.error) {
+        setError(result.error);
+      }
+      return;
+    }
+
+    if (action === 'none') {
+      return;
+    }
+
+    if (!paymentsAvailable) {
+      setError('Payments are currently unavailable.');
       return;
     }
 
@@ -79,6 +98,7 @@ export function PricingPage() {
       <div className="grid gap-6 md:grid-cols-3">
         {PLANS.map((plan) => {
           const isCurrent = plan.id === tier;
+          const action = resolvePlanAction(tier, plan);
           const price = interval === 'month' ? plan.monthlyPrice : plan.yearlyPricePerMonth;
           const totalPrice = interval === 'month' ? plan.monthlyPrice : plan.yearlyPrice;
           const isLoading = loadingPlan === plan.id;
@@ -149,7 +169,7 @@ export function PricingPage() {
 
               <button
                 onClick={() => handleSelectPlan(plan)}
-                disabled={isLoading}
+                disabled={isLoading || (!paymentsAvailable && plan.monthlyPrice > 0)}
                 className={`w-full rounded-xl px-4 py-3 text-sm font-medium transition-all ${
                   isCurrent
                     ? 'border-2 border-brand-300 bg-brand-50 text-brand-700 dark:border-brand-700 dark:bg-brand-900/20 dark:text-brand-300'
@@ -158,7 +178,7 @@ export function PricingPage() {
                       : 'border-2 border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300'
                 } disabled:opacity-50`}
               >
-                {isLoading ? 'Processing...' : isCurrent ? 'Current Plan' : plan.monthlyPrice === 0 ? 'Downgrade' : 'Upgrade'}
+                {isLoading ? 'Processing...' : isCurrent ? 'Current Plan' : action === 'portal' ? 'Manage' : plan.monthlyPrice === 0 ? 'Downgrade' : 'Upgrade'}
               </button>
             </div>
           );
